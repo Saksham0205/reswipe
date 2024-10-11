@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "303015680525",
+    "project_id": "reswipe-35dfd",
+    "storage_bucket": "reswipe-35dfd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:303015680525:android:8743df23a147d82de35344",
+        "android_client_info": {
+          "package_name": "com.reswipe.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCU1H2ShVKIavCSOmnUaW0NHpC0o5Y8_jo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
