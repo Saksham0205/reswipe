@@ -25,7 +25,7 @@ class AuthWrapper extends StatelessWidget {
                 if (userData != null && userData.containsKey('role')) {
                   String userRole = userData['role'];
                   if (userRole == 'company') {
-                    return CompanyHomeScreen();
+                    return CompanyMainScreen();
                   } else {
                     return JobSeekerHomeScreen();
                   }

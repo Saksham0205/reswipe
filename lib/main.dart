@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:reswipe/home_screen/company_home_screen.dart';
 import 'auth/auth_wrapper.dart';
 import 'auth/login_screen.dart';
-import 'home_screen/company_home_screen.dart';
 import 'home_screen/job_seeker_home_screen.dart';
 
 
@@ -25,7 +25,7 @@ class JobFinderApp extends StatelessWidget {
       home: AuthWrapper(),
       routes: {
         '/login': (context) => LoginScreen(),
-        '/company_home': (context) => CompanyHomeScreen(),
+        '/company_home': (context) => CompanyMainScreen(),
         '/job_seeker_home': (context) => JobSeekerHomeScreen(),
       },
     );

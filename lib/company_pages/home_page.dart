@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../models/user_model/applicant.dart';
+import '../services/firestore_service.dart';
+
 
 class HomeScreen extends StatelessWidget {
   @override
