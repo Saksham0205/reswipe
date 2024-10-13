@@ -6,11 +6,19 @@ class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Stream<List<Applicant>> getApplicants() {
+    print('Fetching applicants...'); // Log when the method is called
     return _firestore.collection('applicants').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Applicant.fromMap(doc.data(), doc.id)).toList();
+      print('Received ${snapshot.docs.length} applicants'); // Log the number of documents
+      return snapshot.docs.map((doc) {
+        try {
+          return Applicant.fromMap(doc.data(), doc.id);
+        } catch (e) {
+          print('Error parsing applicant: $e'); // Log any parsing errors
+          return null;
+        }
+      }).whereType<Applicant>().toList(); // Filter out any null values
     });
   }
-
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 

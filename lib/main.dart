@@ -25,7 +25,12 @@ class JobFinderApp extends StatelessWidget {
       home: AuthWrapper(),
       routes: {
         '/login': (context) => LoginScreen(),
-        '/company_home': (context) => CompanyMainScreen(),
+        '/company_home': (context) => CompanyMainScreen(
+          favoriteClothes: [], // Provide an empty list or fetch from somewhere
+          onFavoritesUpdated: (updatedList) {
+            // Handle the updated favorites list
+          },
+        ),
         '/job_seeker_home': (context) => JobSeekerHomeScreen(),
       },
     );
