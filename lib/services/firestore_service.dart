@@ -5,13 +5,32 @@ import '../models/user_model/applicant.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  Stream<List<Applicant>> getFavoriteApplicants() {
+    // Assuming you have a 'favorites' collection with applicant IDs
+    // and a separate 'applicants' collection
+    return _db.collection('favorites').snapshots().asyncMap((snapshot) async {
+      List<Applicant> applicants = [];
+      for (var doc in snapshot.docs) {
+        DocumentSnapshot applicantDoc = await _db.collection('applicants').doc(doc.id).get();
+        if (applicantDoc.exists) {
+          applicants.add(Applicant.fromFirestore(applicantDoc));
+        }
+      }
+      return applicants;
+    });
+  }
+
+  Future<void> removeFromFavorites(String applicantId) {
+    return _db.collection('favorites').doc(applicantId).delete();
+  }
+
   Stream<List<Applicant>> getApplicants() {
     print('Fetching applicants...'); // Log when the method is called
     return _firestore.collection('applicants').snapshots().map((snapshot) {
       print('Received ${snapshot.docs.length} applicants'); // Log the number of documents
       return snapshot.docs.map((doc) {
         try {
-          return Applicant.fromMap(doc.data(), doc.id);
+          return Applicant.fromFirestore(doc.data() as DocumentSnapshot<Object?>);
         } catch (e) {
           print('Error parsing applicant: $e'); // Log any parsing errors
           return null;

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Applicant {
   final String id;
   final String name;
@@ -6,16 +8,17 @@ class Applicant {
   final String profilePhotoUrl;
 
   Applicant({
-    this.id = '',
+    required this.id,
     required this.name,
     required this.jobProfile,
     required this.resumeUrl,
-    this.profilePhotoUrl="",
+    required this.profilePhotoUrl,
   });
 
-  factory Applicant.fromMap(Map<String, dynamic> data, String id) {
+  factory Applicant.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map<String, dynamic>;
     return Applicant(
-      id: id,
+      id: doc.id,
       name: data['name'] ?? '',
       jobProfile: data['jobProfile'] ?? '',
       resumeUrl: data['resumeUrl'] ?? '',

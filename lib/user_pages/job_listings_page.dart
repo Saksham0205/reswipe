@@ -1,67 +1,143 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 
-class Job {
-  final String id;
-  final String title;
-  final String description;
-  final String companyId;
+import '../models/company_model/job.dart';
 
-  Job({
-    this.id = '',
-    required this.title,
-    required this.description,
-    this.companyId = '',
-  });
+class JobListingsPage extends StatefulWidget {
+  @override
+  _JobListingsPageState createState() => _JobListingsPageState();
+}
 
-  factory Job.fromMap(Map<String, dynamic> data, String id) {
-    return Job(
-      id: id,
-      title: data['title'] ?? '',
-      description: data['description'] ?? '',
-      companyId: data['companyId'] ?? '',
+class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProviderStateMixin {
+  List<Job> jobs = [];
+  late CardSwiperController controller;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = CardSwiperController();
+    _fetchJobs();
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchJobs() async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('jobs').get();
+      setState(() {
+        jobs = querySnapshot.docs.map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
+      });
+    } catch (e) {
+      print('Error fetching jobs: $e');
+      // Handle error (show a snackbar, for example)
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Job Listings'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: jobs.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+        children: [
+          Expanded(child: _buildCardSwiper()),
+          _buildSwipeActions(),
+        ],
+      ),
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'description': description,
-      'companyId': companyId,
-    };
+  Widget _buildCardSwiper() {
+    return FadeTransition(
+      opacity: _animation,
+      child: CardSwiper(
+        controller: controller,
+        cardsCount: jobs.length,
+        onSwipe: _onSwipe,
+        padding: const EdgeInsets.all(24.0),
+        cardBuilder: (context, index, _, __) => JobCard(
+          job: jobs[index],
+          onApply: () => _applyForJob(context, jobs[index].id, jobs[index].title),
+        ),
+      ),
+    );
   }
-}
 
-class JobListingsPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('jobs').snapshots(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) {
-          return const Center(child: Text('Something went wrong'));
-        }
+  bool _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
+    if (direction == CardSwiperDirection.right) {
+      _applyForJob(context, jobs[previousIndex].id, jobs[previousIndex].title);
+    }
+    if (currentIndex == null) {
+      _fetchJobs();
+      return false;
+    }
+    return true;
+  }
 
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  Widget _buildSwipeActions() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildActionButton(
+            onPressed: () {
+              controller.swipe(CardSwiperDirection.left);
+            },
+            icon: Icons.close,
+            color: Colors.red,
+          ),
+          _buildActionButton(
+            onPressed: () {
+              controller.swipe(CardSwiperDirection.right);
+            },
+            icon: Icons.check,
+            color: Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
 
-        List<Job> jobs = snapshot.data!.docs.map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
-
-        return PageView.builder(
-          itemCount: jobs.length,
-          itemBuilder: (context, index) {
-            Job job = jobs[index];
-            return JobCard(
-              title: job.title,
-              company: job.companyId,
-              description: job.description,
-              onApply: () => _applyForJob(context, job.id, job.title),
-            );
-          },
-        );
-      },
+  Widget _buildActionButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 32, color: color),
+        onPressed: onPressed,
+      ),
     );
   }
 
@@ -107,48 +183,59 @@ class JobListingsPage extends StatelessWidget {
 }
 
 class JobCard extends StatelessWidget {
-  final String title;
-  final String company;
-  final String description;
+  final Job job;
   final VoidCallback onApply;
 
   JobCard({
-    required this.title,
-    required this.company,
-    required this.description,
+    required this.job,
     required this.onApply,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.headlineSmall),
-            Text(company, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 16),
-            Text(description),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton(
-                  child: const Text('Skip'),
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.0),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.deepPurple.shade50, Colors.white],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(job.title, style: Theme.of(context).textTheme.headlineSmall),
+              Text(job.companyId, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Text(job.description),
                 ),
-                ElevatedButton(
-                  child: const Text('Apply'),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: ElevatedButton(
+                  child: const Text('Apply Now',style: TextStyle(color: Colors.white),),
                   onPressed: onApply,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

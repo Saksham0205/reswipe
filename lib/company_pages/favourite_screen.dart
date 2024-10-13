@@ -1,308 +1,125 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model/applicant.dart';
+import '../services/firestore_service.dart';
 
-import 'home_page.dart';
-
-class FavoriteScreen extends StatefulWidget {
-  final List<ClothingItem> favoriteClothes;
-  final Function(List<ClothingItem>) onFavoritesUpdated;
-
-  FavoriteScreen({required this.favoriteClothes, required this.onFavoritesUpdated});
-
-  @override
-  _FavoriteScreenState createState() => _FavoriteScreenState();
-}
-
-class _FavoriteScreenState extends State<FavoriteScreen> {
-  late List<ClothingItem> _favorites;
-
-  @override
-  void initState() {
-    super.initState();
-    _favorites = List.from(widget.favoriteClothes);
-  }
-
-  Future<void> _saveFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String encodedJson = jsonEncode(_favorites.map((e) => e.toJson()).toList());
-    await prefs.setString('favorites', encodedJson);
-    widget.onFavoritesUpdated(_favorites);
-  }
-
-  void _deleteFavorite(int index) {
-    setState(() {
-      _favorites.removeAt(index);
-      _saveFavorites();
-    });
-  }
-
-  void _clearFavorites() {
-    setState(() {
-      _favorites.clear();
-      _saveFavorites();
-    });
-  }
-
+class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text('My Favorites', style: GoogleFonts.poppins(color: Colors.white)),
-        centerTitle: true,
+        title: Text('Favorite Applicants'),
         backgroundColor: Colors.deepPurple,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_sweep,color: Colors.white,),
-            onPressed: () {
-              if (_favorites.isNotEmpty) {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text('Clear Favorites'),
-                      content: Text('Are you sure you want to remove all favorites?'),
-                      actions: <Widget>[
-                        TextButton(
-                          child: Text('Cancel'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                        TextButton(
-                          child: Text('Clear'),
-                          onPressed: () {
-                            _clearFavorites();
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              }
+      ),
+      body: StreamBuilder<List<Applicant>>(
+        stream: FirestoreService().getFavoriteApplicants(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No favorite applicants found'));
+          }
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              final applicant = snapshot.data![index];
+              return ApplicantCard(applicant: applicant);
             },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class ApplicantCard extends StatelessWidget {
+  final Applicant applicant;
+
+  const ApplicantCard({Key? key, required this.applicant}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.all(8),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+            child: Image.network(
+              applicant.profilePhotoUrl,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Icon(Icons.person, size: 100, color: Colors.grey[600]),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  applicant.name,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  applicant.jobProfile,
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () => _viewResume(context, applicant),
+                      icon: Icon(Icons.description, color: Colors.white),
+                      label: Text('View Resume', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _removeFromFavorites(context, applicant),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-      body: _favorites.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.favorite_border, size: 100, color: Colors.grey),
-            SizedBox(height: 20),
-            Text(
-              'No favorite clothes yet!',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Start Swiping',style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                textStyle: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
-        ),
-      )
-          : AnimationLimiter(
-        child: ListView.builder(
-          itemCount: _favorites.length,
-          itemBuilder: (context, index) {
-            final item = _favorites[index];
-            return AnimationConfiguration.staggeredList(
-              position: index,
-              duration: const Duration(milliseconds: 375),
-              child: SlideAnimation(
-                verticalOffset: 50.0,
-                child: FadeInAnimation(
-                  child: Dismissible(
-                    key: Key(item.id),
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 20),
-                      child: Icon(Icons.delete, color: Colors.white),
-                    ),
-                    direction: DismissDirection.endToStart,
-                    onDismissed: (direction) {
-                      _deleteFavorite(index);
-                    },
-                    child: Card(
-                      elevation: 4,
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.all(16),
-                        leading: Hero(
-                          tag: 'clothing_${item.id}',
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              item.imageUrl,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 80,
-                                  height: 80,
-                                  color: Colors.grey[300],
-                                  child: Icon(Icons.error, color: Colors.red),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          item.name,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 4),
-                            Text(
-                              item.description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '\$${item.price.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.deepPurple,
-                              ),
-                            ),
-                          ],
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            _deleteFavorite(index);
-                          },
-                        ),
-                        onTap: () {
-                          _showItemDetails(context, item);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
       ),
     );
   }
 
-  void _showItemDetails(BuildContext context, ClothingItem item) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Hero(
-                      tag: 'clothing_${item.id}',
-                      child: Image.network(
-                        item.imageUrl,
-                        height: 300,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.name,
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            item.description,
-                            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            '\$${item.price.toStringAsFixed(2)}',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                          ),
-                          SizedBox(height: 24),
-                          Text(
-                            'Size Guide',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            children: ['XS', 'S', 'M', 'L', 'XL'].map((size) {
-                              return Chip(
-                                label: Text(size),
-                                backgroundColor: Colors.grey[200],
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  // Add to cart functionality
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Added to cart')),
-                  );
-                },
-                child: Text('Add to Cart'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  textStyle: TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _viewResume(BuildContext context, Applicant applicant) {
+    // Implement resume viewing logic
+    // You might want to use a package like url_launcher to open the PDF
+    // or navigate to a custom PDF viewer screen
+    print('Viewing resume for ${applicant.name}');
+  }
+
+  void _removeFromFavorites(BuildContext context, Applicant applicant) {
+    // Implement logic to remove applicant from favorites
+    // This might involve calling a method from your FirestoreService
+    // and then showing a snackbar to confirm the action
+    FirestoreService().removeFromFavorites(applicant.id).then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${applicant.name} removed from favorites')),
+      );
+    });
   }
 }

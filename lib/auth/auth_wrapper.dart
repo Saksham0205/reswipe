@@ -26,10 +26,6 @@ class AuthWrapper extends StatelessWidget {
                   String userRole = userData['role'];
                   if (userRole == 'company') {
                     return CompanyMainScreen(
-                      favoriteClothes: [], // Provide an empty list or fetch from somewhere
-                      onFavoritesUpdated: (updatedList) {
-                        // Handle the updated favorites list
-                      },
                     );
                   } else {
                     return JobSeekerHomeScreen();

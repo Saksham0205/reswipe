@@ -5,13 +5,6 @@ import '../company_pages/job_post_screen.dart';
 import '../company_pages/profile_screen.dart';
 
 class CompanyMainScreen extends StatefulWidget {
-  final List<ClothingItem> favoriteClothes;
-  final Function(List<ClothingItem>) onFavoritesUpdated;
-
-  CompanyMainScreen({
-    required this.favoriteClothes,
-    required this.onFavoritesUpdated,
-  });
 
   @override
   _CompanyMainScreenState createState() => _CompanyMainScreenState();
@@ -27,10 +20,7 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
     _screens = [
       HomeScreen(),
       JobPostsScreen(),
-      FavoriteScreen(
-        favoriteClothes: widget.favoriteClothes,
-        onFavoritesUpdated: widget.onFavoritesUpdated,
-      ),
+      FavoritesScreen(),
       ProfileScreen(),
     ];
   }
