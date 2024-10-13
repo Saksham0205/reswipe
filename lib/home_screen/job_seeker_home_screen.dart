@@ -34,12 +34,7 @@ class _JobSeekerHomeScreenState extends State<JobSeekerHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title:  Text('${FirebaseAuth.instance.currentUser?.displayName}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () => FirebaseAuth.instance.signOut(),
-          ),
-        ],
+        automaticallyImplyLeading: false,
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
