@@ -5,13 +5,13 @@ import '../models/user_model/applicant.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Applicant-related methods
+
   Stream<List<Applicant>> getFavoriteApplicants() {
-    // Assuming you have a 'favorites' collection with applicant IDs
-    // and a separate 'applicants' collection
-    return _db.collection('favorites').snapshots().asyncMap((snapshot) async {
+    return _firestore.collection('favorites').snapshots().asyncMap((snapshot) async {
       List<Applicant> applicants = [];
       for (var doc in snapshot.docs) {
-        DocumentSnapshot applicantDoc = await _db.collection('applicants').doc(doc.id).get();
+        DocumentSnapshot applicantDoc = await _firestore.collection('applicants').doc(doc.id).get();
         if (applicantDoc.exists) {
           applicants.add(Applicant.fromFirestore(applicantDoc));
         }
@@ -21,41 +21,133 @@ class FirestoreService {
   }
 
   Future<void> removeFromFavorites(String applicantId) {
-    return _db.collection('favorites').doc(applicantId).delete();
+    return _firestore.collection('favorites').doc(applicantId).delete();
   }
 
   Stream<List<Applicant>> getApplicants() {
-    print('Fetching applicants...'); // Log when the method is called
+    print('Fetching applicants...');
     return _firestore.collection('applicants').snapshots().map((snapshot) {
-      print('Received ${snapshot.docs.length} applicants'); // Log the number of documents
+      print('Received ${snapshot.docs.length} applicants');
       return snapshot.docs.map((doc) {
         try {
-          return Applicant.fromFirestore(doc.data() as DocumentSnapshot<Object?>);
+          return Applicant.fromFirestore(doc);
         } catch (e) {
-          print('Error parsing applicant: $e'); // Log any parsing errors
+          print('Error parsing applicant: $e');
           return null;
         }
-      }).whereType<Applicant>().toList(); // Filter out any null values
+      }).whereType<Applicant>().toList();
     });
   }
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // Job-related methods
 
-  void addJob(String title, String description, String companyId) async {
-    // Create a Job with the companyId
-    Job newJob = Job(
-      title: title,
-      description: description,
-      companyId: companyId,  // companyId is passed in
-    );
-
-    // Save the job in Firestore
-    await FirebaseFirestore.instance.collection('jobs').add(newJob.toMap());
+  Future<void> addJob(Job job) async {
+    try {
+      await _firestore.collection('jobs').add(job.toMap());
+      print('Job added successfully');
+    } catch (e) {
+      print('Error adding job: $e');
+      throw e;
+    }
   }
 
+  Stream<List<Job>> getJobs() {
+    return _firestore.collection('jobs').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        try {
+          return Job.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        } catch (e) {
+          print('Error parsing job: $e');
+          return null;
+        }
+      }).whereType<Job>().toList();
+    });
+  }
 
-  Stream<List<Job>> getFavoriteJobs() {
-    // Implement logic to get favorite jobs
-    return Stream.empty();
+  Stream<List<Job>> getJobsByCompany(String companyId) {
+    return _firestore
+        .collection('jobs')
+        .where('companyId', isEqualTo: companyId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        try {
+          return Job.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        } catch (e) {
+          print('Error parsing job: $e');
+          return null;
+        }
+      }).whereType<Job>().toList();
+    });
+  }
+
+  Future<void> updateJob(Job job) async {
+    try {
+      await _firestore.collection('jobs').doc(job.id).update(job.toMap());
+      print('Job updated successfully');
+    } catch (e) {
+      print('Error updating job: $e');
+      throw e;
+    }
+  }
+
+  Future<void> deleteJob(String jobId) async {
+    try {
+      await _firestore.collection('jobs').doc(jobId).delete();
+      print('Job deleted successfully');
+    } catch (e) {
+      print('Error deleting job: $e');
+      throw e;
+    }
+  }
+
+  // Favorite jobs methods
+
+  Stream<List<Job>> getFavoriteJobs(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favoriteJobs')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Job> favoriteJobs = [];
+      for (var doc in snapshot.docs) {
+        DocumentSnapshot jobDoc = await _firestore.collection('jobs').doc(doc.id).get();
+        if (jobDoc.exists) {
+          favoriteJobs.add(Job.fromMap(jobDoc.data() as Map<String, dynamic>, jobDoc.id));
+        }
+      }
+      return favoriteJobs;
+    });
+  }
+
+  Future<void> addToFavoriteJobs(String userId, String jobId) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('favoriteJobs')
+          .doc(jobId)
+          .set({'addedAt': FieldValue.serverTimestamp()});
+      print('Job added to favorites successfully');
+    } catch (e) {
+      print('Error adding job to favorites: $e');
+      throw e;
+    }
+  }
+
+  Future<void> removeFromFavoriteJobs(String userId, String jobId) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('favoriteJobs')
+          .doc(jobId)
+          .delete();
+      print('Job removed from favorites successfully');
+    } catch (e) {
+      print('Error removing job from favorites: $e');
+      throw e;
+    }
   }
 }

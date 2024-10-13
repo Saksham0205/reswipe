@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
+import 'company_verification_screen.dart';
+import '../models/user_registration.dart';  // Import the new UserRegistration model
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -12,35 +14,49 @@ class RegistrationScreen extends StatefulWidget {
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _email = '';
-  String _password = '';
-  String _name = '';
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _companyNameController = TextEditingController();
   String _role = 'job_seeker';
   bool _isLoading = false;
 
   void _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      _formKey.currentState!.save();
       try {
         UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _email,
-          password: _password,
+          email: _emailController.text,
+          password: _passwordController.text,
         );
+
+        await userCredential.user!.sendEmailVerification();
 
         String? companyId;
         if (_role == 'company') {
           companyId = _generateRandomCompanyId();
         }
 
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-          'name': _name,
-          'role': _role,
-          'email': _email,
-          if (companyId != null) 'companyId': companyId,
-        });
+        UserRegistration newUser = UserRegistration(
+          name: _nameController.text,
+          email: _emailController.text,
+          role: _role,
+          companyName: _role == 'company' ? _companyNameController.text : null,
+          companyId: companyId,
+        );
 
-        Navigator.of(context).pop();
+        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set(newUser.toMap());
+
+        if (_role == 'company') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => CompanyVerificationScreen(email: _emailController.text, companyName: _companyNameController.text),
+          ));
+        } else {
+          // For job seekers, we'll let AuthWrapper handle the navigation
+          Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (context) => AuthWrapper(),
+          ));
+        }
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to register: ${e.message}')),
@@ -65,7 +81,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,8 +91,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     height: 200,
                     fit: BoxFit.contain,
                   ),
-                  SizedBox(height: 40),
-                  Text(
+                  const SizedBox(height: 40),
+                  const Text(
                     'Create Account',
                     style: TextStyle(
                       fontSize: 28,
@@ -85,8 +101,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 10),
-                  Text(
+                  const SizedBox(height: 10),
+                  const Text(
                     'Join our professional community',
                     style: TextStyle(
                       fontSize: 16,
@@ -94,40 +110,45 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   Form(
                     key: _formKey,
                     child: Column(
                       children: [
                         _buildTextField(
+                          controller: _nameController,
                           hintText: 'Full Name',
-                          onSaved: (value) => _name = value!,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildTextField(
+                          controller: _emailController,
                           hintText: 'Email',
-                          onSaved: (value) => _email = value!,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildTextField(
+                          controller: _passwordController,
                           hintText: 'Password',
                           obscureText: true,
-                          onSaved: (value) => _password = value!,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildRoleDropdown(),
-                        SizedBox(height: 24),
+                        const SizedBox(height: 16),
+                        if (_role == 'company')
+                          _buildTextField(
+                            controller: _companyNameController,
+                            hintText: 'Company Name',
+                          ),
+                        const SizedBox(height: 24),
                         _isLoading
-                            ? CircularProgressIndicator()
+                            ? const CircularProgressIndicator()
                             : ElevatedButton(
-                          child: Text('Register'),
                           onPressed: _register,
                           style: ElevatedButton.styleFrom(
-                            fixedSize: Size.fromWidth(150),
+                            fixedSize: const Size.fromWidth(150),
                             foregroundColor: Colors.white,
                             backgroundColor: Colors.blue[700],
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            textStyle: TextStyle(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            textStyle: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -135,15 +156,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               borderRadius: BorderRadius.circular(30),
                             ),
                           ),
+                          child: const Text('Register'),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Already have an account?", style: TextStyle(color: Colors.black54)),
+                      const Text("Already have an account?", style: TextStyle(color: Colors.black54)),
                       TextButton(
                         child: Text(
                           'Sign in',
@@ -166,13 +188,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hintText,
     bool obscureText = false,
-    required Function(String?) onSaved,
   }) {
     return TextFormField(
+      controller: controller,
       obscureText: obscureText,
-      onSaved: onSaved,
       decoration: InputDecoration(
         hintText: hintText,
         filled: true,
@@ -185,7 +207,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           borderRadius: BorderRadius.circular(4),
           borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       validator: (value) => value!.isEmpty ? 'This field is required' : null,
     );
@@ -200,17 +222,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
           borderSide: BorderSide(color: Colors.grey[500]!),
-
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
           borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
-      items: [
-        DropdownMenuItem(child: Text('Job Seeker'), value: 'job_seeker'),
-        DropdownMenuItem(child: Text('Company'), value: 'company'),
+      items: const [
+        DropdownMenuItem(value: 'job_seeker', child: Text('Job Seeker')),
+        DropdownMenuItem(value: 'company', child: Text('Company')),
       ],
       onChanged: (value) => setState(() => _role = value!),
       validator: (value) => value == null ? 'Please select a role' : null,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'package:intl/intl.dart';
 
 import '../models/company_model/job.dart';
 
@@ -11,6 +12,7 @@ class JobListingsPage extends StatefulWidget {
 }
 
 class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProviderStateMixin {
+  Map<String, String> companyNames = {};
   List<Job> jobs = [];
   late CardSwiperController controller;
   late AnimationController _animationController;
@@ -45,12 +47,27 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
   Future<void> _fetchJobs() async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('jobs').get();
+      List<Job> fetchedJobs = querySnapshot.docs.map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
+
+      // Fetch company names
+      Set<String> companyIds = fetchedJobs.map((job) => job.companyId).toSet();
+      for (String companyId in companyIds) {
+        DocumentSnapshot companyDoc = await FirebaseFirestore.instance.collection('users').doc(companyId).get();
+        if (companyDoc.exists) {
+          companyNames[companyId] = companyDoc.get('companyName') ?? 'Unknown Company';
+        } else {
+          companyNames[companyId] = 'Unknown Company';
+        }
+      }
+
       setState(() {
-        jobs = querySnapshot.docs.map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
+        jobs = fetchedJobs;
       });
     } catch (e) {
       print('Error fetching jobs: $e');
-      // Handle error (show a snackbar, for example)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load jobs. Please try again later.')),
+      );
     }
   }
 
@@ -58,16 +75,27 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Job Listings'),
+        title: Text('Job Listings', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.deepPurple,
+        automaticallyImplyLeading: false,
+        elevation: 0,
       ),
-      body: jobs.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-        children: [
-          Expanded(child: _buildCardSwiper()),
-          _buildSwipeActions(),
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.deepPurple, Colors.deepPurple.shade200],
+          ),
+        ),
+        child: jobs.isEmpty
+            ? Center(child: CircularProgressIndicator(color: Colors.white))
+            : Column(
+          children: [
+            Expanded(child: _buildCardSwiper()),
+            _buildSwipeActions(),
+          ],
+        ),
       ),
     );
   }
@@ -82,6 +110,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
         padding: const EdgeInsets.all(24.0),
         cardBuilder: (context, index, _, __) => JobCard(
           job: jobs[index],
+          companyName: companyNames[jobs[index].companyId] ?? 'Unknown Company',
           onApply: () => _applyForJob(context, jobs[index].id, jobs[index].title),
         ),
       ),
@@ -131,8 +160,15 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: Colors.white,
         shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 5,
+          ),
+        ],
       ),
       child: IconButton(
         icon: Icon(icon, size: 32, color: color),
@@ -154,7 +190,10 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       String? resumeUrl = userData['resumeUrl'];
       if (resumeUrl == null || resumeUrl.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please upload your resume before applying')),
+          SnackBar(
+            content: Text('Please upload your resume before applying'),
+            backgroundColor: Colors.red,
+          ),
         );
         return;
       }
@@ -172,11 +211,17 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Application submitted!')),
+        SnackBar(
+          content: Text('Application submitted successfully!'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to apply: $e')),
+        SnackBar(
+          content: Text('Failed to apply: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -184,10 +229,12 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
 
 class JobCard extends StatelessWidget {
   final Job job;
+  final String companyName;
   final VoidCallback onApply;
 
   JobCard({
     required this.job,
+    required this.companyName,
     required this.onApply,
   });
 
@@ -204,40 +251,95 @@ class JobCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.deepPurple.shade50, Colors.white],
+            colors: [Colors.white, Colors.deepPurple.shade50],
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(job.title, style: Theme.of(context).textTheme.headlineSmall),
-              Text(job.companyId, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 16),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Text(job.description),
+              Text(
+                job.title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
                 ),
               ),
-              const SizedBox(height: 16),
-              Center(
-                child: ElevatedButton(
-                  child: const Text('Apply Now',style: TextStyle(color: Colors.white),),
-                  onPressed: onApply,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
+              SizedBox(height: 8),
+              Text(
+                job.companyName,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 16),
+              _buildInfoRow(Icons.location_on, job.location ?? 'Location not specified'),
+              _buildInfoRow(Icons.work, job.employmentType ?? 'Employment type not specified'),
+              _buildInfoRow(Icons.monetization_on, job.salaryRange ?? 'Salary not specified'),
+              SizedBox(height: 16),
+              Text(
+                'Job Description',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              SizedBox(height: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Text(
+                    job.description,
+                    style: TextStyle(color: Colors.grey[800]),
                   ),
                 ),
               ),
+              SizedBox(height: 16),
+              _buildApplyButton(),
+              SizedBox(height: 8),
             ],
           ),
         ),
       ),
     );
+  }
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.deepPurple),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: Colors.grey[800]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApplyButton() {
+    return Center(
+      child: ElevatedButton(
+        child: Text('Apply Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        onPressed: onApply,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurple,
+          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Date not available';
+    return DateFormat('MMMM d, y').format(date);
   }
 }
