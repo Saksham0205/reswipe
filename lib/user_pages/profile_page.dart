@@ -12,10 +12,15 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _profileFormKey = GlobalKey<FormState>();
-  String _qualification = '';
-  String _jobProfile = '';
+  final TextEditingController _qualificationController = TextEditingController();
+  final TextEditingController _jobProfileController = TextEditingController();
+  final TextEditingController _skillsController = TextEditingController();
   String _resumeUrl = '';
   File? _resumeFile;
+  String _profileImageUrl = '';
+  File? _profileImageFile;
+  bool _isLoading = false;
+  bool _isImageLoading = false;
 
   @override
   void initState() {
@@ -24,26 +29,83 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _loadUserProfile() async {
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .get();
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (userDoc.exists) {
-      final userData = userDoc.data() as Map<String, dynamic>;
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        setState(() {
+          _qualificationController.text = userData['qualification'] ?? '';
+          _jobProfileController.text = userData['jobProfile'] ?? '';
+          _skillsController.text = userData['skills'] ?? '';
+          _resumeUrl = userData['resumeUrl'] ?? '';
+          _profileImageUrl = userData['profileImageUrl'] ?? '';
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load profile: $e')),
+      );
+    } finally {
       setState(() {
-        _qualification = userData['qualification'] ?? 'Please add the data';
-        _jobProfile = userData['jobProfile'] ?? 'Please add the data';
-        _resumeUrl = userData['resumeUrl'] ?? '';
-      });
-    } else {
-      setState(() {
-        _qualification = 'Please add the data';
-        _jobProfile = 'Please add the data';
+        _isLoading = false;
       });
     }
   }
 
+  Future<void> _pickAndUploadProfileImage() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+      );
+
+      if (result != null) {
+        setState(() {
+          _profileImageFile = File(result.files.single.path!);
+          _isImageLoading = true;
+        });
+
+        String userId = FirebaseAuth.instance.currentUser!.uid;
+        Reference storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_images')
+            .child('$userId.jpg');
+
+        await storageRef.putFile(_profileImageFile!);
+        String downloadUrl = await storageRef.getDownloadURL();
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({
+          'profileImageUrl': downloadUrl,
+        });
+
+        setState(() {
+          _profileImageUrl = downloadUrl;
+          _isImageLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile image uploaded successfully!')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isImageLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload profile image: $e')),
+      );
+    }
+  }
 
   Future<void> _pickAndUploadResume() async {
     try {
@@ -55,9 +117,9 @@ class _ProfilePageState extends State<ProfilePage> {
       if (result != null) {
         setState(() {
           _resumeFile = File(result.files.single.path!);
+          _isLoading = true;
         });
 
-        // Upload to Firebase Storage
         String userId = FirebaseAuth.instance.currentUser!.uid;
         Reference storageRef = FirebaseStorage.instance
             .ref()
@@ -67,7 +129,6 @@ class _ProfilePageState extends State<ProfilePage> {
         await storageRef.putFile(_resumeFile!);
         String downloadUrl = await storageRef.getDownloadURL();
 
-        // Update Firestore with the URL
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userId)
@@ -77,6 +138,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         setState(() {
           _resumeUrl = downloadUrl;
+          _isLoading = false;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,6 +146,9 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to upload resume: $e')),
       );
@@ -93,13 +158,17 @@ class _ProfilePageState extends State<ProfilePage> {
   void _updateProfile() async {
     if (_profileFormKey.currentState!.validate()) {
       _profileFormKey.currentState!.save();
+      setState(() {
+        _isLoading = true;
+      });
       try {
         await FirebaseFirestore.instance
             .collection('users')
             .doc(FirebaseAuth.instance.currentUser!.uid)
             .update({
-          'qualification': _qualification,
-          'jobProfile': _jobProfile,
+          'qualification': _qualificationController.text,
+          'jobProfile': _jobProfileController.text,
+          'skills': _skillsController.text,
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully!')),
@@ -108,55 +177,119 @@ class _ProfilePageState extends State<ProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update profile: $e')),
         );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Form(
-        key: _profileFormKey,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                initialValue: _qualification,
-                decoration: const InputDecoration(labelText: 'Qualification'),
-                validator: (value) => value!.isEmpty || value == 'Please add the data'
-                    ? 'Enter your qualification'
-                    : null,
-                onSaved: (value) => _qualification = value!,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: _jobProfile,
-                decoration: const InputDecoration(labelText: 'Job Profile'),
-                validator: (value) => value!.isEmpty || value == 'Please add the data'
-                    ? 'Enter your job profile'
-                    : null,
-                onSaved: (value) => _jobProfile = value!,
-              ),
-              const SizedBox(height: 20),
-              Text('Resume', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              _resumeUrl.isNotEmpty
-                  ? const Text('Resume uploaded successfully')
-                  : const Text('No resume uploaded'),
-              const SizedBox(height: 8),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.upload_file),
-                label: const Text('Upload Resume (PDF)'),
-                onPressed: _pickAndUploadResume,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                child: const Text('Update Profile'),
-                onPressed: _updateProfile,
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        child: Form(
+          key: _profileFormKey,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: GestureDetector(
+                    onTap: _isImageLoading ? null : _pickAndUploadProfileImage,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundImage: _profileImageUrl.isNotEmpty
+                              ? NetworkImage(_profileImageUrl)
+                              : null,
+                          child: _profileImageUrl.isEmpty
+                              ? const Icon(Icons.person, size: 60)
+                              : null,
+                        ),
+                        if (_isImageLoading)
+                          const CircularProgressIndicator(),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _qualificationController,
+                  decoration: const InputDecoration(
+                    labelText: 'Qualification',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                  value!.isEmpty ? 'Enter your qualification' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _jobProfileController,
+                  decoration: const InputDecoration(
+                    labelText: 'Job Profile',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                  value!.isEmpty ? 'Enter your job profile' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _skillsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Skills (comma-separated)',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                  value!.isEmpty ? 'Enter your skills' : null,
+                ),
+                const SizedBox(height: 20),
+                Text('Resume', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                _resumeUrl.isNotEmpty
+                    ? const Row(
+                  children: [
+                    Icon(Icons.description, color: Colors.green),
+                    SizedBox(width: 8),
+                    Text('Resume uploaded successfully'),
+                  ],
+                )
+                    : const Text('No resume uploaded'),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Upload Resume (PDF)'),
+                  onPressed: _isLoading ? null : _pickAndUploadResume,
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
+                    child: _isLoading
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                        : const Text('Update Profile'),
+                    onPressed: _isLoading ? null : _updateProfile,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
