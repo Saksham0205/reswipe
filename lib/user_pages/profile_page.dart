@@ -273,6 +273,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
+                    onPressed: _isLoading ? null : _updateProfile,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    ),
                     child: _isLoading
                         ? const SizedBox(
                       width: 20,
@@ -282,10 +286,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     )
                         : const Text('Update Profile'),
-                    onPressed: _isLoading ? null : _updateProfile,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                    ),
                   ),
                 ),
               ],

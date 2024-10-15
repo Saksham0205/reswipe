@@ -11,7 +11,7 @@ class FavoritesScreen extends StatelessWidget {
         backgroundColor: Colors.deepPurple,
       ),
       body: StreamBuilder<List<Applicant>>(
-        stream: FirestoreService().getFavoriteApplicants(),
+        stream: AuthService().getFavoriteApplicants(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -116,7 +116,7 @@ class ApplicantCard extends StatelessWidget {
     // Implement logic to remove applicant from favorites
     // This might involve calling a method from your FirestoreService
     // and then showing a snackbar to confirm the action
-    FirestoreService().removeFromFavorites(applicant.id).then((_) {
+    AuthService().removeFromFavorites(applicant.id).then((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${applicant.name} removed from favorites')),
       );

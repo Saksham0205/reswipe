@@ -1,9 +1,50 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/company_model/job.dart';
 import '../models/user_model/applicant.dart';
 
-class FirestoreService {
+class AuthService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<String?> getCurrentUserId() async {
+    return _auth.currentUser?.uid;
+  }
+
+  Future<String?> getCurrentCompanyId() async {
+    try {
+      String? userId = await getCurrentUserId();
+      if (userId == null) {
+        print('No user is currently logged in.');
+        return null;
+      }
+
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(userId).get();
+
+      if (!userDoc.exists) {
+        print('User document does not exist in Firestore.');
+        return null;
+      }
+
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+      String? companyId = userData['companyId'] as String?;
+
+      if (companyId == null) {
+        print('Company ID not found for the current user.');
+        return null;
+      }
+
+      return companyId;
+    } catch (e) {
+      print('Error getting current company ID: $e');
+      return null;
+    }
+  }
+  Stream<User?> get userStream => _auth.authStateChanges();
+
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
 
   // Applicant-related methods
 
@@ -11,7 +52,7 @@ class FirestoreService {
     return _firestore.collection('favorites').snapshots().asyncMap((snapshot) async {
       List<Applicant> applicants = [];
       for (var doc in snapshot.docs) {
-        DocumentSnapshot applicantDoc = await _firestore.collection('applicants').doc(doc.id).get();
+        DocumentSnapshot applicantDoc = await _firestore.collection('applications').doc(doc.id).get();
         if (applicantDoc.exists) {
           applicants.add(Applicant.fromFirestore(applicantDoc));
         }
@@ -26,13 +67,13 @@ class FirestoreService {
 
   Stream<List<Applicant>> getApplicants() {
     print('Fetching applicants...');
-    return _firestore.collection('applicants').snapshots().map((snapshot) {
-      print('Received ${snapshot.docs.length} applicants');
+    return _firestore.collection('applications').snapshots().map((snapshot) {
+      print('Received ${snapshot.docs.length} applications');
       return snapshot.docs.map((doc) {
         try {
           return Applicant.fromFirestore(doc);
         } catch (e) {
-          print('Error parsing applicant: $e');
+          print('Error parsing applications: $e');
           return null;
         }
       }).whereType<Applicant>().toList();

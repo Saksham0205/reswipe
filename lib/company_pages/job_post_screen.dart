@@ -160,7 +160,7 @@ class _JobPostsScreenState extends State<JobPostsScreen> {
                           companyName: companyName,  // Added company name
                         );
 
-                        await FirestoreService().addJob(newJob);
+                        await AuthService().addJob(newJob);
 
                         _formKey.currentState!.reset();
                         ScaffoldMessenger.of(context).showSnackBar(

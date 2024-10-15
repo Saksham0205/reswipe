@@ -8,7 +8,8 @@ class Job {
   final String location;
   final String employmentType;
   final String companyId;
-  final String companyName;  // Added company name
+  final String companyName;
+
 
   Job({
     this.id = '',
@@ -20,7 +21,9 @@ class Job {
     required this.location,
     required this.employmentType,
     required this.companyId,
-    required this.companyName,  // Added to constructor
+    required this.companyName,
+
+
   });
 
   factory Job.fromMap(Map<String, dynamic> data, String id) {
@@ -34,7 +37,7 @@ class Job {
       location: data['location'] ?? '',
       employmentType: data['employmentType'] ?? '',
       companyId: data['companyId'] ?? '',
-      companyName: data['companyName'] ?? '',  // Added to factory constructor
+      companyName: data['companyName'] ?? '',
     );
   }
 
@@ -48,7 +51,35 @@ class Job {
       'location': location,
       'employmentType': employmentType,
       'companyId': companyId,
-      'companyName': companyName,  // Added to toMap method
+      'companyName': companyName,
+
     };
+  }
+
+  Job copyWith({
+    String? id,
+    String? title,
+    String? description,
+    List<String>? responsibilities,
+    List<String>? qualifications,
+    String? salaryRange,
+    String? location,
+    String? employmentType,
+    String? companyId,
+    String? companyName,
+  }) {
+    return Job(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      responsibilities: responsibilities ?? this.responsibilities,
+      qualifications: qualifications ?? this.qualifications,
+      salaryRange: salaryRange ?? this.salaryRange,
+      location: location ?? this.location,
+      employmentType: employmentType ?? this.employmentType,
+      companyId: companyId ?? this.companyId,
+      companyName: companyName ?? this.companyName,
+
+    );
   }
 }

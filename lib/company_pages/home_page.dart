@@ -53,7 +53,7 @@ class HomeScreen extends StatefulWidget {
 
     Future<void> _fetchApplicants() async {
       try {
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('applicants').get();
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('applications').get();
         setState(() {
           applicants = querySnapshot.docs.map((doc) => Applicant.fromFirestore(doc)).toList();
         });
@@ -69,7 +69,7 @@ class HomeScreen extends StatefulWidget {
       if (favoriteIds != null && favoriteIds.isNotEmpty) {
         try {
           QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-              .collection('applicants')
+              .collection('applications')
               .where(FieldPath.documentId, whereIn: favoriteIds)
               .get();
           setState(() {
@@ -186,10 +186,10 @@ class HomeScreen extends StatefulWidget {
         opacity: _animation,
         child: CardSwiper(
           controller: controller,
-          cardsCount: favoriteApplicants.length,
+          cardsCount: applicants.length,
           onSwipe: _onSwipe,
           padding: const EdgeInsets.all(24.0),
-          cardBuilder: (context, index, _, __) => _buildCard(favoriteApplicants[index]),
+          cardBuilder: (context, index, _, __) => _buildCard(applicants[index]),
         ),
       );
     }
@@ -219,12 +219,12 @@ class HomeScreen extends StatefulWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                     child: Image.network(
-                      applicant.profilePhotoUrl,
+                      applicant.resumeUrl, // Display resume as photo
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: Colors.grey[300],
-                          child: Icon(Icons.person, size: 100, color: Colors.grey[600]),
+                          child: Icon(Icons.description, size: 100, color: Colors.grey[600]),
                         );
                       },
                     ),
@@ -246,6 +246,11 @@ class HomeScreen extends StatefulWidget {
                           applicant.jobProfile,
                           style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                         ),
+                        // SizedBox(height: 8),
+                        // Text(
+                        //   'Qualification: ${applicant.qualification}',
+                        //   style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+                        // ),
                         Spacer(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -278,6 +283,7 @@ class HomeScreen extends StatefulWidget {
       );
     }
 
+
     bool _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
       if (direction == CardSwiperDirection.right) {
         setState(() {
@@ -298,7 +304,26 @@ class HomeScreen extends StatefulWidget {
     }
 
     void _showApplicantDetails(Applicant applicant) {
-      // Implement a modal or navigate to a new screen to show more applicant details
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Applicant Details', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                SizedBox(height: 16),
+                Text('Name: ${applicant.name}'),
+                Text('Job Profile: ${applicant.jobProfile}'),
+                // Text('Qualification: ${applicant.qualification}'),
+                // Add more details as needed
+              ],
+            ),
+          );
+        },
+      );
     }
 
     Widget _buildSwipeActions() {

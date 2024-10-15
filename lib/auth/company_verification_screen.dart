@@ -41,7 +41,7 @@ class _CompanyVerificationScreenState extends State<CompanyVerificationScreen> {
           builder: (context) => AuthWrapper(),
         ));
       } else {
-        Future.delayed(Duration(seconds: 5), _checkEmailVerification);
+        Future.delayed(const Duration(seconds: 5), _checkEmailVerification);
       }
     }
   }
@@ -143,18 +143,18 @@ class AuthWrapper extends StatelessWidget {
                     } else {
                       // Company is email verified but not fully verified
                       // You might want to create a separate screen for this state
-                      return Scaffold(body: Center(child: Text('Waiting for company verification')));
+                      return const Scaffold(body: Center(child: Text('Waiting for company verification')));
                     }
                   } else {
                     return JobSeekerHomeScreen();
                   }
                 }
               }
-              return Scaffold(body: Center(child: CircularProgressIndicator()));
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
             },
           );
         }
-        return Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
     );
   }
