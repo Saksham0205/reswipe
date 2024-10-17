@@ -12,7 +12,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   Stream<List<Job>>? _companyJobsStream;
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'Full-time', 'Part-time', 'Contract'];
+  final List<String> _filters = ['All', 'Full-time', 'Part-time', 'Internship'];
 
   @override
   void initState() {

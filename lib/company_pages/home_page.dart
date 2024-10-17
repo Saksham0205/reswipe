@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import '../models/company_model/applications.dart';
+import 'favourite_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -48,16 +49,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _fetchApplications() async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('applications').get();
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('applications')
+          .orderBy('timestamp', descending: true) // Add ordering
+          .limit(50) // Limit the number of documents
+          .get();
+
       setState(() {
         applications = querySnapshot.docs
             .map((doc) => Application.fromFirestore(doc))
             .toList();
+        print('Fetched ${applications.length} applications'); // Debug print
       });
     } catch (e) {
       print('Error fetching applications: $e');
     }
   }
+
 
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
@@ -144,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(8),
-                child: Icon(Icons.work_outline, color: Colors.white, size: 24),
+                child: const Icon(Icons.work_outline, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
               Text(
@@ -222,25 +230,46 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         controller: controller,
         cardsCount: applications.length,
         onSwipe: _onSwipe,
+        onEnd: _onEnd,
         padding: const EdgeInsets.all(24.0),
-        cardBuilder: (context, index, _, __) => _buildCard(applications[index]),
+        cardBuilder: (context, index, horizontalThreshold, verticalThreshold) {
+          // Add null check and bounds check
+          if (index >= 0 && index < applications.length) {
+            return _buildCard(applications[index]);
+          }
+          return const SizedBox.shrink(); // Return empty widget if index is out of bounds
+        },
       ),
     );
   }
+  void _onEnd() {
+    // Refresh the applications list when all cards are swiped
+    _fetchApplications().then((_) {
+      setState(() {
+        // Reset the controller if needed
+        controller = CardSwiperController();
+      });
+    });
+  }
 
   bool _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
-    if (direction == CardSwiperDirection.right) {
-      setState(() {
-        favoriteApplications.add(applications[previousIndex]);
-        _saveFavorites();
-      });
+    if (previousIndex >= 0 && previousIndex < applications.length) {
+      if (direction == CardSwiperDirection.right) {
+        setState(() {
+          favoriteApplications.add(applications[previousIndex]);
+          _saveFavorites();
+        });
+      }
     }
+
+    // If we've reached the end of the cards
     if (currentIndex == null) {
-      _fetchApplications();
+      _onEnd();
       return false;
     }
     return true;
   }
+
 
   Widget _buildCard(Application application) {
     return Hero(
@@ -411,6 +440,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           MaterialPageRoute(
             builder: (context) => FavoritesScreen(
               favoriteApplications: favoriteApplications,
+              clearAllFavorites: _clearAllFavorites,
+              removeFromFavorites: _removeFromFavorites,
             ),
           ),
         );
@@ -579,362 +610,431 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-
-}
-
-// Update FavoritesScreen to use Application model
-class FavoritesScreen extends StatelessWidget {
-  final List<Application> favoriteApplications;
-
-  const FavoritesScreen({
-    Key? key,
-    required this.favoriteApplications,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: true,
-            pinned: true,
-            backgroundColor: Colors.deepPurple,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Matched Profiles',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.deepPurple.shade700,
-                      Colors.deepPurple.shade500,
-                    ],
-                  ),
-                ),
-              ),
+  void _clearAllFavorites() async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Clear All Favorites'),
+          content: const Text('Are you sure you want to remove all favorites? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {},
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  favoriteApplications.clear();
+                  _saveFavorites();
+                });
+                Navigator.pop(context);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
               ),
-              IconButton(
-                icon: const Icon(Icons.filter_list),
-                onPressed: () {},
-              ),
-            ],
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  final application = favoriteApplications[index];
-                  return _buildFavoriteCard(context, application);
-                },
-                childCount: favoriteApplications.length,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFavoriteCard(BuildContext context, Application application) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: () => _showApplicationDetails(context, application),
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          children: [
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.deepPurple.shade50,
-                    Colors.grey.shade50,
-                  ],
-                ),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  _buildProfileImage(application),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          application.applicantName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          application.jobProfile,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        _buildSkillChips(),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  _buildActionChip(
-                    icon: Icons.description,
-                    label: 'Resume',
-                    onTap: () {},
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionChip(
-                    icon: Icons.message,
-                    label: 'Message',
-                    onTap: () {},
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionChip(
-                    icon: Icons.calendar_today,
-                    label: 'Schedule',
-                    onTap: () {},
-                  ),
-                ],
-              ),
+              child: const Text('Clear All'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileImage(Application application) {
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.deepPurple.shade200,
-          width: 2,
-        ),
-        color: Colors.white,
-      ),
-      child: Center(
-        child: Text(
-          application.applicantName[0].toUpperCase(),
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple.shade400,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSkillChips() {
-    return Row(
-      children: [
-        _buildSkillChip('Flutter'),
-        const SizedBox(width: 4),
-        _buildSkillChip('React'),
-      ],
-    );
-  }
-
-  Widget _buildSkillChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.deepPurple.shade200,
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: Colors.deepPurple.shade700,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionChip({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.grey.shade300,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 16, color: Colors.deepPurple),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showApplicationDetails(BuildContext context, Application application) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          builder: (context, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.all(24),
-                      children: [
-                        Text(
-                          application.applicantName,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          application.jobProfile,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildDetailSection('Experience', [
-                          'Senior Developer at Tech Corp',
-                          'Lead Developer at StartUp Inc',
-                        ]),
-                        _buildDetailSection('Education', [
-                          application.qualification,
-                        ]),
-                        _buildDetailSection('Skills', [
-                          'Flutter Development',
-                          'React Native',
-                          'UI/UX Design',
-                        ]),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
         );
       },
     );
   }
 
-  Widget _buildDetailSection(String title, List<String> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...items.map((item) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              Icon(Icons.arrow_right, color: Colors.grey[600]),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  item,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        )),
-        const SizedBox(height: 24),
-      ],
-    );
+  void _removeFromFavorites(Application application) {
+    setState(() {
+      favoriteApplications.removeWhere((app) => app.id == application.id);
+      _saveFavorites();
+    });
   }
+
 }
+
+// Update FavoritesScreen to use Application model
+// class FavoritesScreen extends StatelessWidget {
+//   final List<Application> favoriteApplications;
+//   final Function() clearAllFavorites;
+//   final Function(Application) removeFromFavorites;
+//
+//   const FavoritesScreen({
+//     Key? key,
+//     required this.favoriteApplications,
+//     required this.clearAllFavorites,
+//     required this.removeFromFavorites,
+//   }) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: CustomScrollView(
+//         slivers: [
+//           SliverAppBar(
+//             expandedHeight: 120,
+//             floating: true,
+//             pinned: true,
+//             backgroundColor: Colors.deepPurple,
+//             flexibleSpace: FlexibleSpaceBar(
+//               title: Text(
+//                 'Matched Profiles',
+//                 style: GoogleFonts.poppins(
+//                   fontSize: 20,
+//                   fontWeight: FontWeight.w600,
+//                 ),
+//               ),
+//               background: Container(
+//                 decoration: BoxDecoration(
+//                   gradient: LinearGradient(
+//                     begin: Alignment.topLeft,
+//                     end: Alignment.bottomRight,
+//                     colors: [
+//                       Colors.deepPurple.shade700,
+//                       Colors.deepPurple.shade500,
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//             ),
+//             actions: [
+//               IconButton(
+//                 icon: const Icon(Icons.delete_outline),
+//                 onPressed: () {
+//                   if (favoriteApplications.isNotEmpty) {
+//                     clearAllFavorites();
+//                   }
+//                 },
+//               ),
+//               IconButton(
+//                 icon: const Icon(Icons.search),
+//                 onPressed: () {},
+//               ),
+//               IconButton(
+//                 icon: const Icon(Icons.filter_list),
+//                 onPressed: () {},
+//               ),
+//             ],
+//           ),
+//           SliverPadding(
+//             padding: const EdgeInsets.all(16),
+//             sliver: SliverList(
+//               delegate: SliverChildBuilderDelegate(
+//                     (context, index) {
+//                   final application = favoriteApplications[index];
+//                   return Dismissible(
+//                     key: Key(application.id),
+//                     direction: DismissDirection.endToStart,
+//                     background: Container(
+//                       alignment: Alignment.centerRight,
+//                       padding: const EdgeInsets.only(right: 20),
+//                       decoration: BoxDecoration(
+//                         color: Colors.red.shade100,
+//                         borderRadius: BorderRadius.circular(16),
+//                       ),
+//                       child: Icon(
+//                         Icons.delete,
+//                         color: Colors.red.shade700,
+//                         size: 30,
+//                       ),
+//                     ),
+//                     onDismissed: (direction) {
+//                       removeFromFavorites(application);
+//                     },
+//                     child: _buildFavoriteCard(context, application),
+//                   );
+//                 },
+//                 childCount: favoriteApplications.length,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildFavoriteCard(BuildContext context, Application application) {
+//     return Card(
+//       margin: const EdgeInsets.only(bottom: 16),
+//       elevation: 2,
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.circular(16),
+//       ),
+//       child: InkWell(
+//         onTap: () => _showApplicationDetails(context, application),
+//         borderRadius: BorderRadius.circular(16),
+//         child: Column(
+//           children: [
+//             Container(
+//               height: 120,
+//               decoration: BoxDecoration(
+//                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+//                 gradient: LinearGradient(
+//                   begin: Alignment.topLeft,
+//                   end: Alignment.bottomRight,
+//                   colors: [
+//                     Colors.deepPurple.shade50,
+//                     Colors.grey.shade50,
+//                   ],
+//                 ),
+//               ),
+//               child: Row(
+//                 children: [
+//                   const SizedBox(width: 16),
+//                   _buildProfileImage(application),
+//                   const SizedBox(width: 16),
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: [
+//                         Text(
+//                           application.applicantName,
+//                           style: const TextStyle(
+//                             fontSize: 18,
+//                             fontWeight: FontWeight.bold,
+//                           ),
+//                         ),
+//                         const SizedBox(height: 4),
+//                         Text(
+//                           application.jobProfile,
+//                           style: TextStyle(
+//                             fontSize: 14,
+//                             color: Colors.grey[600],
+//                           ),
+//                         ),
+//                         const SizedBox(height: 8),
+//                         _buildSkillChips(),
+//                       ],
+//                     ),
+//                   ),
+//                   const SizedBox(width: 16),
+//                 ],
+//               ),
+//             ),
+//             Container(
+//               padding: const EdgeInsets.all(16),
+//               child: Row(
+//                 children: [
+//                   _buildActionChip(
+//                     icon: Icons.description,
+//                     label: 'Resume',
+//                     onTap: () {},
+//                   ),
+//                   const SizedBox(width: 8),
+//                   _buildActionChip(
+//                     icon: Icons.message,
+//                     label: 'Message',
+//                     onTap: () {},
+//                   ),
+//                   const SizedBox(width: 8),
+//                   _buildActionChip(
+//                     icon: Icons.calendar_today,
+//                     label: 'Schedule',
+//                     onTap: () {},
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildProfileImage(Application application) {
+//     return Container(
+//       width: 80,
+//       height: 80,
+//       decoration: BoxDecoration(
+//         shape: BoxShape.circle,
+//         border: Border.all(
+//           color: Colors.deepPurple.shade200,
+//           width: 2,
+//         ),
+//         color: Colors.white,
+//       ),
+//       child: Center(
+//         child: Text(
+//           application.applicantName[0].toUpperCase(),
+//           style: TextStyle(
+//             fontSize: 32,
+//             fontWeight: FontWeight.bold,
+//             color: Colors.deepPurple.shade400,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildSkillChips() {
+//     return Row(
+//       children: [
+//         _buildSkillChip('Flutter'),
+//         const SizedBox(width: 4),
+//         _buildSkillChip('React'),
+//       ],
+//     );
+//   }
+//
+//   Widget _buildSkillChip(String label) {
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//       decoration: BoxDecoration(
+//         color: Colors.deepPurple.shade50,
+//         borderRadius: BorderRadius.circular(12),
+//         border: Border.all(
+//           color: Colors.deepPurple.shade200,
+//         ),
+//       ),
+//       child: Text(
+//         label,
+//         style: TextStyle(
+//           fontSize: 12,
+//           color: Colors.deepPurple.shade700,
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildActionChip({
+//     required IconData icon,
+//     required String label,
+//     required VoidCallback onTap,
+//   }) {
+//     return Expanded(
+//       child: InkWell(
+//         onTap: onTap,
+//         borderRadius: BorderRadius.circular(8),
+//         child: Container(
+//           padding: const EdgeInsets.symmetric(vertical: 8),
+//           decoration: BoxDecoration(
+//             color: Colors.grey.shade50,
+//             borderRadius: BorderRadius.circular(8),
+//             border: Border.all(
+//               color: Colors.grey.shade300,
+//             ),
+//           ),
+//           child: Row(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Icon(icon, size: 16, color: Colors.deepPurple),
+//               const SizedBox(width: 4),
+//               Text(
+//                 label,
+//                 style: const TextStyle(
+//                   fontSize: 12,
+//                   fontWeight: FontWeight.w500,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void _showApplicationDetails(BuildContext context, Application application) {
+//     showModalBottomSheet(
+//       context: context,
+//       isScrollControlled: true,
+//       backgroundColor: Colors.transparent,
+//       builder: (BuildContext context) {
+//         return DraggableScrollableSheet(
+//           initialChildSize: 0.7,
+//           minChildSize: 0.5,
+//           maxChildSize: 0.95,
+//           builder: (context, scrollController) {
+//             return Container(
+//               decoration: const BoxDecoration(
+//                 color: Colors.white,
+//                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//               ),
+//               child: Column(
+//                 children: [
+//                   Container(
+//                     margin: const EdgeInsets.only(top: 8),
+//                     width: 40,
+//                     height: 4,
+//                     decoration: BoxDecoration(
+//                       color: Colors.grey[300],
+//                       borderRadius: BorderRadius.circular(2),
+//                     ),
+//                   ),
+//                   Expanded(
+//                     child: ListView(
+//                       controller: scrollController,
+//                       padding: const EdgeInsets.all(24),
+//                       children: [
+//                         Text(
+//                           application.applicantName,
+//                           style: const TextStyle(
+//                             fontSize: 24,
+//                             fontWeight: FontWeight.bold,
+//                           ),
+//                         ),
+//                         const SizedBox(height: 8),
+//                         Text(
+//                           application.jobProfile,
+//                           style: TextStyle(
+//                             fontSize: 18,
+//                             color: Colors.grey[600],
+//                           ),
+//                         ),
+//                         const SizedBox(height: 24),
+//                         _buildDetailSection('Experience', [
+//                           'Senior Developer at Tech Corp',
+//                           'Lead Developer at StartUp Inc',
+//                         ]),
+//                         _buildDetailSection('Education', [
+//                           application.qualification,
+//                         ]),
+//                         _buildDetailSection('Skills', [
+//                           'Flutter Development',
+//                           'React Native',
+//                           'UI/UX Design',
+//                         ]),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+//
+//   Widget _buildDetailSection(String title, List<String> items) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Text(
+//           title,
+//           style: const TextStyle(
+//             fontSize: 18,
+//             fontWeight: FontWeight.bold,
+//           ),
+//         ),
+//         const SizedBox(height: 12),
+//         ...items.map((item) => Padding(
+//           padding: const EdgeInsets.only(bottom: 8),
+//           child: Row(
+//             children: [
+//               Icon(Icons.arrow_right, color: Colors.grey[600]),
+//               const SizedBox(width: 8),
+//               Expanded(
+//                 child: Text(
+//                   item,
+//                   style: TextStyle(
+//                     fontSize: 16,
+//                     color: Colors.grey[800],
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         )),
+//         const SizedBox(height: 24),
+//       ],
+//     );
+//   }
+// }
