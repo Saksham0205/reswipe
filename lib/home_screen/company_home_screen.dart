@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../company_pages/favourite_screen.dart';
-import '../company_pages/home_page.dart';
+import '../company_pages/favourite_screen.dart' show FavoritesScreen;
+import '../company_pages/home_page.dart' show HomeScreen;
 import '../company_pages/job_post_screen.dart';
 import '../company_pages/profile_screen.dart';
 
 class CompanyMainScreen extends StatefulWidget {
-
   @override
   _CompanyMainScreenState createState() => _CompanyMainScreenState();
 }
@@ -20,7 +19,7 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
     _screens = [
       HomeScreen(),
       JobPostsScreen(),
-      FavoritesScreen(),
+      FavoritesScreen(), // Instantiate the widget
       ProfileScreen(),
     ];
   }
@@ -33,7 +32,9 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
-        items: [
+        selectedItemColor: Colors.deepPurple, // Match your app's theme
+        unselectedItemColor: Colors.grey,
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Job Posts'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),

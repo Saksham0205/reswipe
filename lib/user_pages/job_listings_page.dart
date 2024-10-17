@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
-import 'package:intl/intl.dart';
 
+import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 
 class JobListingsPage extends StatefulWidget {
@@ -66,7 +66,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
     } catch (e) {
       print('Error fetching jobs: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load jobs. Please try again later.')),
+        const SnackBar(content: Text('Failed to load jobs. Please try again later.')),
       );
     }
   }
@@ -75,7 +75,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Job Listings', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Job Listings', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.deepPurple,
         automaticallyImplyLeading: false,
         elevation: 0,
@@ -89,7 +89,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
           ),
         ),
         child: jobs.isEmpty
-            ? Center(child: CircularProgressIndicator(color: Colors.white))
+            ? const Center(child: CircularProgressIndicator(color: Colors.white))
             : Column(
           children: [
             Expanded(child: _buildCardSwiper()),
@@ -190,7 +190,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       String? resumeUrl = userData['resumeUrl'];
       if (resumeUrl == null || resumeUrl.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Please upload your resume before applying'),
             backgroundColor: Colors.red,
           ),
@@ -198,20 +198,25 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
         return;
       }
 
-      await FirebaseFirestore.instance.collection('applications').add({
-        'jobId': jobId,
-        'jobTitle': jobTitle,
-        'userId': userId,
-        'applicantName': userData['name'] ?? 'Unknown',
-        'qualification': userData['qualification'] ?? '',
-        'jobProfile': userData['jobProfile'] ?? '',
-        'resumeUrl': resumeUrl,
-        'status': 'pending',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+      Application application = Application(
+        id: '',
+        jobId: jobId,
+        jobTitle: jobTitle,
+        userId: userId,
+        applicantName: userData['name'] ?? 'Unknown',
+        qualification: userData['qualification'] ?? '',
+        jobProfile: userData['jobProfile'] ?? '',
+        resumeUrl: resumeUrl,
+        status: 'pending',
+        timestamp: DateTime.now(),
+      );
+
+      await FirebaseFirestore.instance
+          .collection('applications')
+          .add(application.toMap());
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Application submitted successfully!'),
           backgroundColor: Colors.green,
         ),
@@ -266,7 +271,7 @@ class JobCard extends StatelessWidget {
                   color: Colors.deepPurple,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 job.companyName,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -274,11 +279,11 @@ class JobCard extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildInfoRow(Icons.location_on, job.location ?? 'Location not specified'),
               _buildInfoRow(Icons.work, job.employmentType ?? 'Employment type not specified'),
               _buildInfoRow(Icons.monetization_on, job.salaryRange ?? 'Salary not specified'),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 'Job Description',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -286,7 +291,7 @@ class JobCard extends StatelessWidget {
                   color: Colors.deepPurple,
                 ),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Expanded(
                 child: SingleChildScrollView(
                   child: Text(
@@ -295,9 +300,9 @@ class JobCard extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildApplyButton(),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -310,7 +315,7 @@ class JobCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, size: 20, color: Colors.deepPurple),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
@@ -325,11 +330,11 @@ class JobCard extends StatelessWidget {
   Widget _buildApplyButton() {
     return Center(
       child: ElevatedButton(
-        child: Text('Apply Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        child: const Text('Apply Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         onPressed: onApply,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.deepPurple,
-          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
@@ -338,8 +343,4 @@ class JobCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Date not available';
-    return DateFormat('MMMM d, y').format(date);
-  }
 }
