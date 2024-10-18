@@ -21,13 +21,29 @@ class _ProfilePageState extends State<ProfilePage> {
   File? _profileImageFile;
   bool _isLoading = false;
   bool _isImageLoading = false;
+  int _companyLikesCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _loadCompanyLikesCount();
   }
+  void _loadCompanyLikesCount() async {
+    try {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final likesSnapshot = await FirebaseFirestore.instance
+          .collection('applications')
+          .where('userId', isEqualTo: userId)
+          .get();
 
+      setState(() {
+        _companyLikesCount = likesSnapshot.docs.length;
+      });
+    } catch (e) {
+      print('Error loading company likes count: $e');
+    }
+  }
   void _loadUserProfile() async {
     setState(() {
       _isLoading = true;
@@ -190,6 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        backgroundColor: Colors.deepPurple,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -202,12 +219,11 @@ class _ProfilePageState extends State<ProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
-                  child: GestureDetector(
-                    onTap: _isImageLoading ? null : _pickAndUploadProfileImage,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CircleAvatar(
+                  child: Stack(
+                    children: [
+                      GestureDetector(
+                        onTap: _isImageLoading ? null : _pickAndUploadProfileImage,
+                        child: CircleAvatar(
                           radius: 60,
                           backgroundImage: _profileImageUrl.isNotEmpty
                               ? NetworkImage(_profileImageUrl)
@@ -216,66 +232,49 @@ class _ProfilePageState extends State<ProfilePage> {
                               ? const Icon(Icons.person, size: 60)
                               : null,
                         ),
-                        if (_isImageLoading)
-                          const CircularProgressIndicator(),
-                      ],
-                    ),
+                      ),
+                      if (_isImageLoading)
+                        const Positioned.fill(
+                          child: CircularProgressIndicator(
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                TextFormField(
+                _buildInfoCard(
+                  icon: Icons.favorite,
+                  title: 'Company Likes',
+                  value: '$_companyLikesCount',
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
                   controller: _qualificationController,
-                  decoration: const InputDecoration(
-                    labelText: 'Qualification',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                  value!.isEmpty ? 'Enter your qualification' : null,
+                  labelText: 'Qualification',
+                  icon: Icons.school,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildTextField(
                   controller: _jobProfileController,
-                  decoration: const InputDecoration(
-                    labelText: 'Job Profile',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                  value!.isEmpty ? 'Enter your job profile' : null,
+                  labelText: 'Job Profile',
+                  icon: Icons.work,
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildTextField(
                   controller: _skillsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Skills (comma-separated)',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                  value!.isEmpty ? 'Enter your skills' : null,
+                  labelText: 'Skills (comma-separated)',
+                  icon: Icons.star,
                 ),
                 const SizedBox(height: 20),
-                Text('Resume', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                _resumeUrl.isNotEmpty
-                    ? const Row(
-                  children: [
-                    Icon(Icons.description, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('Resume uploaded successfully'),
-                  ],
-                )
-                    : const Text('No resume uploaded'),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Upload Resume (PDF)'),
-                  onPressed: _isLoading ? null : _pickAndUploadResume,
-                ),
+                _buildResumeSection(),
                 const SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _updateProfile,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      backgroundColor: Colors.deepPurple,
                     ),
                     child: _isLoading
                         ? const SizedBox(
@@ -285,7 +284,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                        : const Text('Update Profile'),
+                        : const Text('Update Profile',style: TextStyle(color: Colors.white),),
                   ),
                 ),
               ],
@@ -293,6 +292,71 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+    );
+  }
+  Widget _buildInfoCard({required IconData icon, required String title, required String value}) {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.deepPurple, size: 30),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(value, style: const TextStyle(fontSize: 20, color: Colors.deepPurple)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData icon,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: labelText,
+        border: const OutlineInputBorder(),
+        prefixIcon: Icon(icon, color: Colors.deepPurple),
+      ),
+      validator: (value) => value!.isEmpty ? 'This field is required' : null,
+    );
+  }
+
+  Widget _buildResumeSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Resume', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        _resumeUrl.isNotEmpty
+            ? const Row(
+          children: [
+            Icon(Icons.description, color: Colors.green),
+            SizedBox(width: 8),
+            Expanded(child: Text('Resume uploaded successfully', overflow: TextOverflow.ellipsis)),
+          ],
+        )
+            : const Text('No resume uploaded'),
+        const SizedBox(height: 8),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.upload_file,color: Colors.white),
+          label: const Text('Upload Resume (PDF)',style: TextStyle(color: Colors.white),),
+          onPressed: _isLoading ? null : _pickAndUploadResume,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.deepPurple,
+          ),
+        ),
+      ],
     );
   }
 }
