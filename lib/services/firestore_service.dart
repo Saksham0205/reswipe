@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 import '../models/user_model/applicant.dart';
 
@@ -47,6 +48,17 @@ class AuthService {
   }
 
   // Applicant-related methods
+  Future<void> saveApplication(Application application, Job job) async {
+    // Combine application and job details
+    Map<String, dynamic> applicationData = {
+      ...application.toMap(),
+      ...job.toMap(),  // This will add all job details to the application document
+    };
+
+    await FirebaseFirestore.instance
+        .collection('applications')
+        .add(applicationData);
+  }
 
   Stream<List<Applications>> getFavoriteApplicants() {
     return _firestore.collection('favorites').snapshots().asyncMap((snapshot) async {

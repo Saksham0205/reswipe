@@ -32,10 +32,6 @@ class _JobSeekerHomeScreenState extends State<JobSeekerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title:  Text('${FirebaseAuth.instance.currentUser?.displayName}'),
-        automaticallyImplyLeading: false,
-      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
