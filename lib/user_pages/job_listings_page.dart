@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -25,6 +27,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
   bool isFiltering = false;
   String selectedFilter = 'All';
   final List<String> filters = ['All', 'Remote', 'Full-time', 'Part-time', 'Internship'];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -59,6 +62,9 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
   }
 
   Future<void> _fetchJobs() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('jobs').get();
       List<Job> fetchedJobs = querySnapshot.docs
@@ -80,9 +86,14 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
 
       setState(() {
         jobs = fetchedJobs;
+        _isLoading = false;
       });
     } catch (e) {
       print('Error fetching jobs: $e');
+      setState(() {
+        _isLoading = false;
+        jobs = [];
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to load jobs. Please try again later.'),
@@ -109,18 +120,79 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
               _buildHeader(),
               _buildFilters(),
               Expanded(
-                child: jobs.isEmpty
-                    ? _buildShimmerLoading()
-                    : Column(
-                  children: [
-                    Expanded(child: _buildCardSwiper()),
-                    _buildSwipeActions(),
-                  ],
-                ),
+                child: _buildMainContent(),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+  Widget _buildMainContent() {
+    if (_isLoading) {
+      return _buildShimmerLoading();
+    }
+
+    if (jobs.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return Column(
+      children: [
+        Expanded(child: _buildCardSwiper()),
+        _buildSwipeActions(),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.network(
+            'https://assets1.lottiefiles.com/packages/lf20_EMTsq1.json', // Empty box animation
+            width: 200,
+            height: 200,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No Jobs Available',
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              'Looks like all the good jobs are taking a coffee break! ☕\nCheck back later for fresh opportunities.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              _fetchJobs();
+            },
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            label: const Text('Refresh', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

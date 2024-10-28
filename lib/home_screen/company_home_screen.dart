@@ -30,14 +30,6 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
     ];
   }
 
-  void _addToFavorites(Application application) {
-    setState(() {
-      if (!_favoriteApplications.contains(application)) {
-        _favoriteApplications.add(application);
-      }
-    });
-  }
-
   void _removeFromFavorites(Application application) {
     setState(() {
       _favoriteApplications.remove(application);

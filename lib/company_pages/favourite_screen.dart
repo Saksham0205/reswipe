@@ -20,16 +20,54 @@ class FavoritesScreen extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(context),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  final application = favoriteApplications[index];
-                  return _buildFavoriteCard(context, application);
-                },
-                childCount: favoriteApplications.length,
+          if (favoriteApplications.isEmpty)
+            SliverFillRemaining(
+              child: _buildEmptyState(),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    final application = favoriteApplications[index];
+                    return _buildFavoriteCard(context, application);
+                  },
+                  childCount: favoriteApplications.length,
+                ),
               ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.favorite_outline,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Matches Yet',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Swipe right on profiles you like\nto see them here',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -42,7 +80,6 @@ class FavoritesScreen extends StatelessWidget {
       expandedHeight: 120,
       floating: true,
       pinned: true,
-      backgroundColor: Colors.transparent,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -56,28 +93,26 @@ class FavoritesScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
-      title: Text(
-        'Matched Profiles',
-        style: GoogleFonts.poppins(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+        title: Text(
+          'Matched Profiles',
+          style: GoogleFonts.poppins(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
+        centerTitle: true,
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: const Icon(Icons.filter_list, color: Colors.white),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.white),
-          onPressed: clearAllFavorites,
-        ),
+        if (favoriteApplications.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: Colors.white),
+            onPressed: () => _showClearConfirmation(context),
+          ),
       ],
     );
   }
@@ -98,17 +133,27 @@ class FavoritesScreen extends StatelessWidget {
       onDismissed: (direction) => removeFromFavorites(application),
       child: Card(
         elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.only(bottom: 16),
-        child: InkWell(
-          onTap: () => _showApplicationDetails(context, application),
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            children: [
-              _buildCardHeader(application),
-              _buildCardBody(application),
-              _buildCardFooter(context, application),
-            ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.white, Colors.grey.shade50],
+            ),
+          ),
+          child: InkWell(
+            onTap: () => _showApplicationDetails(context, application),
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                _buildCardHeader(application),
+                _buildCardBody(application),
+                _buildCardActions(context, application),
+              ],
+            ),
           ),
         ),
       ),
@@ -152,30 +197,56 @@ class FavoritesScreen extends StatelessWidget {
               ],
             ),
           ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.green.shade200),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
+                const SizedBox(width: 4),
+                Text(
+                  'Matched',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.green.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildProfileImage(Application application) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.deepPurple.shade300, Colors.deepPurple.shade500],
+    return Hero(
+      tag: 'profile_${application.id}',
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.deepPurple.shade300, Colors.deepPurple.shade500],
+          ),
         ),
-      ),
-      child: Center(
-        child: Text(
-          application.applicantName[0].toUpperCase(),
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        child: Center(
+          child: Text(
+            application.applicantName[0].toUpperCase(),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
       ),
@@ -191,8 +262,8 @@ class FavoritesScreen extends StatelessWidget {
           _buildInfoRow(Icons.school, application.qualification),
           const SizedBox(height: 8),
           _buildInfoRow(Icons.location_on, 'Location • Remote'),
-          const SizedBox(height: 16),
-          _buildSkillChips(),
+          const SizedBox(height: 12),
+          _buildSkillsList(),
         ],
       ),
     );
@@ -201,7 +272,7 @@ class FavoritesScreen extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
+        Icon(icon, size: 18, color: Colors.grey[600]),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -213,7 +284,7 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSkillChips() {
+  Widget _buildSkillsList() {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -244,7 +315,7 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCardFooter(BuildContext context, Application application) {
+  Widget _buildCardActions(BuildContext context, Application application) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -252,53 +323,34 @@ class FavoritesScreen extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildActionButton(
-            icon: Icons.description,
-            label: 'Resume',
-            onTap: () {},
-          ),
-          _buildActionButton(
-            icon: Icons.message,
-            label: 'Message',
-            onTap: () {},
-          ),
-          _buildActionButton(
-            icon: Icons.calendar_today,
-            label: 'Schedule',
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 24, color: Colors.deepPurple),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[800],
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.description, size: 18),
+              label: const Text('View Resume'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.deepPurple,
+                side: BorderSide(color: Colors.deepPurple.shade200),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.message, size: 18),
+              label: const Text('Message'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -308,21 +360,23 @@ class FavoritesScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          builder: (context, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(top: 8),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
@@ -330,34 +384,34 @@ class FavoritesScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.all(24),
-                      children: [
-                        _buildDetailHeader(application),
-                        const SizedBox(height: 24),
-                        _buildDetailSection('Experience', [
-                          'Senior Developer at Tech Corp',
-                          'Lead Developer at StartUp Inc',
-                        ]),
-                        _buildDetailSection('Education', [
-                          application.qualification,
-                        ]),
-                        _buildDetailSection('Skills', [
-                          'Flutter Development',
-                          'React Native',
-                          'UI/UX Design',
-                        ]),
-                      ],
-                    ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailHeader(application),
+                      const SizedBox(height: 24),
+                      _buildDetailSection('Experience', [
+                        'Senior Developer at Tech Corp',
+                        'Lead Developer at StartUp Inc',
+                      ]),
+                      _buildDetailSection('Education', [
+                        application.qualification,
+                      ]),
+                      _buildDetailSection('Skills', [
+                        'Flutter Development',
+                        'React Native',
+                        'UI/UX Design',
+                      ]),
+                    ],
                   ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -424,6 +478,34 @@ class FavoritesScreen extends StatelessWidget {
         )),
         const SizedBox(height: 24),
       ],
+    );
+  }
+
+  void _showClearConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Matches'),
+        content: const Text(
+          'Are you sure you want to remove all matched profiles? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              clearAllFavorites();
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
     );
   }
 }
