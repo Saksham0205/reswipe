@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../user_pages/applications_page.dart';
 import '../user_pages/job_listings_page.dart';
 import '../user_pages/profile_page.dart';
-import '../user_pages/settings_page.dart';
+import '../user_pages/settings_screen/settings_page.dart';
 
 
 

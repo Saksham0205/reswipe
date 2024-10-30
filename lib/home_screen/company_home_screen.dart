@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../company_pages/favourite_screen.dart' show FavoritesScreen;
 import '../company_pages/home_page.dart' show HomeScreen;
 import '../company_pages/job_post_screen.dart';
 import '../company_pages/profile_screen.dart';
+import '../company_pages/settings_screen/settings_page.dart';
 import '../models/company_model/applications.dart';
 
 class CompanyMainScreen extends StatefulWidget {
@@ -21,11 +21,7 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
     _screens = [
       HomeScreen(),
       JobPostsScreen(),
-      FavoritesScreen(
-        favoriteApplications: _favoriteApplications,
-        clearAllFavorites: _clearAllFavorites,
-        removeFromFavorites: _removeFromFavorites,
-      ),
+      CompanySettingsPage(),
       ProfileScreen(),
     ];
   }
@@ -36,21 +32,7 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
     });
   }
 
-  void _clearAllFavorites() {
-    setState(() {
-      _favoriteApplications.clear();
-    });
-  }
 
-  void _updateScreens() {
-    setState(() {
-      _screens[2] = FavoritesScreen(
-        favoriteApplications: _favoriteApplications,
-        clearAllFavorites: _clearAllFavorites,
-        removeFromFavorites: _removeFromFavorites,
-      );
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +43,6 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
         onTap: (index) {
           setState(() {
             _currentIndex = index;
-            if (index == 2) {
-              _updateScreens();
-            }
           });
         },
         type: BottomNavigationBarType.fixed,
@@ -72,7 +51,7 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Job Posts'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

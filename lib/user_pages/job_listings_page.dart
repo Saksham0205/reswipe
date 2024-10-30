@@ -16,7 +16,8 @@ class JobListingsPage extends StatefulWidget {
   _JobListingsPageState createState() => _JobListingsPageState();
 }
 
-class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProviderStateMixin {
+class _JobListingsPageState extends State<JobListingsPage>
+    with SingleTickerProviderStateMixin {
   Map<String, String> companyNames = {};
   Map<String, String> companyLogos = {};
   List<Job> jobs = [];
@@ -26,7 +27,13 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
   late Animation<double> _animation;
   bool isFiltering = false;
   String selectedFilter = 'All';
-  final List<String> filters = ['All', 'Remote', 'Full-time', 'Part-time', 'Internship'];
+  final List<String> filters = [
+    'All',
+    'Remote',
+    'Full-time',
+    'Part-time',
+    'Internship'
+  ];
   bool _isLoading = true;
 
   @override
@@ -66,7 +73,8 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       _isLoading = true;
     });
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('jobs').get();
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection('jobs').get();
       List<Job> fetchedJobs = querySnapshot.docs
           .map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
@@ -79,7 +87,8 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
             .doc(companyId)
             .get();
         if (companyDoc.exists) {
-          companyNames[companyId] = companyDoc.get('companyName') ?? 'Unknown Company';
+          companyNames[companyId] =
+              companyDoc.get('companyName') ?? 'Unknown Company';
           companyLogos[companyId] = companyDoc.get('logoUrl') ?? '';
         }
       }
@@ -95,7 +104,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
         jobs = [];
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Failed to load jobs. Please try again later.'),
           backgroundColor: Colors.red,
         ),
@@ -128,6 +137,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       ),
     );
   }
+
   Widget _buildMainContent() {
     if (_isLoading) {
       return _buildShimmerLoading();
@@ -203,7 +213,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
+          const Text(
             'Reswipe',
             style: TextStyle(
               color: Colors.white,
@@ -214,13 +224,13 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.bookmark_border, color: Colors.white),
+                icon: const Icon(Icons.bookmark_border, color: Colors.white),
                 onPressed: () {
                   // Navigate to saved jobs
                 },
               ),
               IconButton(
-                icon: Icon(Icons.person_outline, color: Colors.white),
+                icon: const Icon(Icons.person_outline, color: Colors.white),
                 onPressed: () {
                   // Navigate to profile
                 },
@@ -237,13 +247,13 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: filters.length,
         itemBuilder: (context, index) {
           final filter = filters[index];
           final isSelected = selectedFilter == filter;
           return Padding(
-            padding: EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
               label: Text(
                 filter,
@@ -274,7 +284,7 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -288,9 +298,11 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
     );
   }
 
-  bool _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
+  bool _onSwipe(
+      int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (direction == CardSwiperDirection.right) {
-      _applyForJob(context, jobs[previousIndex]); }
+      _applyForJob(context, jobs[previousIndex]);
+    }
     if (currentIndex == null) {
       _fetchJobs();
       return false;
@@ -303,9 +315,9 @@ class _JobListingsPageState extends State<JobListingsPage> with SingleTickerProv
       controller: controller,
       cardsCount: jobs.length,
       onSwipe: _onSwipe,
-      padding: EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24.0),
       cardBuilder: (context, index, _, __) => JobCard(
-        job: jobs[index],//
+        job: jobs[index], //
         companyName: companyNames[jobs[index].companyId] ?? 'Unknown Company',
         companyLogo: companyLogos[jobs[index].companyId] ?? '',
         isSaved: savedJobs.contains(jobs[index].id),
@@ -350,7 +362,7 @@ Apply now on our platform!
 
   Widget _buildSwipeActions() {
     return Padding(
-      padding: EdgeInsets.only(bottom: 32.0),
+      padding: const EdgeInsets.only(bottom: 32.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -397,10 +409,10 @@ Apply now on our platform!
             onPressed: onPressed,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -408,6 +420,7 @@ Apply now on our platform!
       ],
     );
   }
+
   void _applyForJob(BuildContext context, Job job) async {
     String userId = FirebaseAuth.instance.currentUser!.uid;
 
@@ -454,14 +467,15 @@ Apply now on our platform!
       _showErrorSnackBar('Failed to apply: $e');
     }
   }
+
   void _showSuccessSnackBar(String message) {
     final snackBar = SnackBar(
       content: Container(
-        padding: EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            SizedBox(width: 12),
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
         ),
@@ -469,7 +483,7 @@ Apply now on our platform!
       backgroundColor: Colors.green.shade600,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
@@ -477,11 +491,11 @@ Apply now on our platform!
   void _showErrorSnackBar(String message) {
     final snackBar = SnackBar(
       content: Container(
-        padding: EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.error_outline, color: Colors.white),
-            SizedBox(width: 12),
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
         ),
@@ -489,7 +503,7 @@ Apply now on our platform!
       backgroundColor: Colors.red.shade600,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
@@ -536,22 +550,24 @@ class JobCard extends StatelessWidget {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCompanyInfo(),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     _buildJobDetails(),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     _buildDescription(),
                     if (job.responsibilities.isNotEmpty) ...[
-                      SizedBox(height: 16),
-                      _buildSection('Key Responsibilities', job.responsibilities),
+                      const SizedBox(height: 16),
+                      _buildSection(
+                          'Key Responsibilities', job.responsibilities),
                     ],
                     if (job.qualifications.isNotEmpty) ...[
-                      SizedBox(height: 16),
-                      _buildSection('Required Qualifications', job.qualifications),
+                      const SizedBox(height: 16),
+                      _buildSection(
+                          'Required Qualifications', job.qualifications),
                     ],
                   ],
                 ),
@@ -573,13 +589,13 @@ class JobCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Colors.deepPurple.shade400, Colors.deepPurple.shade700],
         ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Stack(
         children: [
           Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.black12,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
@@ -598,25 +614,27 @@ class JobCard extends StatelessWidget {
                     child: ClipOval(
                       child: CachedNetworkImage(
                         imageUrl: companyLogo,
-                        placeholder: (context, url) => CircularProgressIndicator(),
-                        errorWidget: (context, url, error) => Icon(Icons.business),
+                        placeholder: (context, url) =>
+                            const CircularProgressIndicator(),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.business),
                       ),
                     ),
                   )
                 else
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
                     child: Icon(Icons.business, color: Colors.deepPurple),
                   ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         job.title,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -626,7 +644,7 @@ class JobCard extends StatelessWidget {
                       ),
                       Text(
                         job.companyName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
                         ),
@@ -649,11 +667,14 @@ class JobCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoRow(Icons.location_on, job.location ?? 'Location not specified'),
-              SizedBox(height: 8),
-              _buildInfoRow(Icons.work, job.employmentType ?? 'Employment type not specified'),
-              SizedBox(height: 8),
-              _buildInfoRow(Icons.monetization_on, job.salaryRange ?? 'Salary not specified'),
+              _buildInfoRow(
+                  Icons.location_on, job.location ?? 'Location not specified'),
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.work,
+                  job.employmentType ?? 'Employment type not specified'),
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.monetization_on,
+                  job.salaryRange ?? 'Salary not specified'),
             ],
           ),
         ),
@@ -665,7 +686,7 @@ class JobCard extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 20, color: Colors.deepPurple),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
@@ -683,7 +704,7 @@ class JobCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'About the Role',
           style: TextStyle(
             fontSize: 18,
@@ -691,9 +712,9 @@ class JobCard extends StatelessWidget {
             color: Colors.deepPurple,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Container(
-          padding: EdgeInsets.all(12),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
@@ -732,7 +753,7 @@ class JobCard extends StatelessWidget {
     return Column(
       children: [
         Icon(icon, color: Colors.deepPurple, size: 20),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           title,
           style: TextStyle(
@@ -740,7 +761,7 @@ class JobCard extends StatelessWidget {
             color: Colors.grey[600],
           ),
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           value,
           style: TextStyle(
@@ -757,7 +778,7 @@ class JobCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Job Description',
           style: TextStyle(
             fontSize: 18,
@@ -765,7 +786,7 @@ class JobCard extends StatelessWidget {
             color: Colors.deepPurple,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
           job.description,
           style: TextStyle(
@@ -783,57 +804,57 @@ class JobCard extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.deepPurple,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         ...items.map((item) => Padding(
-          padding: EdgeInsets.only(bottom: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: Colors.deepPurple,
-                    shape: BoxShape.circle,
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Colors.deepPurple,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  item,
-                  style: TextStyle(
-                    color: Colors.grey[800],
-                    height: 1.5,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        height: 1.5,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        )),
+            )),
       ],
     );
   }
 
   Widget _buildFooter() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, -5),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
@@ -844,12 +865,12 @@ class JobCard extends StatelessWidget {
               onPressed: onApply,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 'Apply Now',
                 style: TextStyle(
                   fontSize: 16,
@@ -859,13 +880,13 @@ class JobCard extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           _buildIconButton(
             icon: isSaved ? Icons.bookmark : Icons.bookmark_border,
             onPressed: onSave,
             tooltip: isSaved ? 'Remove from saved' : 'Save job',
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           _buildIconButton(
             icon: Icons.share_outlined,
             onPressed: onShare,
@@ -910,7 +931,7 @@ mixin CardAnimationMixin<T extends StatefulWidget> on State<T> {
   void initState() {
     super.initState();
     _fadeController = AnimationController(
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
       vsync: this as TickerProvider,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
