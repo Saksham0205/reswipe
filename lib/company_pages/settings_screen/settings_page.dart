@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:reswipe/company_pages/settings_screen/about_screen.dart';
+import 'package:reswipe/company_pages/settings_screen/privacy_and_security_screen.dart';
+import 'package:reswipe/company_pages/settings_screen/support_and_help_screen.dart';
 
 class CompanySettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings',style: TextStyle(color: Colors.white),),
+        title: const Text('Settings',style: TextStyle(color: Colors.white),),
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Padding(
@@ -22,7 +25,7 @@ class CompanySettingsPage extends StatelessWidget {
                 color: Colors.blue[900],
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             SettingsCard(
               icon: Icons.manage_accounts,
               title: 'Manage Account Settings',
@@ -30,7 +33,7 @@ class CompanySettingsPage extends StatelessWidget {
                 // Navigate to account settings
               },
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             SettingsCard(
               icon: Icons.payment,
               title: 'Manage Payment',
@@ -38,7 +41,7 @@ class CompanySettingsPage extends StatelessWidget {
                 // Navigate to payment settings
               },
             ),
-            SizedBox(height: 32.0),
+            const SizedBox(height: 32.0),
             Text(
               'Security & Privacy',
               style: TextStyle(
@@ -47,29 +50,45 @@ class CompanySettingsPage extends StatelessWidget {
                 color: Colors.blue[900],
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             SettingsCard(
               icon: Icons.lock,
               title: 'Privacy & Security',
               onTap: () {
-                // Navigate to privacy and security settings
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PrivacyAndSecurityScreen(),
+                  ),
+                );
               },
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             SettingsCard(
               icon: Icons.help,
               title: 'Support & Help',
               onTap: () {
-                // Navigate to support and help
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HelpAndSupportScreen()),
+                );
               },
             ),
-            Spacer(),
+            const SizedBox(height: 16.0),
+            SettingsCard(
+              icon: Icons.people,
+              title: 'About Us',
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (contex)=>const AboutScreen()));
+              },
+            ),
+            const Spacer(),
             Align(
               alignment: Alignment.center,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
-                  padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26.0),
                   ),
@@ -78,7 +97,7 @@ class CompanySettingsPage extends StatelessWidget {
                   await FirebaseAuth.instance.signOut();
                   // Navigate to login screen
                 },
-                child: Text(
+                child: const Text(
                   'Logout',
                   style: TextStyle(
                     fontSize: 16.0,
@@ -112,7 +131,7 @@ class SettingsCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16.0),
@@ -121,7 +140,7 @@ class SettingsCard extends StatelessWidget {
               color: Colors.grey.withOpacity(0.3),
               spreadRadius: 2,
               blurRadius: 5,
-              offset: Offset(0, 3),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -132,17 +151,17 @@ class SettingsCard extends StatelessWidget {
               color: Theme.of(context).primaryColor,
               size: 32.0,
             ),
-            SizedBox(width: 16.0),
+            const SizedBox(width: 16.0),
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            Icon(
+            const Icon(
               Icons.chevron_right,
               color: Colors.grey,
             ),
