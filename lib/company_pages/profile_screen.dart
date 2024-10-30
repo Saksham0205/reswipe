@@ -12,7 +12,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   Stream<List<Job>>? _companyJobsStream;
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'Full-time', 'Part-time', 'Internship'];
+  final List<String> _filters = [
+    'All',
+    'Full-time',
+    'Part-time',
+    'Internship',
+    'Contract'
+  ];
 
   @override
   void initState() {
@@ -36,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _authService.deleteJob(job.id);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: const Text('Job deleted successfully'),
+          content: Text('Job deleted successfully'),
           backgroundColor: Colors.green,
         ),
       );
@@ -54,85 +60,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Company Profile'),
-        elevation: 0,
+        title: _buildHeader(context),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _authService.signOut(),
-          ),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(context),
-          _buildFilterChips(),
           Expanded(
-            child: _buildJobList(),
+              child: Container(
+                  height: 50,
+                  child: _buildFilterChips()),
           ),
         ],
       ),
-
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: _buildJobList(),
+      ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            offset: Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Job Posting History',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Manage and track your job postings',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white70,
-            ),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Job Posting History',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Manage and track your job postings',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+              ),
+        ),
+      ],
     );
   }
 
   Widget _buildFilterChips() {
-    return Container(
-      height: 50,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: _filters.map((filter) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(filter),
-              selected: _selectedFilter == filter,
-              onSelected: (selected) {
-                setState(() {
-                  _selectedFilter = filter;
-                });
-              },
-            ),
-          );
-        }).toList(),
-      ),
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      itemCount: _filters.length,
+      separatorBuilder: (context, index) => const SizedBox(width: 8),
+      itemBuilder: (context, index) {
+        String filter = _filters[index];
+        return FilterChip(
+          label: Text(filter),
+          selected: _selectedFilter == filter,
+          onSelected: (selected) {
+            setState(() {
+              _selectedFilter = filter;
+            });
+          },
+        );
+      },
     );
   }
 
@@ -172,12 +153,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         List<Job> jobs = snapshot.data!;
         if (_selectedFilter != 'All') {
-          jobs = jobs.where((job) => job.employmentType == _selectedFilter).toList();
+          jobs = jobs
+              .where((job) => job.employmentType == _selectedFilter)
+              .toList();
         }
 
-        return ListView.builder(
+        return ListView.separated(
           itemCount: jobs.length,
-          padding: const EdgeInsets.only(bottom: 80), // Account for FAB
+          padding: EdgeInsets.zero,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
             Job job = jobs[index];
             return _buildJobCard(job);
@@ -189,7 +173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildJobCard(Job job) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
       child: InkWell(
         onTap: () => _showJobDetails(context, job),
@@ -212,7 +195,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 4),
                         Text(
                           job.companyName,
-                          style: const TextStyle(color: Colors.grey),
+                          style: TextStyle(color: Colors.grey[600]),
                         ),
                       ],
                     ),
@@ -299,8 +282,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Text(
                         job.title,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                        ),
+                              color: Colors.white,
+                            ),
                       ),
                     ),
                     IconButton(
@@ -321,10 +304,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       _buildDetailSection('Company', job.companyName),
                       _buildDetailSection('Location', job.location),
-                      _buildDetailSection('Employment Type', job.employmentType),
+                      _buildDetailSection(
+                          'Employment Type', job.employmentType),
                       _buildDetailSection('Salary Range', job.salaryRange),
                       _buildDetailSection('Description', job.description),
-                      _buildListSection('Responsibilities', job.responsibilities),
+                      _buildListSection(
+                          'Responsibilities', job.responsibilities),
                       _buildListSection('Qualifications', job.qualifications),
                     ],
                   ),
@@ -377,16 +362,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('• '),
-                Expanded(child: Text(item)),
-              ],
-            ),
-          )).toList(),
+          ...items
+              .map((item) => Padding(
+                    padding: const EdgeInsets.only(left: 16, bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('• '),
+                        Expanded(child: Text(item)),
+                      ],
+                    ),
+                  ))
+              .toList(),
         ],
       ),
     );
@@ -398,7 +385,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Confirm Deletion"),
-          content: const Text("Are you sure you want to delete this job posting? This action cannot be undone."),
+          content: const Text(
+              "Are you sure you want to delete this job posting? This action cannot be undone."),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),

@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
-import '../models/company_model/applications.dart';
+import '../../models/company_model/applications.dart';
 import 'favourite_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -46,6 +46,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  //Functions
+
   Future<void> _fetchApplications() async {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -64,7 +66,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       print('Error fetching applications: $e');
     }
   }
-
 
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();

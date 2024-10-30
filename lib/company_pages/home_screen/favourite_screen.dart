@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/company_model/applications.dart';
+import '../../models/company_model/applications.dart';
 
 class FavoritesScreen extends StatelessWidget {
   final List<Application> favoriteApplications;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../company_pages/home_page.dart' show HomeScreen;
+import '../company_pages/home_screen/home_page.dart' show HomeScreen;
 import '../company_pages/job_post_screen.dart';
 import '../company_pages/profile_screen.dart';
 import '../company_pages/settings_screen/settings_page.dart';
