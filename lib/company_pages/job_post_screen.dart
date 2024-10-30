@@ -323,8 +323,9 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Post a New Job'),
-        backgroundColor: Colors.blue,
+        title: Text('Post a New Job',style: TextStyle(color: Colors.white
+        ),),
+        backgroundColor: Colors.deepPurpleAccent,
         elevation: 0,
       ),
       body: Form(
@@ -549,105 +550,105 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
         _employmentType != 'Full-time';
   }
 
-  // Add a helper method to show tooltips
-  Widget _buildTooltip(Widget child, String message) {
-    return Tooltip(
-      message: message,
-      decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      textStyle: TextStyle(color: Colors.white),
-      child: child,
-    );
-  }
-
-  // Add animations for section transitions
-  Widget _buildAnimatedSection(Widget child) {
-    return AnimatedSwitcher(
-      duration: Duration(milliseconds: 300),
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: Offset(0.1, 0),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
-        );
-      },
-      child: child,
-    );
-  }
-
-  // Add a progress indicator
-  Widget _buildProgressIndicator() {
-    final progress = (_currentStep + 1) / 3;
-    return Container(
-      height: 4,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: FractionallySizedBox(
-        alignment: Alignment.centerLeft,
-        widthFactor: progress,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Add a section header with animation
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blue),
-          SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[800],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Add help text with expandable details
-  Widget _buildHelpText(String text) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 16),
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue[100]!),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline, color: Colors.blue),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: Colors.blue[800]),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // // Add a helper method to show tooltips
+  // Widget _buildTooltip(Widget child, String message) {
+  //   return Tooltip(
+  //     message: message,
+  //     decoration: BoxDecoration(
+  //       color: Colors.blue.withOpacity(0.9),
+  //       borderRadius: BorderRadius.circular(8),
+  //     ),
+  //     textStyle: TextStyle(color: Colors.white),
+  //     child: child,
+  //   );
+  // }
+  //
+  // // Add animations for section transitions
+  // Widget _buildAnimatedSection(Widget child) {
+  //   return AnimatedSwitcher(
+  //     duration: Duration(milliseconds: 300),
+  //     transitionBuilder: (Widget child, Animation<double> animation) {
+  //       return FadeTransition(
+  //         opacity: animation,
+  //         child: SlideTransition(
+  //           position: Tween<Offset>(
+  //             begin: Offset(0.1, 0),
+  //             end: Offset.zero,
+  //           ).animate(animation),
+  //           child: child,
+  //         ),
+  //       );
+  //     },
+  //     child: child,
+  //   );
+  // }
+  //
+  // // Add a progress indicator
+  // Widget _buildProgressIndicator() {
+  //   final progress = (_currentStep + 1) / 3;
+  //   return Container(
+  //     height: 4,
+  //     margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //     decoration: BoxDecoration(
+  //       color: Colors.grey[200],
+  //       borderRadius: BorderRadius.circular(2),
+  //     ),
+  //     child: FractionallySizedBox(
+  //       alignment: Alignment.centerLeft,
+  //       widthFactor: progress,
+  //       child: Container(
+  //         decoration: BoxDecoration(
+  //           color: Colors.blue,
+  //           borderRadius: BorderRadius.circular(2),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+  //
+  // // Add a section header with animation
+  // Widget _buildSectionHeader(String title, IconData icon) {
+  //   return Container(
+  //     margin: EdgeInsets.only(bottom: 16),
+  //     child: Row(
+  //       children: [
+  //         Icon(icon, color: Colors.blue),
+  //         SizedBox(width: 8),
+  //         Text(
+  //           title,
+  //           style: TextStyle(
+  //             fontSize: 20,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.blue[800],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+  //
+  // // Add help text with expandable details
+  // Widget _buildHelpText(String text) {
+  //   return Container(
+  //     margin: EdgeInsets.only(bottom: 16),
+  //     padding: EdgeInsets.all(8),
+  //     decoration: BoxDecoration(
+  //       color: Colors.blue[50],
+  //       borderRadius: BorderRadius.circular(8),
+  //       border: Border.all(color: Colors.blue[100]!),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Icon(Icons.info_outline, color: Colors.blue),
+  //         SizedBox(width: 8),
+  //         Expanded(
+  //           child: Text(
+  //             text,
+  //             style: TextStyle(color: Colors.blue[800]),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

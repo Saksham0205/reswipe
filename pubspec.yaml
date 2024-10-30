@@ -36,6 +36,7 @@ dependencies:
   share_plus: ^10.1.0
   cached_network_image: ^3.4.1
   flutter_animate: ^4.5.0
+  flutter_chips_input:
 
 
 
