@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/company_model/applications.dart';
+import 'components/app_class.dart';
 
 class FavoritesScreen extends StatelessWidget {
   final List<Application> favoriteApplications;
@@ -17,29 +18,45 @@ class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(context),
-          if (favoriteApplications.isEmpty)
-            SliverFillRemaining(
-              child: _buildEmptyState(),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    final application = favoriteApplications[index];
-                    return _buildFavoriteCard(context, application);
-                  },
-                  childCount: favoriteApplications.length,
-                ),
-              ),
-            ),
-        ],
+      backgroundColor: AppColors.backgroundLight,
+      body: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return [
+            _buildSliverAppBar(context, innerBoxIsScrolled),
+          ];
+        },
+        body: _buildFavoritesList(context),
       ),
     );
+  }
+
+
+  Widget _buildFavoritesList(BuildContext context) {
+    if (favoriteApplications.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      color: AppColors.primary,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: favoriteApplications.length,
+        itemBuilder: (context, index) {
+          final application = favoriteApplications[index];
+          return _buildFavoriteCard(context, application)
+              .animate()
+              .fadeIn(duration: 300.ms)
+              .slideY(begin: 0.1, end: 0);
+        },
+      ),
+    );
+  }
+
+  Future<void> _handleRefresh() async {
+    // Simulate a network refresh
+    await Future.delayed(const Duration(seconds: 2));
+    // Consider implementing actual data refresh logic here
   }
 
   Widget _buildEmptyState() {
@@ -75,87 +92,103 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context) {
+  SliverAppBar _buildSliverAppBar(BuildContext context, bool innerBoxIsScrolled) {
     return SliverAppBar(
       expandedHeight: 120,
       floating: true,
       pinned: true,
+      snap: true,
+      forceElevated: innerBoxIsScrolled,
+      backgroundColor: AppColors.primary,
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.deepPurple.shade800,
-                Colors.deepPurple.shade500,
-              ],
-            ),
-          ),
-        ),
         title: Text(
           'Matched Profiles',
-          style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+          style: AppTypography.appBarTitle.copyWith(
             color: Colors.white,
           ),
         ),
         centerTitle: true,
+        titlePadding: const EdgeInsets.only(bottom: 16),
       ),
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
         if (favoriteApplications.isNotEmpty)
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.white),
+            tooltip: 'Clear all matches',
+            icon: const Icon(Icons.delete_sweep_rounded, color: Colors.white),
             onPressed: () => _showClearConfirmation(context),
           ),
       ],
-    );
-  }
+    );}
 
   Widget _buildFavoriteCard(BuildContext context, Application application) {
     return Dismissible(
       key: Key(application.id),
       direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: Colors.red.shade100,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(Icons.delete, color: Colors.red.shade700, size: 30),
-      ),
-      onDismissed: (direction) => removeFromFavorites(application),
+      confirmDismiss: (direction) async {
+        return await _showRemoveConfirmation(context, application);
+      },
+      background: _buildDismissBackground(),
       child: Card(
-        elevation: 2,
+        elevation: 4,
         margin: const EdgeInsets.only(bottom: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.white, Colors.grey.shade50],
-            ),
-          ),
-          child: InkWell(
-            onTap: () => _showApplicationDetails(context, application),
-            borderRadius: BorderRadius.circular(12),
-            child: Column(
-              children: [
-                _buildCardHeader(application),
-                _buildCardBody(application),
-                _buildCardActions(context, application),
-              ],
-            ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey.shade200, width: 1),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _showApplicationDetails(context, application),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCardHeader(application),
+              _buildCardBody(application),
+              _buildCardActions(context, application),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDismissBackground() {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      decoration: BoxDecoration(
+        color: Colors.red.shade100,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Icon(Icons.delete_forever_rounded, color: Colors.red.shade700, size: 36),
+    );
+  }
+
+  Future<bool?> _showRemoveConfirmation(BuildContext context, Application application) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Match'),
+        content: Text(
+          'Are you sure you want to remove ${application.applicantName} from your matches?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              removeFromFavorites(application);
+              Navigator.of(context).pop(true);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
       ),
     );
   }

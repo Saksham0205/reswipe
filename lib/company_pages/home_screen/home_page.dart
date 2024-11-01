@@ -256,6 +256,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
+
   void _onEnd() {
     // Refresh the applications list when all cards are swiped
     _fetchApplications().then((_) {
@@ -553,9 +554,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildSwipeActions() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _buildActionButton(
             onPressed: () {
@@ -565,6 +566,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: Colors.red,
             label: 'Skip',
           ),
+          const SizedBox(width: 48), // Add space between buttons
           _buildActionButton(
             onPressed: () {
               controller.swipe(CardSwiperDirection.right);
@@ -573,14 +575,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: Colors.green,
             label: 'Like',
             isLarge: true,
-          ),
-          _buildActionButton(
-            onPressed: () {
-              // Implement super like functionality
-            },
-            icon: Icons.star,
-            color: Colors.blue,
-            label: 'Super',
           ),
         ],
       ),
@@ -602,23 +596,38 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           decoration: BoxDecoration(
             color: color.withOpacity(0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: color, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: color.withOpacity(0.5), width: 2),
           ),
-          child: IconButton(
-            icon: Icon(icon,
-                size: isLarge ? 36 : 28,
-                color: color),
-            onPressed: onPressed,
-            padding: EdgeInsets.all(isLarge ? 16 : 12),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(50),
+              onTap: onPressed,
+              child: Padding(
+                padding: EdgeInsets.all(isLarge ? 20 : 16),
+                child: Icon(
+                  icon,
+                  size: isLarge ? 40 : 32,
+                  color: color,
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Text(
           label,
           style: TextStyle(
             color: color,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
