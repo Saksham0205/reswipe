@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/company_model/applications.dart';
 import 'components/app_class.dart';
 
@@ -372,7 +373,7 @@ class FavoritesScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () => _sendEmail(context, application),
               icon: const Icon(Icons.message, size: 18),
               label: const Text('Message'),
               style: ElevatedButton.styleFrom(
@@ -387,6 +388,51 @@ class FavoritesScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _sendEmail(BuildContext context, Application application) async {
+//     // Assume that the HR's registered email is fetched from their account/profile details.
+//     String hrEmail = "saksham252003@gmail.com"; // Replace with actual retrieval logic
+//
+//     // Compose the email URI
+//     final Uri emailUri = Uri(
+//       scheme: 'mailto',
+//       path: 'sakshamchauhan02@outlook.com',
+//       queryParameters: {
+//         'subject': 'Job Application Inquiry - ${application.applicantName}',
+//         'body': '''
+// Dear ${application.applicantName},
+//
+// I am reaching out regarding your job application for the ${application.jobProfile} position.
+//
+// Best regards,
+// $hrEmail
+// '''
+//       },
+//     );
+//
+//     try {
+//       // Check if the email can be launched
+//       if (await canLaunchUrl(emailUri)) {
+//         // Launch the email client
+//         await launchUrl(emailUri);
+//       } else {
+//         // If email client can't be launched, show an error
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Could not launch email app'),
+//           ),
+//         );
+//       }
+//     } catch (e) {
+//       // Handle any errors
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('An error occurred: $e'),
+//         ),
+//       );
+//     }
+  }
+
 
   void _showApplicationDetails(BuildContext context, Application application) {
     showModalBottomSheet(

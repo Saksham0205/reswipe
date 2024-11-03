@@ -37,6 +37,11 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_animate: ^4.5.0
   flutter_chips_input:
+  flutter_email_sender: ^6.0.3
+  google_generative_ai: ^0.4.6
+  syncfusion_flutter_pdf: ^27.1.57
+  firebase_app_check: ^0.3.1+4
+
 
 
 
