@@ -245,13 +245,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         cardsCount: applications.length,
         onSwipe: _onSwipe,
         onEnd: _onEnd,
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
         cardBuilder: (context, index, horizontalThreshold, verticalThreshold) {
-          // Add null check and bounds check
           if (index >= 0 && index < applications.length) {
-            return _buildCard(applications[index]);
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7, // 70% of screen height
+                maxWidth: MediaQuery.of(context).size.width * 0.9,  // 90% of screen width
+              ),
+              child: _buildCard(applications[index]),
+            );
           }
-          return const SizedBox.shrink(); // Return empty widget if index is out of bounds
+          return const SizedBox.shrink();
         },
       ),
     );
@@ -288,162 +293,444 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
 
   Widget _buildCard(Application application) {
-    return Hero(
-      tag: 'application_${application.id}',
-      child: Card(
-        elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20.0),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.white, Colors.grey.shade50],
+    final expandedNotifier = ValueNotifier<bool>(false);
+
+    return ValueListenableBuilder<bool>(
+      valueListenable: expandedNotifier,
+      builder: (context, isExpanded, _) {
+        return Hero(
+          tag: 'application_${application.id}',
+          child: Card(
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24.0),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 4,
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                      child: Image.network(
-                        application.resumeUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Colors.deepPurple.shade100,
-                                  Colors.deepPurple.shade50,
+            child: InkWell(
+              onTap: () => expandedNotifier.value = !isExpanded,
+              borderRadius: BorderRadius.circular(24.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24.0),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.white, Colors.grey.shade50],
+                  ),
+                ),
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Header Section
+                          _buildHeader(application, isExpanded),
+
+                          // Expandable Content
+                          AnimatedCrossFade(
+                            firstChild: const SizedBox.shrink(),
+                            secondChild: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSkillsSection(application),
+                                  const SizedBox(height: 16),
+                                  _buildExperienceEducationSection(application),
+                                  if (application.achievements.isNotEmpty) ...[
+                                    const SizedBox(height: 16),
+                                    _buildAchievementsSection(application),
+                                  ],
+                                  const SizedBox(height: 16),
+                                  _buildActionButtons(application),
                                 ],
                               ),
                             ),
-                            child: Icon(Icons.description, size: 100, color: Colors.deepPurple.shade200),
-                          );
-                        },
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.8),
-                              Colors.transparent,
-                            ],
+                            crossFadeState: isExpanded
+                                ? CrossFadeState.showSecond
+                                : CrossFadeState.showFirst,
+                            duration: const Duration(milliseconds: 300),
                           ),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              application.applicantName,
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              application.jobProfile,
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[300],
-                              ),
-                            ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.school, size: 20, color: Colors.grey[600]),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              application.qualification,
-                              style: TextStyle(fontSize: 16, color: Colors.grey[800]),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on, size: 20, color: Colors.grey[600]),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Location • Remote',
-                            style: TextStyle(fontSize: 16, color: Colors.grey[800]),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _viewResume(application),
-                              icon: const Icon(Icons.description, color: Colors.white, size: 20),
-                              label: const Text('View Resume', style: TextStyle(color: Colors.white)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.info_outline, color: Colors.deepPurple),
-                              onPressed: () => _showApplicationDetails(application),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(Application application, bool isExpanded) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.deepPurple.shade400, Colors.deepPurple.shade600],
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            application.applicantName,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.work_outline, color: Colors.white.withOpacity(0.9)),
+              const SizedBox(width: 8),
+              Text(
+                application.jobProfile,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey[100],
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: application.experience.map((exp) => Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                exp,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )).toList(),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: AnimatedRotation(
+              duration: const Duration(milliseconds: 200),
+              turns: isExpanded ? 0.5 : 0,
+              child: Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.white.withOpacity(0.8),
+                size: 28,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildSkillsSection(Application application) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.code, color: Colors.deepPurple.shade600, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Key Skills',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple.shade600,
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.shade50.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.deepPurple.shade100),
+          ),
+          child: Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: application.skills.map((skill) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.deepPurple.shade100.withOpacity(0.5),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  skill,
+                  style: TextStyle(
+                    color: Colors.deepPurple.shade700,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExperienceEducationSection(Application application) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade200,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoColumn(
+                  icon: Icons.work_outline,
+                  title: 'Experience',
+                  value: '${application.experience.length} years',
+                  subtitle: 'Professional',
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 60,
+                color: Colors.grey.shade300,
+              ),
+              Expanded(
+                child: _buildInfoColumn(
+                  icon: Icons.school_outlined,
+                  title: 'Education',
+                  value: application.qualification,
+                  subtitle: 'Qualification',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoColumn({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String subtitle,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.deepPurple.shade400, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAchievementsSection(Application application) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.star_border_rounded, color: Colors.deepPurple.shade600, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Key Achievements',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple.shade600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.amber.shade50.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.amber.shade200),
+          ),
+          child: Column(
+            children: application.achievements.map((achievement) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.star,
+                      size: 20,
+                      color: Colors.amber[600],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        achievement,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(Application application) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _viewResume(application),
+            icon: const Icon(Icons.description_outlined, color: Colors.white, size: 24),
+            label: const Text(
+              'View Resume',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 4,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.shade50,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.deepPurple.shade100.withOpacity(0.5),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(30),
+              onTap: () => _showApplicationDetails(application),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.deepPurple.shade400,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -526,29 +813,85 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void _showApplicationDetails(Application application) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (BuildContext context) {
         return Container(
-          padding: const EdgeInsets.all(16),
+          height: MediaQuery.of(context).size.height * 0.7,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Application Details',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              const SizedBox(height: 16),
-              Text('Name: ${application.applicantName}'),
-              Text('Job Title: ${application.jobTitle}'),
-              Text('Job Profile: ${application.jobProfile}'),
-              Text('Qualification: ${application.qualification}'),
-              Text('Status: ${application.status}'),
-              if (application.timestamp != null)
-                Text('Applied on: ${application.timestamp!.toString().split(' ')[0]}'),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Application Details',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      _buildDetailItem('Name', application.applicantName),
+                      _buildDetailItem('Job Title', application.jobTitle),
+                      _buildDetailItem('Job Profile', application.jobProfile),
+                      _buildDetailItem('Qualification', application.qualification),
+                      _buildDetailItem('Status', application.status),
+                      if (application.timestamp != null)
+                        _buildDetailItem(
+                          'Applied on',
+                          application.timestamp!.toString().split(' ')[0],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'job.dart';
-
 class Application {
   final String id;
+  // Job related fields
   final String jobId;
   final String jobTitle;
   final String jobDescription;
@@ -16,11 +15,18 @@ class Application {
   final String companyName;
   final String userId;
   final String applicantName;
+  final String email;
   final String qualification;
   final String jobProfile;
+  final List<String> skills;
+  final List<String> experience;
+  final List<String> achievements;
+  final List<String> projects;
   final String resumeUrl;
+  final String profileImageUrl;
   final String status;
   final DateTime? timestamp;
+  final int companyLikesCount;
 
   Application({
     required this.id,
@@ -36,23 +42,30 @@ class Application {
     required this.companyName,
     required this.userId,
     required this.applicantName,
+    required this.email,
     required this.qualification,
     required this.jobProfile,
+    required this.skills,
+    required this.experience,
+    required this.achievements,
+    required this.projects,
     required this.resumeUrl,
+    required this.profileImageUrl,
     required this.status,
     this.timestamp,
+    this.companyLikesCount = 0,
   });
 
-  // Create from Firestore
   factory Application.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
     return Application(
       id: doc.id,
       jobId: data['jobId'] ?? '',
       jobTitle: data['jobTitle'] ?? '',
       jobDescription: data['jobDescription'] ?? '',
-      jobResponsibilities: List<String>.from(data['jobResponsibilities'] ?? []),
-      jobQualifications: List<String>.from(data['jobQualifications'] ?? []),
+      jobResponsibilities: _convertToStringList(data['jobResponsibilities']),
+      jobQualifications: _convertToStringList(data['jobQualifications']),
       jobSalaryRange: data['jobSalaryRange'] ?? '',
       jobLocation: data['jobLocation'] ?? '',
       jobEmploymentType: data['jobEmploymentType'] ?? '',
@@ -60,15 +73,44 @@ class Application {
       companyName: data['companyName'] ?? '',
       userId: data['userId'] ?? '',
       applicantName: data['applicantName'] ?? '',
+      email: data['email'] ?? '',
       qualification: data['qualification'] ?? '',
       jobProfile: data['jobProfile'] ?? '',
+      skills: _convertToStringList(data['skills']),
+      experience: _convertToStringList(data['experience']),
+      achievements: _convertToStringList(data['achievements']),
+      projects: _convertToStringList(data['projects']),
       resumeUrl: data['resumeUrl'] ?? '',
+      profileImageUrl: data['profileImageUrl'] ?? '',
       status: data['status'] ?? 'pending',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate(),
+      companyLikesCount: data['companyLikesCount'] ?? 0,
     );
   }
 
-  // Convert to Map
+  // Updated helper method to handle various data types more robustly
+  static List<String> _convertToStringList(dynamic value) {
+    if (value == null) return [];
+
+    if (value is List) {
+      return value.map((item) => item.toString()).toList();
+    }
+
+    if (value is String) {
+      if (value.isEmpty) return [];
+      // Handle comma-separated strings
+      return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    }
+
+    // Handle Map case
+    if (value is Map) {
+      return value.values.map((e) => e.toString()).toList();
+    }
+
+    // If it's a single non-list value, return it as a single-item list
+    return [value.toString()];
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'jobId': jobId,
@@ -83,15 +125,21 @@ class Application {
       'companyName': companyName,
       'userId': userId,
       'applicantName': applicantName,
+      'email': email,
       'qualification': qualification,
       'jobProfile': jobProfile,
+      'skills': skills,
+      'experience': experience,
+      'achievements': achievements,
+      'projects': projects,
       'resumeUrl': resumeUrl,
+      'profileImageUrl': profileImageUrl,
       'status': status,
       'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : FieldValue.serverTimestamp(),
+      'companyLikesCount': companyLikesCount,
     };
   }
 
-  // Create copy with new values
   Application copyWith({
     String? id,
     String? jobId,
@@ -106,11 +154,18 @@ class Application {
     String? companyName,
     String? userId,
     String? applicantName,
+    String? email,
     String? qualification,
     String? jobProfile,
+    List<String>? skills,
+    List<String>? experience,
+    List<String>? achievements,
+    List<String>? projects,
     String? resumeUrl,
+    String? profileImageUrl,
     String? status,
     DateTime? timestamp,
+    int? companyLikesCount,
   }) {
     return Application(
       id: id ?? this.id,
@@ -126,42 +181,18 @@ class Application {
       companyName: companyName ?? this.companyName,
       userId: userId ?? this.userId,
       applicantName: applicantName ?? this.applicantName,
+      email: email ?? this.email,
       qualification: qualification ?? this.qualification,
       jobProfile: jobProfile ?? this.jobProfile,
+      skills: skills ?? this.skills,
+      experience: experience ?? this.experience,
+      achievements: achievements ?? this.achievements,
+      projects: projects ?? this.projects,
       resumeUrl: resumeUrl ?? this.resumeUrl,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       status: status ?? this.status,
       timestamp: timestamp ?? this.timestamp,
-    );
-  }
-
-  // Helper method to create Application from Job
-  factory Application.fromJob({
-    required Job job,
-    required String userId,
-    required String applicantName,
-    required String qualification,
-    required String jobProfile,
-    required String resumeUrl,
-    String status = 'pending',
-  }) {
-    return Application(
-      id: '',  // This will be set by Firestore
-      jobId: job.id,
-      jobTitle: job.title,
-      jobDescription: job.description,
-      jobResponsibilities: job.responsibilities,
-      jobQualifications: job.qualifications,
-      jobSalaryRange: job.salaryRange,
-      jobLocation: job.location,
-      jobEmploymentType: job.employmentType,
-      companyId: job.companyId,
-      companyName: job.companyName,
-      userId: userId,
-      applicantName: applicantName,
-      qualification: qualification,
-      jobProfile: jobProfile,
-      resumeUrl: resumeUrl,
-      status: status,
+      companyLikesCount: companyLikesCount ?? this.companyLikesCount,
     );
   }
 }

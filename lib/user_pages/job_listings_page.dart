@@ -56,25 +56,46 @@ class _JobListingsPageState extends State<JobListingsPage>
     _animationController.forward();
   }
 
-  Future<void> _loadSavedJobs() async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('savedJobs')
-        .get();
-    setState(() {
-      savedJobs = doc.docs.map((d) => d.id).toList();
-    });
+  @override
+  void dispose() {
+    controller.dispose();  // Dispose the card swiper controller
+    _animationController.dispose();  // Dispose the animation controller
+    super.dispose();
   }
 
+  Future<void> _loadSavedJobs() async {
+    if (!mounted) return;
+
+    try {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('savedJobs')
+          .get();
+
+      if (!mounted) return;
+
+      setState(() {
+        savedJobs = doc.docs.map((d) => d.id).toList();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorSnackBar('Error loading saved jobs: $e');
+    }
+  }
+
+
   Future<void> _fetchJobs() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
     });
+
     try {
       QuerySnapshot querySnapshot =
-          await FirebaseFirestore.instance.collection('jobs').get();
+      await FirebaseFirestore.instance.collection('jobs').get();
       List<Job> fetchedJobs = querySnapshot.docs
           .map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
@@ -82,6 +103,8 @@ class _JobListingsPageState extends State<JobListingsPage>
       // Fetch company details
       Set<String> companyIds = fetchedJobs.map((job) => job.companyId).toSet();
       for (String companyId in companyIds) {
+        if (!mounted) return;
+
         DocumentSnapshot companyDoc = await FirebaseFirestore.instance
             .collection('applications')
             .doc(companyId)
@@ -93,16 +116,21 @@ class _JobListingsPageState extends State<JobListingsPage>
         }
       }
 
+      if (!mounted) return;
+
       setState(() {
         jobs = fetchedJobs;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+
       print('Error fetching jobs: $e');
       setState(() {
         _isLoading = false;
         jobs = [];
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to load jobs. Please try again later.'),
@@ -437,6 +465,19 @@ Apply now on our platform!
         return;
       }
 
+      // Helper function to safely convert to List<String>
+      List<String> safeListFromDynamic(dynamic value) {
+        if (value == null) return [];
+        if (value is List) {
+          return value.map((e) => e.toString()).toList();
+        }
+        if (value is String) {
+          return [value]; // Convert single string to list
+        }
+        return [];
+      }
+
+      // Safely get user data with proper type conversion
       Application application = Application(
         id: '',
         jobId: job.id,
@@ -450,12 +491,20 @@ Apply now on our platform!
         companyId: job.companyId,
         companyName: job.companyName,
         userId: userId,
-        applicantName: userData['name'] ?? 'Unknown',
-        qualification: userData['qualification'] ?? '',
-        jobProfile: userData['jobProfile'] ?? '',
+        applicantName: userData['name']?.toString() ?? 'Unknown',
+        email: userData['email']?.toString() ?? '',
+        qualification: userData['qualification']?.toString() ?? '',
+        jobProfile: userData['jobProfile']?.toString() ?? '',
+        // Safely convert lists using the helper function
+        skills: safeListFromDynamic(userData['skills']),
+        experience: safeListFromDynamic(userData['experience']),
+        achievements: safeListFromDynamic(userData['achievements']),
+        projects: safeListFromDynamic(userData['projects']),
         resumeUrl: resumeUrl,
+        profileImageUrl: userData['profileImageUrl']?.toString() ?? '',
         status: 'pending',
         timestamp: DateTime.now(),
+        companyLikesCount: 0,
       );
 
       await FirebaseFirestore.instance
@@ -464,10 +513,10 @@ Apply now on our platform!
 
       _showSuccessSnackBar('Application submitted successfully!');
     } catch (e) {
+      print('Application error details: $e'); // Add detailed error logging
       _showErrorSnackBar('Failed to apply: $e');
     }
   }
-
   void _showSuccessSnackBar(String message) {
     final snackBar = SnackBar(
       content: Container(
