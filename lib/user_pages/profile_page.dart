@@ -19,6 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final _profileFormKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _collegeController = TextEditingController(); // Added controller
   final TextEditingController _qualificationController = TextEditingController();
   final TextEditingController _jobProfileController = TextEditingController();
   final TextEditingController _skillsController = TextEditingController();
@@ -36,12 +37,11 @@ class _ProfilePageState extends State<ProfilePage> {
   int _companyLikesCount = 0;
   bool _dataLoaded = false;
 
-  // Store the current user data
   Map<String, dynamic> _currentUserData = {};
 
   final _model = GenerativeModel(
     model: 'gemini-1.5-flash-latest',
-    apiKey: 'AIzaSyCV659yUlgYVKIk_a11SAvEwwnoxQpTCvA', // Replace with your API key
+    apiKey: 'AIzaSyCV659yUlgYVKIk_a11SAvEwwnoxQpTCvA',
   );
 
   @override
@@ -51,8 +51,8 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadCompanyLikesCount();
     _addTextControllerListeners();
   }
-  @override
 
+  @override
   void dispose() {
     // Remove listeners when disposing
     _removeTextControllerListeners();
@@ -137,16 +137,18 @@ class _ProfilePageState extends State<ProfilePage> {
 You are a specialized resume parser. Your task is to extract specific information from the provided resume text and return it in a strict JSON format. Follow these rules:
 
 1. Only return valid JSON, no additional text or explanations
-2. Use empty string "" for missing fields
+2. Use an empty string "" for missing fields
 3. Use empty arrays [] for missing list items
 4. Maintain the exact field names specified
 5. For arrays, each item should be a single string
-6. Remove any special characters that could break JSON parsing
+6. Preserve bullet points or numbers in achievements if they exist
+7. Remove any special characters that could break JSON parsing
 
 Parse the following resume and return only this JSON structure:
 {
   "fullName": "string (full name of the candidate)",
   "email": "string (email address if found)",
+  "college": "string (name of the college if found)",
   "education": "string (highest education qualification)",
   "jobProfile": "string (current or most recent job title)",
   "skills": ["skill1", "skill2", "skill3"],
@@ -154,9 +156,9 @@ Parse the following resume and return only this JSON structure:
     "position1: company1 - duration1 - responsibilities1",
     "position2: company2 - duration2 - responsibilities2"
   ],
-  "achievements": [
-    "achievement1",
-    "achievement2"
+  "formattedAchievements": [
+    "- achievement1",
+    "1. achievement2"
   ],
   "projects": [
     "project1: description1",
@@ -170,26 +172,24 @@ ${resumeText.trim()}
 
       final response = await _retryGenerateContent(prompt);
       String? jsonString = response.text;
-
       jsonString = _cleanJsonString(jsonString);
 
       try {
         final Map<String, dynamic> parsedData = json.decode(jsonString);
         final sanitizedData = _sanitizeResumeData(parsedData);
 
-        // Update controllers and Firebase
         setState(() {
           _nameController.text = sanitizedData['fullName'];
           _emailController.text = sanitizedData['email'];
+          _collegeController.text = sanitizedData['college'] ?? '';
           _qualificationController.text = sanitizedData['education'];
           _jobProfileController.text = sanitizedData['jobProfile'];
           _skillsController.text = sanitizedData['skills'].join(', ');
           _experienceController.text = sanitizedData['experience'].join('\n');
-          _achievementsController.text = sanitizedData['achievements'].join('\n');
+          _achievementsController.text = sanitizedData['formattedAchievements'].join('\n');
           _projectsController.text = sanitizedData['projects'].join('\n');
         });
 
-        // Automatically save the parsed data
         await _updateProfile(showSnackBar: false);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -230,11 +230,12 @@ ${resumeText.trim()}
     return {
       'fullName': (data['fullName'] as String?) ?? '',
       'email': (data['email'] as String?) ?? '',
+      'college': (data['college'] as String?) ?? '',
       'education': (data['education'] as String?) ?? '',
       'jobProfile': (data['jobProfile'] as String?) ?? '',
       'skills': (data['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       'experience': (data['experience'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      'achievements': (data['achievements'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      'formattedAchievements': (data['formattedAchievements'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       'projects': (data['projects'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     };
   }
@@ -420,14 +421,14 @@ ${resumeText.trim()}
     }
   }
 
-  Future<void>  _updateProfile({bool showSnackBar = true}) async {
+  Future<void> _updateProfile({bool showSnackBar = true}) async {
     if (_profileFormKey.currentState!.validate()) {
       _profileFormKey.currentState!.save();
 
-      // Only update if there are actual changes
       Map<String, dynamic> newData = {
         'name': _nameController.text,
         'email': _emailController.text,
+        'college': _collegeController.text, // Added college field
         'qualification': _qualificationController.text,
         'jobProfile': _jobProfileController.text,
         'skills': _skillsController.text,
@@ -588,6 +589,12 @@ ${resumeText.trim()}
               controller: _emailController,
               labelText: 'Email',
               icon: Icons.email,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _collegeController,
+              labelText: 'College',
+              icon: Icons.school,
             ),
           ],
         ),
