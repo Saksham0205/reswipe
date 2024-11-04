@@ -293,6 +293,7 @@ ${resumeText.trim()}
         setState(() {
           _nameController.text = _currentUserData['name'] ?? '';
           _emailController.text = _currentUserData['email'] ?? '';
+          _collegeController.text = _currentUserData['college'] ?? '';
           _qualificationController.text = _currentUserData['qualification'] ?? '';
           _jobProfileController.text = _currentUserData['jobProfile'] ?? '';
           _skillsController.text = _currentUserData['skills'] ?? '';
