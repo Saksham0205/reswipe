@@ -498,6 +498,7 @@ Apply now on our platform!
         // Safely convert lists using the helper function
         skills: safeListFromDynamic(userData['skills']),
         experience: safeListFromDynamic(userData['experience']),
+        college: userData['college']?.toString() ?? '',
         achievements: safeListFromDynamic(userData['achievements']),
         projects: safeListFromDynamic(userData['projects']),
         resumeUrl: resumeUrl,

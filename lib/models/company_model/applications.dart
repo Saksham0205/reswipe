@@ -21,6 +21,7 @@ class Application {
   final List<String> skills;
   final List<String> experience;
   final List<String> achievements;
+  final String college;
   final List<String> projects;
   final String resumeUrl;
   final String profileImageUrl;
@@ -48,6 +49,7 @@ class Application {
     required this.skills,
     required this.experience,
     required this.achievements,
+    required this.college,
     required this.projects,
     required this.resumeUrl,
     required this.profileImageUrl,
@@ -79,6 +81,7 @@ class Application {
       skills: _convertToStringList(data['skills']),
       experience: _convertToStringList(data['experience']),
       achievements: _convertToStringList(data['achievements']),
+      college: data['college'] ?? '',
       projects: _convertToStringList(data['projects']),
       resumeUrl: data['resumeUrl'] ?? '',
       profileImageUrl: data['profileImageUrl'] ?? '',
@@ -131,6 +134,7 @@ class Application {
       'skills': skills,
       'experience': experience,
       'achievements': achievements,
+      'college': college,
       'projects': projects,
       'resumeUrl': resumeUrl,
       'profileImageUrl': profileImageUrl,
@@ -159,6 +163,7 @@ class Application {
     String? jobProfile,
     List<String>? skills,
     List<String>? experience,
+    String? college,
     List<String>? achievements,
     List<String>? projects,
     String? resumeUrl,
@@ -187,6 +192,7 @@ class Application {
       skills: skills ?? this.skills,
       experience: experience ?? this.experience,
       achievements: achievements ?? this.achievements,
+      college: college ?? this.college,
       projects: projects ?? this.projects,
       resumeUrl: resumeUrl ?? this.resumeUrl,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
