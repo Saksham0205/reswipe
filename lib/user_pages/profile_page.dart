@@ -498,21 +498,392 @@ ${resumeText.trim()}
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileHeader(),
-                const SizedBox(height: 24),
+                _buildHeaderSection(),
+                const Divider(thickness: 2, height: 32),
                 if (_isParsingResume)
                   const Center(
                     child: Column(
                       children: [
                         CircularProgressIndicator(),
                         SizedBox(height: 16),
-                        Text('Analyzing your resume...'),
+                        Text('Extracting data from resume...'),
                       ],
                     ),
                   ),
-                _buildProfileSections(),
+                _buildResumeUploadCard(),
+                const SizedBox(height: 16),
+                _buildProfessionalSection(),
+                const SizedBox(height: 16),
+                _buildSkillsAndAchievements(),
+                const SizedBox(height: 24),
+                _buildUpdateButton(),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Profile Image Section
+        Column(
+          children: [
+            Stack(
+              children: [
+                GestureDetector(
+                  onTap: _isImageLoading ? null : _pickAndUploadProfileImage,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.deepPurple, width: 3),
+                    ),
+                    child: _isImageLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : CircleAvatar(
+                      radius: 58,
+                      backgroundImage: _profileImageUrl.isNotEmpty
+                          ? NetworkImage(_profileImageUrl)
+                          : null,
+                      child: _profileImageUrl.isEmpty
+                          ? const Icon(Icons.person, size: 60)
+                          : null,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.deepPurple.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Profile Views',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  Text(
+                    '$_companyLikesCount',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 16),
+        // Personal Information Fields
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTextField(
+                controller: _nameController,
+                labelText: 'Full Name',
+                icon: Icons.person,
+              ),
+              const SizedBox(height: 8),
+              _buildTextField(
+                controller: _emailController,
+                labelText: 'Email',
+                icon: Icons.email,
+              ),
+              const SizedBox(height: 8),
+              _buildTextField(
+                controller: _collegeController,
+                labelText: 'College',
+                icon: Icons.school,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResumeUploadCard() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Resume',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.deepPurple.withOpacity(0.5)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      _resumeUrl.isEmpty ? Icons.upload_file : Icons.description,
+                      size: 48,
+                      color: Colors.deepPurple,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _resumeUrl.isEmpty
+                          ? 'Upload your resume (PDF)'
+                          : 'Resume uploaded successfully',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _pickAndUploadResume,
+                      icon: const Icon(Icons.upload_file, color: Colors.white),
+                      label: Text(
+                        _resumeUrl.isEmpty ? 'Select File' : 'Update Resume',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfessionalSection() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Professional Experience',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _qualificationController,
+              labelText: 'Education',
+              icon: Icons.school,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _jobProfileController,
+              labelText: 'Current Job Profile',
+              icon: Icons.work,
+            ),
+            const SizedBox(height: 16),
+            _buildExperienceSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExperienceSection() {
+    List<String> experiences = _experienceController.text.split('\n')
+      ..removeWhere((e) => e.isEmpty);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Experience',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.deepPurple,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: experiences.length,
+          itemBuilder: (context, index) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.deepPurple,
+                  child: Text(
+                    'E${index + 1}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                title: Text(experiences[index]),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkillsAndAchievements() {
+    List<String> achievements = _achievementsController.text.split('\n')
+      ..removeWhere((e) => e.isEmpty);
+
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Skills & Achievements',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _skillsController,
+              labelText: 'Skills',
+              icon: Icons.star,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Achievements',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: achievements.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.deepPurple,
+                      child: Text(
+                        'A${index + 1}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    title: Text(achievements[index]),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String labelText,
+    required IconData icon,
+    bool isMultiline = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: isMultiline ? null : 1,
+      decoration: InputDecoration(
+        labelText: labelText,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        prefixIcon: Icon(icon, color: Colors.deepPurple),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+      ),
+      validator: (value) => value!.isEmpty ? 'This field is required' : null,
+    );
+  }
+
+  Widget _buildUpdateButton() {
+    return Center(
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : () => _updateProfile(showSnackBar: true),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurple,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 48,
+            vertical: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        )
+            : const Text(
+          'Update Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
@@ -748,36 +1119,36 @@ ${resumeText.trim()}
     );
   }
 
-  Widget _buildUpdateButton() {
-    return Center(
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _updateProfile,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-          backgroundColor: Colors.deepPurple,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: _isLoading
-            ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        )
-            : const Text(
-          'Update Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildUpdateButton() {
+  //   return Center(
+  //     child: ElevatedButton(
+  //       onPressed: _isLoading ? null : _updateProfile,
+  //       style: ElevatedButton.styleFrom(
+  //         padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+  //         backgroundColor: Colors.deepPurple,
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(8),
+  //         ),
+  //       ),
+  //       child: _isLoading
+  //           ? const SizedBox(
+  //         width: 20,
+  //         height: 20,
+  //         child: CircularProgressIndicator(
+  //           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+  //         ),
+  //       )
+  //           : const Text(
+  //         'Update Profile',
+  //         style: TextStyle(
+  //           color: Colors.white,
+  //           fontSize: 16,
+  //           fontWeight: FontWeight.bold,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildInfoCard({required IconData icon, required String title, required String value}) {
     return Card(
@@ -801,22 +1172,22 @@ ${resumeText.trim()}
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
-    required IconData icon,
-    bool isMultiline = false,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: labelText,
-        border: const OutlineInputBorder(),
-        prefixIcon: Icon(icon, color: Colors.deepPurple),
-      ),
-      validator: (value) => value!.isEmpty ? 'This field is required' : null,
-    );
-  }
+  // Widget _buildTextField({
+  //   required TextEditingController controller,
+  //   required String labelText,
+  //   required IconData icon,
+  //   bool isMultiline = false,
+  // }) {
+  //   return TextFormField(
+  //     controller: controller,
+  //     decoration: InputDecoration(
+  //       labelText: labelText,
+  //       border: const OutlineInputBorder(),
+  //       prefixIcon: Icon(icon, color: Colors.deepPurple),
+  //     ),
+  //     validator: (value) => value!.isEmpty ? 'This field is required' : null,
+  //   );
+  // }
 
   Widget _buildResumeSection() {
     return Column(
