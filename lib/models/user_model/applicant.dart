@@ -15,7 +15,7 @@ class Applications {
     required this.jobProfile,
     required this.resumeUrl,
     required this.profilePhotoUrl,
-    required this.college, // Initialize college field
+    required this.college,
     required this.companyLikesCount,
   });
 
@@ -38,7 +38,7 @@ class Applications {
       'jobProfile': jobProfile,
       'resumeUrl': resumeUrl,
       'profilePhotoUrl': profilePhotoUrl,
-      'college': college, // Add college to the map
+      'college': college,
       'companyLikesCount': companyLikesCount,
     };
   }

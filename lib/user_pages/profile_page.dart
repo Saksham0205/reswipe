@@ -148,7 +148,7 @@ Parse the following resume and return only this JSON structure:
 {
   "fullName": "string (full name of the candidate)",
   "email": "string (email address if found)",
-  "college": "string (name of the college if found)",
+  "college": "string (name of the college/university if found)",
   "education": "string (highest education qualification)",
   "jobProfile": "string (current or most recent job title)",
   "skills": ["skill1", "skill2", "skill3"],
@@ -190,7 +190,23 @@ ${resumeText.trim()}
           _projectsController.text = sanitizedData['projects'].join('\n');
         });
 
-        await _updateProfile(showSnackBar: false);
+        // Update Firestore with all fields including college
+        String userId = FirebaseAuth.instance.currentUser!.uid;
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({
+          'resumeUrl': _resumeUrl,
+          'name': _nameController.text,
+          'email': _emailController.text,
+          'college': _collegeController.text, // Added college field
+          'qualification': _qualificationController.text,
+          'jobProfile': _jobProfileController.text,
+          'skills': _skillsController.text,
+          'experience': _experienceController.text,
+          'achievements': _achievementsController.text,
+          'projects': _projectsController.text,
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Resume parsed and saved successfully!')),
@@ -623,6 +639,7 @@ ${resumeText.trim()}
                 labelText: 'College',
                 icon: Icons.school,
               ),
+
             ],
           ),
         ),
