@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../models/company_model/applications.dart';
 import 'components/app_class.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   final List<Application> favoriteApplications;
   final Function() clearAllFavorites;
   final Function(Application) removeFromFavorites;
@@ -16,6 +16,11 @@ class FavoritesScreen extends StatelessWidget {
     required this.removeFromFavorites,
   }) : super(key: key);
 
+  @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,9 +36,8 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-
   Widget _buildFavoritesList(BuildContext context) {
-    if (favoriteApplications.isEmpty) {
+    if (widget.favoriteApplications.isEmpty) {
       return _buildEmptyState();
     }
 
@@ -42,9 +46,9 @@ class FavoritesScreen extends StatelessWidget {
       color: AppColors.primary,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: favoriteApplications.length,
+        itemCount: widget.favoriteApplications.length,
         itemBuilder: (context, index) {
-          final application = favoriteApplications[index];
+          final application = widget.favoriteApplications[index];
           return _buildFavoriteCard(context, application)
               .animate()
               .fadeIn(duration: 300.ms)
@@ -95,6 +99,7 @@ class FavoritesScreen extends StatelessWidget {
 
   SliverAppBar _buildSliverAppBar(BuildContext context, bool innerBoxIsScrolled) {
     return SliverAppBar(
+      automaticallyImplyLeading: false,
       expandedHeight: 120,
       floating: true,
       pinned: true,
@@ -102,10 +107,23 @@ class FavoritesScreen extends StatelessWidget {
       forceElevated: innerBoxIsScrolled,
       backgroundColor: AppColors.primary,
       flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.deepPurple.shade700,
+                Colors.deepPurple.shade500,
+              ],
+            ),
+          ),
+        ),
         title: Text(
           'Matched Profiles',
           style: AppTypography.appBarTitle.copyWith(
             color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
@@ -116,14 +134,15 @@ class FavoritesScreen extends StatelessWidget {
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
-        if (favoriteApplications.isNotEmpty)
+        if (widget.favoriteApplications.isNotEmpty)
           IconButton(
             tooltip: 'Clear all matches',
             icon: const Icon(Icons.delete_sweep_rounded, color: Colors.white),
             onPressed: () => _showClearConfirmation(context),
           ),
       ],
-    );}
+    );
+  }
 
   Widget _buildFavoriteCard(BuildContext context, Application application) {
     return Dismissible(
@@ -183,7 +202,7 @@ class FavoritesScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              removeFromFavorites(application);
+              widget.removeFromFavorites(application);
               Navigator.of(context).pop(true);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -295,9 +314,98 @@ class FavoritesScreen extends StatelessWidget {
         children: [
           _buildInfoRow(Icons.school, application.qualification),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.location_on, 'Location • Remote'),
+          _buildInfoRow(Icons.location_on, application.college),
           const SizedBox(height: 12),
-          _buildSkillsList(),
+          _buildSkillsList(application.skills),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkillsList(List<String> skills) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: skills.map((skill) => _buildSkillChip(skill)).toList(),
+    );
+  }
+
+  Widget _buildCardActions(BuildContext context, Application application) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+      ),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: () {
+            // Implement resume view functionality
+            if (application.resumeUrl.isNotEmpty) {
+              launchUrl(Uri.parse(application.resumeUrl));
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Resume not available'),
+                ),
+              );
+            }
+          },
+          icon: const Icon(Icons.description, size: 18),
+          label: const Text('View Resume'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.deepPurple,
+            side: BorderSide(color: Colors.deepPurple.shade200),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showClearConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Clear All Matches',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to remove all matched profiles? This action cannot be undone.',
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              widget.clearAllFavorites();
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('All matches cleared'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Clear All'),
+          ),
         ],
       ),
     );
@@ -314,18 +422,6 @@ class FavoritesScreen extends StatelessWidget {
             style: TextStyle(fontSize: 14, color: Colors.grey[800]),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildSkillsList() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        _buildSkillChip('Flutter'),
-        _buildSkillChip('React'),
-        _buildSkillChip('UI/UX'),
       ],
     );
   }
@@ -348,91 +444,6 @@ class FavoritesScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildCardActions(BuildContext context, Application application) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.description, size: 18),
-              label: const Text('View Resume'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.deepPurple,
-                side: BorderSide(color: Colors.deepPurple.shade200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () => _sendEmail(context, application),
-              icon: const Icon(Icons.message, size: 18),
-              label: const Text('Message'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _sendEmail(BuildContext context, Application application) async {
-//     // Assume that the HR's registered email is fetched from their account/profile details.
-//     String hrEmail = "saksham252003@gmail.com"; // Replace with actual retrieval logic
-//
-//     // Compose the email URI
-//     final Uri emailUri = Uri(
-//       scheme: 'mailto',
-//       path: 'sakshamchauhan02@outlook.com',
-//       queryParameters: {
-//         'subject': 'Job Application Inquiry - ${application.applicantName}',
-//         'body': '''
-// Dear ${application.applicantName},
-//
-// I am reaching out regarding your job application for the ${application.jobProfile} position.
-//
-// Best regards,
-// $hrEmail
-// '''
-//       },
-//     );
-//
-//     try {
-//       // Check if the email can be launched
-//       if (await canLaunchUrl(emailUri)) {
-//         // Launch the email client
-//         await launchUrl(emailUri);
-//       } else {
-//         // If email client can't be launched, show an error
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(
-//             content: Text('Could not launch email app'),
-//           ),
-//         );
-//       }
-//     } catch (e) {
-//       // Handle any errors
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(
-//           content: Text('An error occurred: $e'),
-//         ),
-//       );
-//     }
-  }
-
 
   void _showApplicationDetails(BuildContext context, Application application) {
     showModalBottomSheet(
@@ -471,18 +482,42 @@ class FavoritesScreen extends StatelessWidget {
                     children: [
                       _buildDetailHeader(application),
                       const SizedBox(height: 24),
-                      _buildDetailSection('Experience', [
-                        'Senior Developer at Tech Corp',
-                        'Lead Developer at StartUp Inc',
-                      ]),
+                      if (application.experience.isNotEmpty)
+                        _buildDetailSection('Experience', application.experience),
                       _buildDetailSection('Education', [
                         application.qualification,
+                        'College: ${application.college}',
                       ]),
-                      _buildDetailSection('Skills', [
-                        'Flutter Development',
-                        'React Native',
-                        'UI/UX Design',
-                      ]),
+                      if (application.skills.isNotEmpty)
+                        _buildDetailSection('Skills', application.skills),
+                      if (application.projects.isNotEmpty)
+                        _buildDetailSection('Projects', application.projects),
+                      if (application.achievements.isNotEmpty)
+                        _buildDetailSection('Achievements', application.achievements),
+                      const SizedBox(height: 24),
+                      Center(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            if (application.resumeUrl.isNotEmpty) {
+                              launchUrl(Uri.parse(application.resumeUrl));
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Resume not available'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.description, size: 18),
+                          label: const Text('View Resume'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.deepPurple,
+                            side: BorderSide(color: Colors.deepPurple.shade200),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -491,6 +526,44 @@ class FavoritesScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailSection(String title, List<String> items) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...items.map((item) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.check_circle, color: Colors.deepPurple, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  item,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )).toList(),
+        const SizedBox(height: 24),
+      ],
     );
   }
 
@@ -522,69 +595,6 @@ class FavoritesScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDetailSection(String title, List<String> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...items.map((item) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.deepPurple, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  item,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        )),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
-  void _showClearConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear All Matches'),
-        content: const Text(
-          'Are you sure you want to remove all matched profiles? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              clearAllFavorites();
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: const Text('Clear All'),
-          ),
-        ],
-      ),
     );
   }
 }
