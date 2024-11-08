@@ -50,7 +50,6 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
     super.dispose();
   }
 
-  // Helper function to show error messages with animation
   void _showErrorSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -73,7 +72,6 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
     );
   }
 
-  // Show success message with animation
   void _showSuccessSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -95,7 +93,6 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
     );
   }
 
-  // Validate current section
   bool _validateCurrentSection() {
     switch (_currentStep) {
       case 0: // Basic Information
@@ -112,47 +109,97 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
   }
 
   Widget _buildStepIndicator() {
+    final steps = [
+      {'label': 'Basic Info', 'icon': Icons.description},
+      {'label': 'Details', 'icon': Icons.list_alt},
+      {'label': 'Requirements', 'icon': Icons.check_circle}
+    ];
+
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(3, (index) {
-          bool isActive = index == _currentStep;
-          bool isCompleted = _completedSections[index] ?? false;
-          return Row(
-            children: [
-              Container(
-                width: 35,
-                height: 35,
+      padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      child: Column(
+        children: [
+          // Progress Bar
+          Container(
+            height: 4,
+            margin: EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: AnimatedFractionallySizedBox(
+              duration: Duration(milliseconds: 300),
+              alignment: Alignment.centerLeft,
+              widthFactor: _currentStep / (steps.length - 1),
+              child: Container(
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isCompleted
-                      ? Colors.green
-                      : (isActive ? Colors.blue : Colors.grey[300]),
-                ),
-                child: Center(
-                  child: isCompleted
-                      ? Icon(Icons.check, color: Colors.white, size: 20)
-                      : Text(
-                    '${index + 1}',
-                    style: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                    ),
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[400]!, Colors.blue[600]!],
                   ),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              if (index < 2)
-                Container(
-                  width: 50,
-                  height: 2,
-                  color: _completedSections[index] ?? false
-                      ? Colors.green
-                      : Colors.grey[300],
-                ),
-            ],
-          );
-        }),
+            ),
+          ),
+
+          // Step Indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(steps.length, (index) {
+              final isCompleted = _completedSections[index] ?? false;
+              final isActive = index == _currentStep;
+
+              return Column(
+                children: [
+                  TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 300),
+                    tween: Tween(begin: 1.0, end: isActive ? 1.1 : 1.0),
+                    builder: (context, scale, child) {
+                      return Transform.scale(
+                        scale: scale,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isCompleted
+                                ? Colors.green
+                                : (isActive ? Colors.blue : Colors.grey[300]),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: isCompleted
+                                ? Icon(Icons.check, color: Colors.white, size: 24)
+                                : Icon(
+                              steps[index]['icon'] as IconData,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    steps[index]['label'] as String,
+                    style: TextStyle(
+                      color: isActive ? Colors.blue[600] : Colors.grey[600],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
