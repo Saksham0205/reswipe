@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 import '../services/firestore_service.dart';
+import 'forgot_password.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -119,7 +120,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             onPressed: () {
-                              // Handle forgot password
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ForgotPasswordScreen(),
+                                ),
+                              );
                             },
                           ),
                         ),

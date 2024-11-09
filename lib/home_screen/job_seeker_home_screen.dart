@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import '../user_pages/applications_page.dart';
 import '../user_pages/home_page/job_listings_page.dart';
 import '../user_pages/profile_page.dart';
-import '../user_pages/settings_screen/settings_page.dart';
+import '../user_pages/user_settings_screen/user_settings_page.dart';
 
 
 
@@ -20,7 +18,7 @@ class _JobSeekerHomeScreenState extends State<JobSeekerHomeScreen> {
     JobListingsPage(),
     ApplicationsPage(),
     ProfilePage(),
-    SettingsPage(),
+    UserSettingsPage(),
   ];
 
   void _onItemTapped(int index) {
