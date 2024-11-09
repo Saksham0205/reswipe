@@ -109,13 +109,13 @@ class AuthService {
         .add(applicationData);
   }
 
-  Stream<List<Applications>> getFavoriteApplicants() {
+  Stream<List<Applicant>> getFavoriteApplicants() {
     return _firestore.collection('favorites').snapshots().asyncMap((snapshot) async {
-      List<Applications> applicants = [];
+      List<Applicant> applicants = [];
       for (var doc in snapshot.docs) {
         DocumentSnapshot applicantDoc = await _firestore.collection('applications').doc(doc.id).get();
         if (applicantDoc.exists) {
-          applicants.add(Applications.fromFirestore(applicantDoc));
+          applicants.add(Applicant.fromFirestore(applicantDoc));
         }
       }
       return applicants;
@@ -126,18 +126,18 @@ class AuthService {
     return _firestore.collection('favorites').doc(applicantId).delete();
   }
 
-  Stream<List<Applications>> getApplicants() {
+  Stream<List<Applicant>> getApplicants() {
     print('Fetching applicants...');
     return _firestore.collection('applications').snapshots().map((snapshot) {
       print('Received ${snapshot.docs.length} applications');
       return snapshot.docs.map((doc) {
         try {
-          return Applications.fromFirestore(doc);
+          return Applicant.fromFirestore(doc);
         } catch (e) {
           print('Error parsing applications: $e');
           return null;
         }
-      }).whereType<Applications>().toList();
+      }).whereType<Applicant>().toList();
     });
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:lottie/lottie.dart';
 import '../services/firestore_service.dart';
 import 'forgot_password.dart';
@@ -166,9 +167,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 20),
                   OutlinedButton.icon(
-                    icon: Image.network(
-                      'https://img.icons8.com/?size=100&id=17949&format=png&color=000000',
-                      height: 24.0,
+                    icon: Image.asset(
+                      'assets/google_icon.png',
                     ),
                     label: Text('Sign in with Google'),
                     onPressed: _isLoading ? null : _handleGoogleSignIn,

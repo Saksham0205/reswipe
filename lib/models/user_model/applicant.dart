@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Applications {
+class Applicant {
   final String id;
   final String name;
   final String jobProfile;
   final String resumeUrl;
   final String profilePhotoUrl;
-  final String college; // New college field
+  final String college;
   final int companyLikesCount;
 
-  Applications({
+  Applicant({
     required this.id,
     required this.name,
     required this.jobProfile,
@@ -19,9 +19,9 @@ class Applications {
     required this.companyLikesCount,
   });
 
-  factory Applications.fromFirestore(DocumentSnapshot doc) {
+  factory Applicant.fromFirestore(DocumentSnapshot doc) {
     Map data = doc.data() as Map<String, dynamic>;
-    return Applications(
+    return Applicant(
       id: doc.id,
       name: data['name'] ?? '',
       jobProfile: data['jobProfile'] ?? '',
