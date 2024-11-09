@@ -21,6 +21,13 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
+  late List<Application> _localFavorites;
+
+  @override
+  void initState() {
+    super.initState();
+    _localFavorites = List.from(widget.favoriteApplications);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +44,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildFavoritesList(BuildContext context) {
-    if (widget.favoriteApplications.isEmpty) {
+    if (_localFavorites.isEmpty) {
       return _buildEmptyState();
     }
 
@@ -46,9 +53,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       color: AppColors.primary,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: widget.favoriteApplications.length,
+        itemCount: _localFavorites.length,
         itemBuilder: (context, index) {
-          final application = widget.favoriteApplications[index];
+          final application = _localFavorites[index];
           return _buildFavoriteCard(context, application)
               .animate()
               .fadeIn(duration: 300.ms)
@@ -57,6 +64,135 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       ),
     );
   }
+
+  // Updated delete single item functionality
+  void _handleDeleteApplication(Application application) {
+    setState(() {
+      _localFavorites.remove(application);
+      widget.removeFromFavorites(application);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${application.applicantName}\'s profile removed'),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              _localFavorites.add(application);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  // Updated clear all functionality
+  void _handleClearAll() {
+    final previousFavorites = List<Application>.from(_localFavorites);
+
+    setState(() {
+      _localFavorites.clear();
+      widget.clearAllFavorites();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('All matches cleared'),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              _localFavorites = List.from(previousFavorites);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showRemoveConfirmation(BuildContext context, Application application) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Match'),
+        content: Text(
+          'Are you sure you want to remove ${application.applicantName} from your matches?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _handleDeleteApplication(application);
+              Navigator.of(context).pop(true);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Clear All Matches',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Are you sure you want to remove all matched profiles? This action cannot be undone.',
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _handleClearAll();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDismissBackground() {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      decoration: BoxDecoration(
+        color: Colors.red.shade100,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Icon(Icons.delete_forever_rounded, color: Colors.red.shade700, size: 36),
+    );
+  }
+
 
   Future<void> _handleRefresh() async {
     // Simulate a network refresh
@@ -175,40 +311,34 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Widget _buildDismissBackground() {
-    return Container(
-      alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 20),
-      decoration: BoxDecoration(
-        color: Colors.red.shade100,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Icon(Icons.delete_forever_rounded, color: Colors.red.shade700, size: 36),
-    );
-  }
 
-  Future<bool?> _showRemoveConfirmation(BuildContext context, Application application) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Match'),
-        content: Text(
-          'Are you sure you want to remove ${application.applicantName} from your matches?',
+  Widget _buildProfileImage(Application application, {String? heroSuffix}) {
+    // Create a unique tag by combining the ID with an optional suffix
+    final heroTag = 'profile_${application.id}${heroSuffix ?? ""}';
+
+    return Hero(
+      tag: heroTag,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.deepPurple.shade300, Colors.deepPurple.shade500],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+        child: Center(
+          child: Text(
+            application.applicantName[0].toUpperCase(),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              widget.removeFromFavorites(application);
-              Navigator.of(context).pop(true);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Remove'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -226,7 +356,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       ),
       child: Row(
         children: [
-          _buildProfileImage(application),
+          _buildProfileImage(application, heroSuffix: '_list'),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -278,33 +408,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Widget _buildProfileImage(Application application) {
-    return Hero(
-      tag: 'profile_${application.id}',
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.deepPurple.shade300, Colors.deepPurple.shade500],
-          ),
-        ),
-        child: Center(
-          child: Text(
-            application.applicantName[0].toUpperCase(),
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildCardBody(Application application) {
     return Padding(
@@ -363,53 +466,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  void _showClearConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'Clear All Matches',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: const Text(
-          'Are you sure you want to remove all matched profiles? This action cannot be undone.',
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              widget.clearAllFavorites();
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('All matches cleared'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Clear All'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(

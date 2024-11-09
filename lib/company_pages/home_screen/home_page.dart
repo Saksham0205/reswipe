@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../models/company_model/applications.dart';
@@ -18,14 +19,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late CardSwiperController controller;
   late AnimationController _animationController;
   late Animation<double> _animation;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     controller = CardSwiperController();
-    _loadFavorites();
-    _fetchApplications();
-
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -37,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
 
     _animationController.forward();
+    _loadFavorites();
+    _fetchApplications();
   }
 
   @override
@@ -49,23 +50,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   //Functions
 
   Future<void> _fetchApplications() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('applications')
-          .orderBy('timestamp', descending: true) // Add ordering
-          .limit(50) // Limit the number of documents
+          .orderBy('timestamp', descending: true)
+          .limit(50)
           .get();
 
       setState(() {
         applications = querySnapshot.docs
             .map((doc) => Application.fromFirestore(doc))
             .toList();
-        print('Fetched ${applications.length} applications'); // Debug print
+        isLoading = false;
+
+        // Reset the controller when we get new applications
+        if (applications.isNotEmpty) {
+          controller = CardSwiperController();
+        }
       });
     } catch (e) {
       print('Error fetching applications: $e');
+      setState(() {
+        isLoading = false;
+      });
     }
   }
+
 
   Future<void> _loadFavorites() async {
     final prefs = await SharedPreferences.getInstance();
@@ -123,15 +137,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
         child: SafeArea(
           child: Column(
-            children: [
+            children:[
               _buildAppBar(),
               Expanded(
-                child: applications.isEmpty
-                    ? _buildLoadingShimmer()
-                    : _buildCardSwiper(),
+                child: _buildMainContent(),
               ),
-              _buildSwipeActions(),
-
+              if (applications.isNotEmpty) _buildSwipeActions(),
             ],
           ),
         ),
@@ -195,36 +206,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildCardSwiper() {
+    if (applications.isEmpty) {
+      return _buildNoApplicationsView();
+    }
+
     return FadeTransition(
       opacity: _animation,
       child: CardSwiper(
         controller: controller,
         cardsCount: applications.length,
+        numberOfCardsDisplayed: 1,
         onSwipe: _onSwipe,
         onEnd: _onEnd,
-        padding: EdgeInsets.zero, // Remove padding
+        padding: EdgeInsets.zero,
         cardBuilder: (context, index, horizontalThreshold, verticalThreshold) {
-          if (index >= 0 && index < applications.length) {
-            return SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              child: _buildCard(applications[index]),
-            );
-          }
-          return const SizedBox.shrink();
+          return SizedBox(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            child: _buildCard(applications[index]),
+          );
         },
       ),
     );
-  }
-
-  void _onEnd() {
-    // Refresh the applications list when all cards are swiped
-    _fetchApplications().then((_) {
-      setState(() {
-        // Reset the controller if needed
-        controller = CardSwiperController();
-      });
-    });
   }
 
   bool _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
@@ -238,13 +241,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       }
     }
 
-    // If we've reached the end of the cards
-    if (currentIndex == null) {
+    // If this was the last card
+    if (currentIndex == null || currentIndex >= applications.length) {
       _onEnd();
       return false;
     }
     return true;
   }
+
+  void _onEnd() {
+    setState(() {
+      applications.clear();
+      // Create a new controller for the next batch
+      controller = CardSwiperController();
+    });
+
+    // Fetch new applications
+    _fetchApplications();
+  }
+
 
 
   Widget _buildCard(Application application) {
@@ -548,6 +563,62 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     // Implement resume viewing logic
     // You might want to use a package like url_launcher to open the PDF
   }
+
+  Widget _buildMainContent() {
+    if (isLoading) {
+      return _buildLoadingShimmer();
+    }
+
+    if (applications.isEmpty) {
+      return _buildNoApplicationsView();
+    }
+
+    return _buildCardSwiper();
+  }
+
+  Widget _buildNoApplicationsView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.network(
+            'https://assets1.lottiefiles.com/packages/lf20_EMTsq1.json',
+            width: 200,
+            height: 200,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'No More Resumes',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple.shade600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Check back later for new applications',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _fetchApplications,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refresh'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   void _showApplicationDetails(Application application) {
     showModalBottomSheet(
