@@ -3,12 +3,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:reswipe/home_screen/company_home_screen.dart';
 import 'auth/auth_wrapper.dart';
 import 'auth/login_screen.dart';
+import 'firebase_options.dart';
 import 'home_screen/job_seeker_home_screen.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(JobFinderApp());
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
+import '../services/firestore_service.dart';
 import 'registration_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -9,10 +10,30 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   String _email = '';
   String _password = '';
   bool _isLoading = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final UserCredential? userCredential = await _authService.signInWithGoogle();
+      if (userCredential == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google sign in was cancelled')),
+        );
+      }
+      // Navigation will be handled by AuthWrapper
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to sign in with Google: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   void _tryLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -139,11 +160,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 20),
                   OutlinedButton.icon(
-                    icon: Icon(Icons.android, color: Colors.green),
+                    icon: Image.network(
+                      'https://img.icons8.com/?size=100&id=17949&format=png&color=000000',
+                      height: 24.0,
+                    ),
                     label: Text('Sign in with Google'),
-                    onPressed: () {
-                      // Handle Google Sign-In
-                    },
+                    onPressed: _isLoading ? null : _handleGoogleSignIn,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black87,
                       padding: EdgeInsets.symmetric(vertical: 12),

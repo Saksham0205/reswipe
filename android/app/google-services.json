@@ -12,7 +12,20 @@
           "package_name": "com.reswipe.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "303015680525-vj25eeis1rdc5v822nndogntggs860ka.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.reswipe.app",
+            "certificate_hash": "9bb8b1aa2ca75915142f88f87f7251931b441b24"
+          }
+        },
+        {
+          "client_id": "303015680525-f01r0h6pn48qbskqt6cage39sho076tq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCU1H2ShVKIavCSOmnUaW0NHpC0o5Y8_jo"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "303015680525-f01r0h6pn48qbskqt6cage39sho076tq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "303015680525-jiniquaude45bltq2ump9dkipbj73f87.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.reswipe.app"
+              }
+            }
+          ]
         }
       }
     }
