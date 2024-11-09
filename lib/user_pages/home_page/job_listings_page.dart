@@ -8,8 +8,8 @@ import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../models/company_model/applications.dart';
-import '../models/company_model/job.dart';
+import '../../models/company_model/applications.dart';
+import '../../models/company_model/job.dart';
 
 class JobListingsPage extends StatefulWidget {
   @override
@@ -21,11 +21,10 @@ class _JobListingsPageState extends State<JobListingsPage>
   Map<String, String> companyNames = {};
   Map<String, String> companyLogos = {};
   List<Job> jobs = [];
-  List<String> savedJobs = [];
+  List<Job> filteredJobs = [];
   late CardSwiperController controller;
   late AnimationController _animationController;
   late Animation<double> _animation;
-  bool isFiltering = false;
   String selectedFilter = 'All';
   final List<String> filters = [
     'All',
@@ -35,13 +34,18 @@ class _JobListingsPageState extends State<JobListingsPage>
     'Internship'
   ];
   bool _isLoading = true;
+  bool _showEndState = false;
 
   @override
   void initState() {
     super.initState();
     controller = CardSwiperController();
-    _fetchJobs();
-    _loadSavedJobs();
+    _showEndState = false;
+    _fetchJobs().then((_) {
+      if (mounted) {
+        _filterJobs('All');
+      }
+    });
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -63,34 +67,33 @@ class _JobListingsPageState extends State<JobListingsPage>
     super.dispose();
   }
 
-  Future<void> _loadSavedJobs() async {
-    if (!mounted) return;
 
-    try {
-      final userId = FirebaseAuth.instance.currentUser!.uid;
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('savedJobs')
-          .get();
+  void _filterJobs(String filter) {
+    setState(() {
+      selectedFilter = filter;
+      _showEndState = false; // Reset end state when changing filters
+      if (filter == 'All') {
+        filteredJobs = List.from(jobs);
+      } else {
+        filteredJobs = jobs
+            .where((job) =>
+        job.employmentType.toLowerCase() == filter.toLowerCase())
+            .toList();
+      }
 
-      if (!mounted) return;
-
-      setState(() {
-        savedJobs = doc.docs.map((d) => d.id).toList();
-      });
-    } catch (e) {
-      if (!mounted) return;
-      _showErrorSnackBar('Error loading saved jobs: $e');
-    }
+      // Reset the controller when filter changes
+      if (filteredJobs.isNotEmpty) {
+        controller = CardSwiperController();
+      }
+    });
   }
-
 
   Future<void> _fetchJobs() async {
     if (!mounted) return;
 
     setState(() {
       _isLoading = true;
+      _showEndState = false;
     });
 
     try {
@@ -140,6 +143,97 @@ class _JobListingsPageState extends State<JobListingsPage>
     }
   }
 
+  Widget _buildEndState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.network(
+            'https://assets3.lottiefiles.com/packages/lf20_success.json', // You can change this to any completion animation
+            width: 200,
+            height: 200,
+            fit: BoxFit.contain,
+            repeat: false,
+            frameRate: FrameRate(60),
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.check_circle_outline,
+              size: 100,
+              color: Colors.deepPurple.shade200,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'You\'re All Caught Up!',
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              'You\'ve viewed all available jobs.\nCheck back later for new opportunities!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (selectedFilter != 'All') ...[
+                ElevatedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showEndState = false;
+                      _filterJobs('All');
+                    });
+                  },
+                  icon: const Icon(Icons.filter_list, color: Colors.deepPurple),
+                  label: const Text('Show All Jobs',
+                      style: TextStyle(color: Colors.deepPurple)
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _showEndState = false;
+                  });
+                  _fetchJobs();
+                },
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                label: const Text('Refresh',
+                    style: TextStyle(color: Colors.white)
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,106 +260,16 @@ class _JobListingsPageState extends State<JobListingsPage>
     );
   }
 
-  Widget _buildMainContent() {
-    if (_isLoading) {
-      return _buildShimmerLoading();
-    }
-
-    if (jobs.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return Column(
-      children: [
-        Expanded(child: _buildCardSwiper()),
-        _buildSwipeActions(),
-      ],
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Lottie.network(
-            'https://assets1.lottiefiles.com/packages/lf20_EMTsq1.json', // Empty box animation
-            width: 200,
-            height: 200,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'No Jobs Available',
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              'Looks like all the good jobs are taking a coffee break! ☕\nCheck back later for fresh opportunities.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              _fetchJobs();
-            },
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            label: const Text('Refresh', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Reswipe',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.bookmark_border, color: Colors.white),
-                onPressed: () {
-                  // Navigate to saved jobs
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.person_outline, color: Colors.white),
-                onPressed: () {
-                  // Navigate to profile
-                },
-              ),
-            ],
-          ),
-        ],
+      child: Text(
+        'Reswipe',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -292,20 +296,155 @@ class _JobListingsPageState extends State<JobListingsPage>
               ),
               selected: isSelected,
               onSelected: (selected) {
-                setState(() {
-                  selectedFilter = filter;
-                  // Implement filtering logic
-                });
+                _filterJobs(filter);
               },
               backgroundColor: Colors.white,
               selectedColor: Colors.deepPurple,
               checkmarkColor: Colors.white,
+              elevation: 3,
+              shadowColor: Colors.deepPurple.withOpacity(0.3),
             ),
           );
         },
       ),
     );
   }
+
+  Widget _buildMainContent() {
+    if (_isLoading) {
+      return _buildShimmerLoading();
+    }
+
+    if (jobs.isEmpty) {
+      return _buildEmptyState(
+        message: 'No Jobs Available',
+        subMessage: 'Looks like all the good jobs are taking a coffee break! ☕\nCheck back later for fresh opportunities.',
+        lottieUrl: 'https://assets1.lottiefiles.com/packages/lf20_EMTsq1.json',
+      );
+    }
+
+    if (filteredJobs.isEmpty) {
+      return _buildEmptyState(
+        message: 'No ${selectedFilter} Jobs Found',
+        subMessage: 'We couldn\'t find any jobs matching your filter.\nTry selecting a different category!',
+        lottieUrl: 'https://assets10.lottiefiles.com/packages/lf20_swnrn2gh.json',
+      );
+    }
+
+    if (_showEndState) {
+      return _buildEndState();
+    }
+
+    // If we have exactly one job left, show it in the card swiper
+    // The CardSwiper will handle it properly now
+    return Column(
+      children: [
+        Expanded(
+          child: CardSwiper(
+            controller: controller,
+            cardsCount: filteredJobs.length,
+            onSwipe: _onSwipe,
+            numberOfCardsDisplayed: 1, // Explicitly set to 1
+            backCardOffset: const Offset(0, 0), // Prevent showing partial cards
+            padding: const EdgeInsets.all(24.0),
+            cardBuilder: (context, index, _, __) => JobCard(
+              job: filteredJobs[index],
+              companyName: companyNames[filteredJobs[index].companyId] ?? 'Unknown Company',
+              companyLogo: companyLogos[filteredJobs[index].companyId] ?? '',
+            ),
+          ),
+        ),
+        if (filteredJobs.length >= 1) _buildSwipeActions(),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState({
+    required String message,
+    required String subMessage,
+    required String lottieUrl,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Lottie.network(
+            lottieUrl,
+            width: 200,
+            height: 200,
+            fit: BoxFit.contain,
+            frameRate: FrameRate(60),
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.error_outline,
+              size: 100,
+              color: Colors.deepPurple.shade200,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            message,
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              subMessage,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  _filterJobs('All');
+                },
+                icon: const Icon(Icons.refresh, color: Colors.deepPurple),
+                label: const Text('Show All Jobs',
+                    style: TextStyle(color: Colors.deepPurple)
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  _fetchJobs();
+                },
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                label: const Text('Refresh',
+                    style: TextStyle(color: Colors.white)
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildShimmerLoading() {
     return Shimmer.fromColors(
@@ -326,66 +465,27 @@ class _JobListingsPageState extends State<JobListingsPage>
     );
   }
 
+
+
+
   bool _onSwipe(
       int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (direction == CardSwiperDirection.right) {
-      _applyForJob(context, jobs[previousIndex]);
+      _applyForJob(context, filteredJobs[previousIndex]);
     }
-    if (currentIndex == null) {
-      _fetchJobs();
-      return false;
-    }
-    return true;
-  }
 
-  Widget _buildCardSwiper() {
-    return CardSwiper(
-      controller: controller,
-      cardsCount: jobs.length,
-      onSwipe: _onSwipe,
-      padding: const EdgeInsets.all(24.0),
-      cardBuilder: (context, index, _, __) => JobCard(
-        job: jobs[index], //
-        companyName: companyNames[jobs[index].companyId] ?? 'Unknown Company',
-        companyLogo: companyLogos[jobs[index].companyId] ?? '',
-        isSaved: savedJobs.contains(jobs[index].id),
-        onApply: () => _applyForJob(context, jobs[index]),
-        onSave: () => _toggleSaveJob(jobs[index].id),
-        onShare: () => _shareJob(jobs[index]),
-      ),
-    );
-  }
-
-  Future<void> _toggleSaveJob(String jobId) async {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-    final savedJobRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('savedJobs')
-        .doc(jobId);
-
-    if (savedJobs.contains(jobId)) {
-      await savedJobRef.delete();
-      setState(() {
-        savedJobs.remove(jobId);
-      });
-    } else {
-      await savedJobRef.set({'savedAt': DateTime.now()});
-      setState(() {
-        savedJobs.add(jobId);
+    // Check if this was the last card
+    if (currentIndex == null || currentIndex >= filteredJobs.length - 1) {
+      // Delay showing end state to allow the swipe animation to complete
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          setState(() {
+            _showEndState = true;
+          });
+        }
       });
     }
-  }
-
-  Future<void> _shareJob(Job job) async {
-    final String shareText = '''
-${job.title} at ${job.companyName}
-${job.location} • ${job.employmentType}
-Salary: ${job.salaryRange}
-
-Apply now on our platform!
-''';
-    await Share.share(shareText);
+    return true; // Always return true to allow the swipe
   }
 
   Widget _buildSwipeActions() {
@@ -563,19 +663,11 @@ class JobCard extends StatelessWidget {
   final Job job;
   final String companyName;
   final String companyLogo;
-  final bool isSaved;
-  final VoidCallback onApply;
-  final VoidCallback onSave;
-  final VoidCallback onShare;
 
   JobCard({
     required this.job,
     required this.companyName,
     required this.companyLogo,
-    required this.isSaved,
-    required this.onApply,
-    required this.onSave,
-    required this.onShare,
   });
 
   @override
@@ -600,30 +692,27 @@ class JobCard extends StatelessWidget {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCompanyInfo(),
-                    const SizedBox(height: 16),
-                    _buildJobDetails(),
-                    const SizedBox(height: 16),
+                    _buildLocationInfo(),
+                    const SizedBox(height: 20),
                     _buildDescription(),
                     if (job.responsibilities.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      _buildSection(
-                          'Key Responsibilities', job.responsibilities),
+                      const SizedBox(height: 24),
+                      _buildSection('Key Responsibilities', job.responsibilities),
                     ],
                     if (job.qualifications.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      _buildSection(
-                          'Required Qualifications', job.qualifications),
+                      const SizedBox(height: 24),
+                      _buildSection('Required Qualifications', job.qualifications),
                     ],
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
-            _buildFooter(),
           ],
         ),
       ),
@@ -645,61 +734,55 @@ class JobCard extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.black12,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.1),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
             ),
           ),
-          Positioned(
-            top: 20,
-            left: 20,
-            right: 20,
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                if (companyLogo.isNotEmpty)
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: companyLogo,
-                        placeholder: (context, url) =>
-                            const CircularProgressIndicator(),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.business),
-                      ),
-                    ),
-                  )
-                else
-                  const CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.business, color: Colors.deepPurple),
-                  ),
+                _buildCompanyLogo(),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        job.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Container(
+                        constraints: BoxConstraints(
+                          maxHeight: constraints.maxHeight,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        job.companyName,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                job.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              job.companyName,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
               ],
@@ -710,25 +793,53 @@ class JobCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCompanyInfo() {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildInfoRow(
-                  Icons.location_on, job.location ?? 'Location not specified'),
-              const SizedBox(height: 8),
-              _buildInfoRow(Icons.work,
-                  job.employmentType ?? 'Employment type not specified'),
-              const SizedBox(height: 8),
-              _buildInfoRow(Icons.monetization_on,
-                  job.salaryRange ?? 'Salary not specified'),
-            ],
+  Widget _buildCompanyLogo() {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
           ),
-        ),
-      ],
+        ],
+      ),
+      child: ClipOval(
+        child: companyLogo.isNotEmpty
+            ? CachedNetworkImage(
+          imageUrl: companyLogo,
+          placeholder: (context, url) => const CircularProgressIndicator(),
+          errorWidget: (context, url, error) =>
+          const Icon(Icons.business, color: Colors.deepPurple),
+          fit: BoxFit.cover,
+        )
+            : const Icon(Icons.business, color: Colors.deepPurple, size: 30),
+      ),
+    );
+  }
+
+  Widget _buildLocationInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoRow(Icons.location_on, job.location ?? 'Location not specified'),
+          const SizedBox(height: 8),
+          _buildInfoRow(Icons.work, job.employmentType ?? 'Employment type not specified'),
+          const SizedBox(height: 8),
+          _buildInfoRow(Icons.monetization_on, job.salaryRange ?? 'Salary not specified'),
+        ],
+      ),
     );
   }
 
@@ -736,88 +847,15 @@ class JobCard extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 20, color: Colors.deepPurple),
-        const SizedBox(width: 8),
+        const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
               color: Colors.grey[800],
               fontSize: 15,
+              height: 1.5,
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildJobDetails() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'About the Role',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildDetailCard(
-                icon: Icons.timer,
-                title: 'Posted',
-                value: '2 days ago',
-              ),
-              _buildDetailCard(
-                icon: Icons.people_outline,
-                title: 'Applicants',
-                value: '45+',
-              ),
-              _buildDetailCard(
-                icon: Icons.access_time,
-                title: 'Type',
-                value: job.employmentType ?? 'N/A',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailCard({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.deepPurple, size: 20),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
           ),
         ),
       ],
@@ -836,12 +874,13 @@ class JobCard extends StatelessWidget {
             color: Colors.deepPurple,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           job.description,
           style: TextStyle(
             color: Colors.grey[800],
-            height: 1.5,
+            height: 1.6,
+            fontSize: 15,
           ),
         ),
       ],
@@ -860,14 +899,19 @@ class JobCard extends StatelessWidget {
             color: Colors.deepPurple,
           ),
         ),
-        const SizedBox(height: 8),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+        const SizedBox(height: 12),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.only(top: 8),
                     child: Container(
                       width: 6,
                       height: 6,
@@ -880,88 +924,20 @@ class JobCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      item,
+                      items[index],
                       style: TextStyle(
                         color: Colors.grey[800],
-                        height: 1.5,
+                        height: 1.6,
+                        fontSize: 15,
                       ),
                     ),
                   ),
                 ],
               ),
-            )),
+            );
+          },
+        ),
       ],
-    );
-  }
-
-  Widget _buildFooter() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: onApply,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: const Text(
-                'Apply Now',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          _buildIconButton(
-            icon: isSaved ? Icons.bookmark : Icons.bookmark_border,
-            onPressed: onSave,
-            tooltip: isSaved ? 'Remove from saved' : 'Save job',
-          ),
-          const SizedBox(width: 8),
-          _buildIconButton(
-            icon: Icons.share_outlined,
-            onPressed: onShare,
-            tooltip: 'Share job',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.deepPurple),
-        onPressed: onPressed,
-        tooltip: tooltip,
-      ),
     );
   }
 }
