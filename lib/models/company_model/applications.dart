@@ -27,6 +27,7 @@ class Application {
   final String profileImageUrl;
   final String status;
   final DateTime? timestamp;
+  final DateTime? statusUpdatedAt;
   final int companyLikesCount;
 
   Application({
@@ -55,6 +56,7 @@ class Application {
     required this.profileImageUrl,
     required this.status,
     this.timestamp,
+    this.statusUpdatedAt,
     this.companyLikesCount = 0,
   });
 
@@ -87,6 +89,7 @@ class Application {
       profileImageUrl: data['profileImageUrl'] ?? '',
       status: data['status'] ?? 'pending',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate(),
+      statusUpdatedAt: (data['statusUpdatedAt'] as Timestamp?)?.toDate(),
       companyLikesCount: data['companyLikesCount'] ?? 0,
     );
   }
@@ -140,6 +143,7 @@ class Application {
       'profileImageUrl': profileImageUrl,
       'status': status,
       'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : FieldValue.serverTimestamp(),
+      'statusUpdatedAt': statusUpdatedAt != null ? Timestamp.fromDate(statusUpdatedAt!) : FieldValue.serverTimestamp(),
       'companyLikesCount': companyLikesCount,
     };
   }
@@ -170,6 +174,7 @@ class Application {
     String? profileImageUrl,
     String? status,
     DateTime? timestamp,
+    DateTime? statusUpdatedAt,
     int? companyLikesCount,
   }) {
     return Application(
@@ -198,6 +203,7 @@ class Application {
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       status: status ?? this.status,
       timestamp: timestamp ?? this.timestamp,
+      statusUpdatedAt: statusUpdatedAt ?? this.statusUpdatedAt,
       companyLikesCount: companyLikesCount ?? this.companyLikesCount,
     );
   }

@@ -232,12 +232,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   bool _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (previousIndex >= 0 && previousIndex < applications.length) {
+      Application currentApplication = applications[previousIndex];
       if (direction == CardSwiperDirection.right) {
+        _updateApplicationStatus(currentApplication.id, 'Accepted');
         _incrementCompanyLikesCount(applications[previousIndex]);
         setState(() {
           favoriteApplications.add(applications[previousIndex]);
           _saveFavorites();
         });
+      }
+      else if (direction == CardSwiperDirection.left) {
+        // Handle left swipe (Reject)
+        _updateApplicationStatus(currentApplication.id, 'Rejected');
       }
     }
 
@@ -247,6 +253,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       return false;
     }
     return true;
+  }
+
+  Future<void> _updateApplicationStatus(String applicationId, String status) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('applications')
+          .doc(applicationId)
+          .update({
+        'status': status,
+        'statusUpdatedAt': FieldValue.serverTimestamp(),
+      });
+      print('Updated application $applicationId status to $status');
+    } catch (e) {
+      print('Error updating application status: $e');
+    }
   }
 
   void _onEnd() {
