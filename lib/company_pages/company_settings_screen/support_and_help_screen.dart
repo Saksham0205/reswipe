@@ -166,7 +166,7 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
                           {
                             'question': 'Can I undo a swipe?',
                             'answer':
-                            'Yes, premium users can undo their last swipe by tapping the undo button or shaking their device.',
+                            'Yes, premium users can undo their last swipe by tapping the undo button.',
                           },
                           {
                             'question': 'How do I export my matched candidates?',
@@ -283,76 +283,6 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHelpHeader() {
-    return Container(
-      color: Colors.deepPurpleAccent,
-      padding: const EdgeInsets.all(20),
-      child: const Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.help_outline,
-              size: 50,
-              color: Colors.white,
-            ),
-            SizedBox(height: 15),
-            Text(
-              'Frequently Asked Questions',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              'Find quick answers to common questions',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSupportHeader() {
-    return Container(
-      color: Colors.deepPurpleAccent,
-      padding: const EdgeInsets.all(20),
-      child: const Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.support_agent,
-              size: 50,
-              color: Colors.white,
-            ),
-            SizedBox(height: 15),
-            Text(
-              'How can we help?',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              'We\'re here to assist you',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:reswipe/company_pages/settings_screen/about_screen.dart';
-import 'package:reswipe/company_pages/settings_screen/privacy_and_security_screen.dart';
-import 'package:reswipe/company_pages/settings_screen/support_and_help_screen.dart';
+import 'package:reswipe/company_pages/company_settings_screen/about_screen.dart';
+import 'package:reswipe/company_pages/company_settings_screen/privacy_and_security_screen.dart';
+import 'package:reswipe/company_pages/company_settings_screen/support_and_help_screen.dart';
 
 class CompanySettingsPage extends StatelessWidget {
   @override
