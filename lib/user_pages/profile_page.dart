@@ -19,7 +19,8 @@ class _ProfilePageState extends State<ProfilePage> {
   final _profileFormKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _collegeController = TextEditingController(); // Added controller
+  final TextEditingController _collegeController = TextEditingController();
+  final TextEditingController _collegeSessionController = TextEditingController();
   final TextEditingController _qualificationController = TextEditingController();
   final TextEditingController _jobProfileController = TextEditingController();
   final TextEditingController _skillsController = TextEditingController();
@@ -97,6 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Timer? _debounceTimer;
+
   void _debounceUpdate() {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
@@ -117,7 +119,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
       document.dispose();
 
-      if (text.trim().isEmpty) {
+      if (text
+          .trim()
+          .isEmpty) {
         throw Exception('No text could be extracted from the PDF');
       }
 
@@ -143,12 +147,14 @@ You are a specialized resume parser. Your task is to extract specific informatio
 5. For arrays, each item should be a single string
 6. Preserve bullet points or numbers in achievements if they exist
 7. Remove any special characters that could break JSON parsing
+8. Extract college session in format YYYY-YYYY (e.g. 2022-2026)
 
 Parse the following resume and return only this JSON structure:
 {
   "fullName": "string (full name of the candidate)",
   "email": "string (email address if found)",
   "college": "string (name of the college/university if found)",
+  "collegeSession": "string (college session in YYYY-YYYY format)",
   "education": "string (highest education qualification)",
   "jobProfile": "string (current or most recent job title)",
   "skills": ["skill1", "skill2", "skill3"],
@@ -182,6 +188,7 @@ ${resumeText.trim()}
           _nameController.text = sanitizedData['fullName'];
           _emailController.text = sanitizedData['email'];
           _collegeController.text = sanitizedData['college'] ?? '';
+          _collegeSessionController.text = sanitizedData['collegeSession'] ?? '';
           _qualificationController.text = sanitizedData['education'];
           _jobProfileController.text = sanitizedData['jobProfile'];
           _skillsController.text = sanitizedData['skills'].join(', ');
@@ -190,7 +197,7 @@ ${resumeText.trim()}
           _projectsController.text = sanitizedData['projects'].join('\n');
         });
 
-        // Update Firestore with all fields including college
+        // Update Firestore with all fields including college session
         String userId = FirebaseAuth.instance.currentUser!.uid;
         await FirebaseFirestore.instance
             .collection('users')
@@ -199,7 +206,8 @@ ${resumeText.trim()}
           'resumeUrl': _resumeUrl,
           'name': _nameController.text,
           'email': _emailController.text,
-          'college': _collegeController.text, // Added college field
+          'college': _collegeController.text,
+          'collegeSession': _collegeSessionController.text,
           'qualification': _qualificationController.text,
           'jobProfile': _jobProfileController.text,
           'skills': _skillsController.text,
@@ -225,6 +233,27 @@ ${resumeText.trim()}
     }
   }
 
+// Update the _sanitizeResumeData method to include collegeSession
+  Map<String, dynamic> _sanitizeResumeData(Map<String, dynamic> data) {
+    return {
+      'fullName': (data['fullName'] as String?) ?? '',
+      'email': (data['email'] as String?) ?? '',
+      'college': (data['college'] as String?) ?? '',
+      'collegeSession': (data['collegeSession'] as String?) ?? '',
+      'education': (data['education'] as String?) ?? '',
+      'jobProfile': (data['jobProfile'] as String?) ?? '',
+      'skills': (data['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      'experience': (data['experience'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      'formattedAchievements': (data['formattedAchievements'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList() ?? [],
+      'projects': (data['projects'] as List<dynamic>?)
+          ?.map((e) => e.toString())
+          .toList() ?? [],
+    };
+  }
+
+
   String _cleanJsonString(String? jsonString) {
     if (jsonString == null || jsonString.isEmpty) {
       throw Exception('Empty response from Gemini');
@@ -241,23 +270,9 @@ ${resumeText.trim()}
     return jsonString.substring(startIndex, endIndex + 1);
   }
 
-// Helper function to sanitize and validate parsed data
-  Map<String, dynamic> _sanitizeResumeData(Map<String, dynamic> data) {
-    return {
-      'fullName': (data['fullName'] as String?) ?? '',
-      'email': (data['email'] as String?) ?? '',
-      'college': (data['college'] as String?) ?? '',
-      'education': (data['education'] as String?) ?? '',
-      'jobProfile': (data['jobProfile'] as String?) ?? '',
-      'skills': (data['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      'experience': (data['experience'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      'formattedAchievements': (data['formattedAchievements'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      'projects': (data['projects'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-    };
-  }
 
-
-  Future<GenerateContentResponse> _retryGenerateContent(Content prompt, {int maxAttempts = 3}) async {
+  Future<GenerateContentResponse> _retryGenerateContent(Content prompt,
+      {int maxAttempts = 3}) async {
     int attempts = 0;
     while (attempts < maxAttempts) {
       try {
@@ -265,9 +280,11 @@ ${resumeText.trim()}
       } catch (e) {
         attempts++;
         if (attempts == maxAttempts) {
-          throw Exception('Failed to generate content after $maxAttempts attempts: $e');
+          throw Exception(
+              'Failed to generate content after $maxAttempts attempts: $e');
         }
-        await Future.delayed(Duration(seconds: attempts)); // Exponential backoff
+        await Future.delayed(
+            Duration(seconds: attempts)); // Exponential backoff
       }
     }
     throw Exception('Unexpected error in retry logic');
@@ -276,17 +293,73 @@ ${resumeText.trim()}
   void _loadCompanyLikesCount() async {
     try {
       final userId = FirebaseAuth.instance.currentUser!.uid;
-      final likesSnapshot = await FirebaseFirestore.instance
+
+      // Get all applications for this user
+      final applicationsSnapshot = await FirebaseFirestore.instance
           .collection('applications')
           .where('userId', isEqualTo: userId)
           .get();
 
+      // Calculate total likes across all applications
+      int totalLikes = 0;
+      for (var doc in applicationsSnapshot.docs) {
+        totalLikes += (doc.data()['companyLikesCount'] ?? 0) as int;
+      }
+
       setState(() {
-        _companyLikesCount = likesSnapshot.docs.length;
+        _companyLikesCount = totalLikes;
       });
     } catch (e) {
       print('Error loading company likes count: $e');
     }
+  }
+
+  Widget _buildProfileStats() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.deepPurple.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.favorite,
+                color: Colors.deepPurple,
+                size: 20,
+              ),
+              SizedBox(width: 4),
+              Text(
+                'Company Likes',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$_companyLikesCount',
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+          const Text(
+            'Total Likes',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.deepPurple,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _loadUserProfile() async {
@@ -310,7 +383,9 @@ ${resumeText.trim()}
           _nameController.text = _currentUserData['name'] ?? '';
           _emailController.text = _currentUserData['email'] ?? '';
           _collegeController.text = _currentUserData['college'] ?? '';
-          _qualificationController.text = _currentUserData['qualification'] ?? '';
+          _collegeSessionController.text = _currentUserData['collegeSession'] ?? '';
+          _qualificationController.text =
+              _currentUserData['qualification'] ?? '';
           _jobProfileController.text = _currentUserData['jobProfile'] ?? '';
           _skillsController.text = _currentUserData['skills'] ?? '';
           _experienceController.text = _currentUserData['experience'] ?? '';
@@ -445,7 +520,8 @@ ${resumeText.trim()}
       Map<String, dynamic> newData = {
         'name': _nameController.text,
         'email': _emailController.text,
-        'college': _collegeController.text, // Added college field
+        'college': _collegeController.text,
+        'collegeSession': _collegeSessionController.text,
         'qualification': _qualificationController.text,
         'jobProfile': _jobProfileController.text,
         'skills': _skillsController.text,
@@ -501,7 +577,7 @@ ${resumeText.trim()}
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Professional Profile'),
+        title: const Text('Professional Profile',style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.deepPurple,
       ),
       body: _isLoading
@@ -572,7 +648,7 @@ ${resumeText.trim()}
                     ),
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   bottom: 0,
                   right: 0,
                   child: CircleAvatar(
@@ -588,32 +664,7 @@ ${resumeText.trim()}
               ],
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    'Profile Views',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                  Text(
-                    '$_companyLikesCount',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildProfileStats(),
           ],
         ),
         const SizedBox(width: 16),
@@ -638,6 +689,21 @@ ${resumeText.trim()}
                 controller: _collegeController,
                 labelText: 'College',
                 icon: Icons.school,
+              ),
+              const SizedBox(height: 8),
+              _buildTextField(
+                controller: _collegeSessionController,
+                labelText: 'College Session (YYYY-YYYY)',
+                icon: Icons.date_range,
+              //   validator: (value) {
+              //     if (value == null || value.isEmpty) return 'This field is required';
+              //     final pattern = RegExp(r'^\d{4}-\d{4}$');
+              //     if (!pattern.hasMatch(value)) {
+              //       return 'Please enter valid session format (YYYY-YYYY)';
+              //     }
+              //     return null;
+              //   },
+              // ),
               ),
 
             ],
@@ -675,7 +741,8 @@ ${resumeText.trim()}
                 child: Column(
                   children: [
                     Icon(
-                      _resumeUrl.isEmpty ? Icons.upload_file : Icons.description,
+                      _resumeUrl.isEmpty ? Icons.upload_file : Icons
+                          .description,
                       size: 48,
                       color: Colors.deepPurple,
                     ),
@@ -907,330 +974,5 @@ ${resumeText.trim()}
     );
   }
 
-  Widget _buildProfileHeader() {
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                GestureDetector(
-                  onTap: _isImageLoading ? null : _pickAndUploadProfileImage,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.deepPurple, width: 3),
-                    ),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundImage: _profileImageUrl.isNotEmpty
-                          ? NetworkImage(_profileImageUrl)
-                          : null,
-                      child: _profileImageUrl.isEmpty
-                          ? const Icon(Icons.person, size: 60)
-                          : null,
-                    ),
-                  ),
-                ),
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.deepPurple,
-                  child: Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildInfoCard(
-              icon: Icons.favorite,
-              title: 'Profile Views',
-              value: '$_companyLikesCount',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-
-  Widget _buildProfileSections() {
-    return Column(
-      children: [
-        _buildResumeUploadSection(),
-        const SizedBox(height: 24),
-        _buildExpandableSection(
-          title: 'Personal Information',
-          children: [
-            _buildTextField(
-              controller: _nameController,
-              labelText: 'Full Name',
-              icon: Icons.person,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _emailController,
-              labelText: 'Email',
-              icon: Icons.email,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _collegeController,
-              labelText: 'College',
-              icon: Icons.school,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _buildExpandableSection(
-          title: 'Professional Information',
-          children: [
-            _buildTextField(
-              controller: _qualificationController,
-              labelText: 'Education',
-              icon: Icons.school,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _jobProfileController,
-              labelText: 'Job Profile',
-              icon: Icons.work,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _experienceController,
-              labelText: 'Experience',
-              icon: Icons.timeline,
-              isMultiline: true,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _buildExpandableSection(
-          title: 'Skills & Achievements',
-          children: [
-            _buildTextField(
-              controller: _skillsController,
-              labelText: 'Skills',
-              icon: Icons.star,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _achievementsController,
-              labelText: 'Achievements',
-              icon: Icons.emoji_events,
-              isMultiline: true,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _projectsController,
-              labelText: 'Projects',
-              icon: Icons.folder_special,
-              isMultiline: true,
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        _buildUpdateButton(),
-      ],
-    );
-  }
-
-
-  Widget _buildExpandableSection({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ExpansionTile(
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(children: children),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResumeUploadSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Upload Resume',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.deepPurple,
-                    width: 2,
-                    style: BorderStyle.solid,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.upload_file,
-                      size: 48,
-                      color: Colors.deepPurple,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _resumeUrl.isEmpty
-                          ? 'Click to Upload Resume (PDF)'
-                          : 'Resume uploaded successfully',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.upload_file, color: Colors.white),
-                      label: const Text('Select File', style: TextStyle(color: Colors.white)),
-                      onPressed: _isLoading ? null : _pickAndUploadResume,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget _buildUpdateButton() {
-  //   return Center(
-  //     child: ElevatedButton(
-  //       onPressed: _isLoading ? null : _updateProfile,
-  //       style: ElevatedButton.styleFrom(
-  //         padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-  //         backgroundColor: Colors.deepPurple,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(8),
-  //         ),
-  //       ),
-  //       child: _isLoading
-  //           ? const SizedBox(
-  //         width: 20,
-  //         height: 20,
-  //         child: CircularProgressIndicator(
-  //           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-  //         ),
-  //       )
-  //           : const Text(
-  //         'Update Profile',
-  //         style: TextStyle(
-  //           color: Colors.white,
-  //           fontSize: 16,
-  //           fontWeight: FontWeight.bold,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  Widget _buildInfoCard({required IconData icon, required String title, required String value}) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.deepPurple, size: 30),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(value, style: const TextStyle(fontSize: 20, color: Colors.deepPurple)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget _buildTextField({
-  //   required TextEditingController controller,
-  //   required String labelText,
-  //   required IconData icon,
-  //   bool isMultiline = false,
-  // }) {
-  //   return TextFormField(
-  //     controller: controller,
-  //     decoration: InputDecoration(
-  //       labelText: labelText,
-  //       border: const OutlineInputBorder(),
-  //       prefixIcon: Icon(icon, color: Colors.deepPurple),
-  //     ),
-  //     validator: (value) => value!.isEmpty ? 'This field is required' : null,
-  //   );
-  // }
-
-  Widget _buildResumeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Resume', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        _resumeUrl.isNotEmpty
-            ? const Row(
-          children: [
-            Icon(Icons.description, color: Colors.green),
-            SizedBox(width: 8),
-            Expanded(child: Text('Resume uploaded successfully', overflow: TextOverflow.ellipsis)),
-          ],
-        )
-            : const Text('No resume uploaded'),
-        const SizedBox(height: 8),
-        ElevatedButton.icon(
-          icon: const Icon(Icons.upload_file,color: Colors.white),
-          label: const Text('Upload Resume (PDF)',style: TextStyle(color: Colors.white),),
-          onPressed: _isLoading ? null : _pickAndUploadResume,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple,
-          ),
-        ),
-      ],
-    );
-  }
 }
