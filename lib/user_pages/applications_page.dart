@@ -152,10 +152,6 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
         ),
         backgroundColor: Colors.white,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2D3748)),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance

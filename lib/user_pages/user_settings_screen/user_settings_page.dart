@@ -8,106 +8,104 @@ class UserSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings',style: TextStyle(color: Colors.white),),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Account',
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue[900],
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            SettingsCard(
-              icon: Icons.manage_accounts,
-              title: 'Manage Account Settings',
-              onTap: () {
-                // Navigate to account settings
-              },
-            ),
-            const SizedBox(height: 16.0),
-            SettingsCard(
-              icon: Icons.payment,
-              title: 'Manage Payment',
-              onTap: () {
-                // Navigate to payment settings
-              },
-            ),
-            const SizedBox(height: 32.0),
-            Text(
-              'Security & Privacy',
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue[900],
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            SettingsCard(
-              icon: Icons.lock,
-              title: 'Privacy & Security',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PrivacyAndSecurityScreen(),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16.0),
-            SettingsCard(
-              icon: Icons.help,
-              title: 'Support & Help',
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HelpAndSupportScreen()),
-                );
-              },
-            ),
-            const SizedBox(height: 16.0),
-            SettingsCard(
-              icon: Icons.people,
-              title: 'About Us',
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (contex)=>const AboutScreen()));
-              },
-            ),
-            const Spacer(),
-            Align(
-              alignment: Alignment.center,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade700,
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26.0),
-                  ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Account',
+                style: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[900],
                 ),
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                  // Navigate to login screen
+              ),
+              const SizedBox(height: 16.0),
+              SettingsCard(
+                icon: Icons.manage_accounts,
+                title: 'Manage Account Settings',
+                onTap: () {
+                  // Navigate to account settings
                 },
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              ),
+              const SizedBox(height: 16.0),
+              SettingsCard(
+                icon: Icons.payment,
+                title: 'Manage Payment',
+                onTap: () {
+                  // Navigate to payment settings
+                },
+              ),
+              const SizedBox(height: 32.0),
+              Text(
+                'Security & Privacy',
+                style: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[900],
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              SettingsCard(
+                icon: Icons.lock,
+                title: 'Privacy & Security',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PrivacyAndSecurityScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16.0),
+              SettingsCard(
+                icon: Icons.help,
+                title: 'Support & Help',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HelpAndSupportScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 16.0),
+              SettingsCard(
+                icon: Icons.people,
+                title: 'About Us',
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (contex)=>const AboutScreen()));
+                },
+              ),
+              const Spacer(),
+              Align(
+                alignment: Alignment.center,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26.0),
+                    ),
+                  ),
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    // Navigate to login screen
+                  },
+                  child: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

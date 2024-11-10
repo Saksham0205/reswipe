@@ -579,6 +579,7 @@ ${resumeText.trim()}
       appBar: AppBar(
         title: const Text('Professional Profile',style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.deepPurple,
+        centerTitle: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
