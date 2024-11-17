@@ -65,22 +65,33 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  // Updated delete single item functionality
   void _handleDeleteApplication(Application application) {
+    // Store the index before removal for potential undo
+    final index = _localFavorites.indexOf(application);
+    final deletedApplication = application;
+
     setState(() {
       _localFavorites.remove(application);
       widget.removeFromFavorites(application);
     });
 
+    ScaffoldMessenger.of(context).clearSnackBars(); // Clear any existing snackbars
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${application.applicantName}\'s profile removed'),
+        content: Row(
+          children: [
+            const Icon(Icons.person_remove, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text('${application.applicantName} removed from matches'),
+          ],
+        ),
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: 'Undo',
+          label: 'UNDO',
           onPressed: () {
             setState(() {
-              _localFavorites.add(application);
+              _localFavorites.insert(index, deletedApplication);
             });
           },
         ),
@@ -88,7 +99,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  // Updated clear all functionality
   void _handleClearAll() {
     final previousFavorites = List<Application>.from(_localFavorites);
 
@@ -195,9 +205,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
 
   Future<void> _handleRefresh() async {
-    // Simulate a network refresh
     await Future.delayed(const Duration(seconds: 2));
-    // Consider implementing actual data refresh logic here
   }
 
   Widget _buildEmptyState() {
@@ -289,22 +297,35 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       },
       background: _buildDismissBackground(),
       child: Card(
-        elevation: 4,
+        elevation: 2,
         margin: const EdgeInsets.only(bottom: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _showApplicationDetails(context, application),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildCardHeader(application),
-              _buildCardBody(application),
-              _buildCardActions(context, application),
-            ],
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                Colors.deepPurple.shade50.withOpacity(0.3),
+              ],
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _showApplicationDetails(context, application),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCardHeader(application),
+                _buildCardBody(application),
+                _buildCardActions(context, application),
+              ],
+            ),
           ),
         ),
       ),
