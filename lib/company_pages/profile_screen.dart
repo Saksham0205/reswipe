@@ -210,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 4),
                   Text(job.location),
                   const SizedBox(width: 16),
-                  const Icon(Icons.attach_money, size: 16, color: Colors.grey),
+                  const Icon(Icons.currency_rupee, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(job.salaryRange),
                 ],

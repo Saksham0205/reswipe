@@ -268,7 +268,7 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
                 child: _buildAnimatedTextField(
                   controller: _salaryRangeController,
                   label: 'Salary Range',
-                  icon: Icons.attach_money,
+                  icon: Icons.currency_rupee,
                 ),
               ),
               SizedBox(width: 16),
@@ -556,8 +556,6 @@ class _JobPostsScreenState extends State<JobPostsScreen> with SingleTickerProvid
       _tabController.animateTo(0);
     });
   }
-
-  // Custom dialog to confirm form reset
   Future<bool> _onWillPop() async {
     if (_formHasData()) {
       return await showDialog(
