@@ -307,7 +307,6 @@ ${resumeText.trim()}
         _companyLikesCount = totalLikes;
       });
     } catch (e) {
-      print('Error loading company likes count: $e');
     }
   }
 
@@ -820,31 +819,80 @@ ${resumeText.trim()}
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Experience',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Experience',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.deepPurple),
+              onPressed: () {
+                // Add edit functionality here
+                showDialog(
+                  context: context,
+                  builder: (context) => _buildExperienceEditDialog(),
+                );
+              },
+            ),
+          ],
         ),
         const SizedBox(height: 8),
-        ListView.builder(
+        experiences.isEmpty
+            ? const Center(
+          child: Text(
+            'No experience added yet',
+            style: TextStyle(
+              color: Colors.grey,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        )
+            : ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: experiences.length,
           itemBuilder: (context, index) {
-            return Card(
+            return Container(
               margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.deepPurple,
-                  child: Text(
-                    'E${index + 1}',
-                    style: const TextStyle(color: Colors.white),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        color: Colors.deepPurple,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-                title: Text(experiences[index]),
+                title: Text(
+                  experiences[index],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
               ),
             );
           },
@@ -878,32 +926,77 @@ ${resumeText.trim()}
               labelText: 'Skills',
               icon: Icons.star,
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Achievements',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
-              ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Achievements',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.deepPurple),
+                  onPressed: () {
+                    // Add edit functionality here
+                    showDialog(
+                      context: context,
+                      builder: (context) => _buildAchievementsEditDialog(),
+                    );
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 8),
-            ListView.builder(
+            achievements.isEmpty
+                ? const Center(
+              child: Text(
+                'No achievements added yet',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            )
+                : ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: achievements.length,
               itemBuilder: (context, index) {
-                return Card(
+                return Container(
                   margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.deepPurple,
-                      child: Text(
-                        'A${index + 1}',
-                        style: const TextStyle(color: Colors.white),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.emoji_events,
+                        color: Colors.deepPurple,
                       ),
                     ),
-                    title: Text(achievements[index]),
+                    title: Text(
+                      achievements[index],
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
                   ),
                 );
               },
@@ -911,6 +1004,59 @@ ${resumeText.trim()}
           ],
         ),
       ),
+    );
+  }
+
+// Add these dialog builders
+  Widget _buildExperienceEditDialog() {
+    return AlertDialog(
+      title: const Text('Edit Experience'),
+      content: TextField(
+        controller: _experienceController,
+        maxLines: null,
+        decoration: const InputDecoration(
+          hintText: 'Enter your experience (one per line)',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            _updateProfile(showSnackBar: false);
+            Navigator.pop(context);
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAchievementsEditDialog() {
+    return AlertDialog(
+      title: const Text('Edit Achievements'),
+      content: TextField(
+        controller: _achievementsController,
+        maxLines: null,
+        decoration: const InputDecoration(
+          hintText: 'Enter your achievements (one per line)',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            _updateProfile(showSnackBar: false);
+            Navigator.pop(context);
+          },
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 
