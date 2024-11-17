@@ -325,7 +325,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                 data['jobEmploymentType'] ?? 'Not specified',
                               ),
                               _buildDetailRow(
-                                Icons.attach_money_rounded,
+                                Icons.currency_rupee,
                                 data['jobSalaryRange'] ?? 'Not specified',
                               ),
                               const SizedBox(height: 16),

@@ -4,10 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:share_plus/share_plus.dart';
-
 import '../../models/company_model/applications.dart';
 import '../../models/company_model/job.dart';
 
@@ -35,6 +34,7 @@ class _JobListingsPageState extends State<JobListingsPage>
   ];
   bool _isLoading = true;
   bool _showEndState = false;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -87,6 +87,47 @@ class _JobListingsPageState extends State<JobListingsPage>
       }
     });
   }
+  final _model = GenerativeModel(
+    model: 'gemini-1.5-flash-latest',
+    apiKey: 'AIzaSyCV659yUlgYVKIk_a11SAvEwwnoxQpTCvA',
+  );
+
+  Future<String> generateJobSummary({
+    required String title,
+    required String description,
+    required List<String> responsibilities,
+    required List<String> qualifications,
+  }) async {
+    try {
+      final prompt = '''
+        Summarize the following job details concisely:
+        
+        Title: $title
+        
+        Description: $description
+        
+        Key Responsibilities:
+        ${responsibilities.map((r) => "- $r").join("\n")}
+        
+        Required Qualifications:
+        ${qualifications.map((q) => "- $q").join("\n")}
+        
+        Please provide a brief, well-structured summary highlighting:
+        1. Core job function
+        2. Key responsibilities (3-4 main points)
+        3. Essential qualifications
+        4. Any unique aspects or benefits
+      ''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      return response.text ?? 'Unable to generate summary';
+    } catch (e) {
+      throw Exception('Failed to generate summary: $e');
+    }
+  }
+
+
 
   Future<void> _fetchJobs() async {
     if (!mounted) return;
@@ -143,18 +184,93 @@ class _JobListingsPageState extends State<JobListingsPage>
     }
   }
 
+  void _showJobSummaryDialog(BuildContext context) async {
+    if (filteredJobs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No jobs available to summarize')),
+      );
+      return;
+    }
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final currentJob = filteredJobs[_currentIndex];
+      final summary = await generateJobSummary(
+        title: currentJob.title,
+        description: currentJob.description,
+        responsibilities: currentJob.responsibilities,
+        qualifications: currentJob.qualifications,
+      );
+
+      // Hide loading dialog
+      Navigator.pop(context);
+
+      // Show summary dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            'Job Summary',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  summary,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+      );
+    } catch (e) {
+      // Hide loading dialog
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating summary: $e')),
+      );
+    }
+  }
+
   Widget _buildEndState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Lottie.network(
-            'https://assets3.lottiefiles.com/packages/lf20_success.json', // You can change this to any completion animation
+            'https://assets3.lottiefiles.com/packages/lf20_success.json',
             width: 200,
             height: 200,
             fit: BoxFit.contain,
             repeat: false,
-            frameRate: FrameRate(60),
+            frameRate: const FrameRate(60),
             errorBuilder: (context, error, stackTrace) => Icon(
               Icons.check_circle_outline,
               size: 100,
@@ -246,13 +362,30 @@ class _JobListingsPageState extends State<JobListingsPage>
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: Stack(  // Wrap with Stack
             children: [
-              _buildHeader(),
-              _buildFilters(),
-              Expanded(
-                child: _buildMainContent(),
+              Column(
+                children: [
+                  _buildHeader(),
+                  _buildFilters(),
+                  Expanded(
+                    child: _buildMainContent(),
+                  ),
+                ],
               ),
+              if (!_isLoading && !_showEndState && filteredJobs.isNotEmpty)
+                Positioned(  // Add info button
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton.small(
+                    onPressed: () => _showJobSummaryDialog(context),
+                    backgroundColor: Colors.white,
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -261,8 +394,8 @@ class _JobListingsPageState extends State<JobListingsPage>
   }
 
   Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return const Padding(
+      padding: EdgeInsets.all(16.0),
       child: Text(
         'Reswipe',
         style: TextStyle(
@@ -275,7 +408,7 @@ class _JobListingsPageState extends State<JobListingsPage>
   }
 
   Widget _buildFilters() {
-    return Container(
+    return SizedBox(
       height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -334,9 +467,6 @@ class _JobListingsPageState extends State<JobListingsPage>
     if (_showEndState) {
       return _buildEndState();
     }
-
-    // If we have exactly one job left, show it in the card swiper
-    // The CardSwiper will handle it properly now
     return Column(
       children: [
         Expanded(
@@ -373,7 +503,7 @@ class _JobListingsPageState extends State<JobListingsPage>
             width: 200,
             height: 200,
             fit: BoxFit.contain,
-            frameRate: FrameRate(60),
+            frameRate: const FrameRate(60),
             errorBuilder: (context, error, stackTrace) => Icon(
               Icons.error_outline,
               size: 100,
@@ -456,7 +586,7 @@ class _JobListingsPageState extends State<JobListingsPage>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Container(
+          child: const SizedBox(
             height: 400,
             width: double.infinity,
           ),
@@ -470,13 +600,17 @@ class _JobListingsPageState extends State<JobListingsPage>
 
   bool _onSwipe(
       int previousIndex, int? currentIndex, CardSwiperDirection direction) {
+    if (currentIndex != null) {
+      setState(() {
+        _currentIndex = currentIndex;
+      });
+    }
+
     if (direction == CardSwiperDirection.right) {
       _applyForJob(context, filteredJobs[previousIndex]);
     }
 
-    // Check if this was the last card
     if (currentIndex == null || currentIndex >= filteredJobs.length - 1) {
-      // Delay showing end state to allow the swipe animation to complete
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           setState(() {
@@ -485,9 +619,8 @@ class _JobListingsPageState extends State<JobListingsPage>
         }
       });
     }
-    return true; // Always return true to allow the swipe
+    return true;
   }
-
   Widget _buildSwipeActions() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 32.0),
@@ -664,14 +797,14 @@ class JobCard extends StatelessWidget {
   final String companyName;
   final String companyLogo;
 
-  JobCard({
+  const JobCard({super.key,
     required this.job,
     required this.companyName,
     required this.companyLogo,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context)  {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
@@ -837,7 +970,7 @@ class JobCard extends StatelessWidget {
           const SizedBox(height: 8),
           _buildInfoRow(Icons.work, job.employmentType ?? 'Employment type not specified'),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.monetization_on, job.salaryRange ?? 'Salary not specified'),
+          _buildInfoRow(Icons.currency_rupee, job.salaryRange ?? 'Salary not specified'),
         ],
       ),
     );
@@ -942,13 +1075,11 @@ class JobCard extends StatelessWidget {
   }
 }
 
-// Add these extensions to handle potential null values more elegantly
 extension StringExtension on String? {
   String get orEmpty => this ?? '';
   bool get isNullOrEmpty => this == null || this!.isEmpty;
 }
 
-// Add an animation mixin for more sophisticated animations
 mixin CardAnimationMixin<T extends StatefulWidget> on State<T> {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;

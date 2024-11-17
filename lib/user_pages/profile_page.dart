@@ -197,7 +197,6 @@ ${resumeText.trim()}
           _projectsController.text = sanitizedData['projects'].join('\n');
         });
 
-        // Update Firestore with all fields including college session
         String userId = FirebaseAuth.instance.currentUser!.uid;
         await FirebaseFirestore.instance
             .collection('users')
@@ -232,8 +231,6 @@ ${resumeText.trim()}
       });
     }
   }
-
-// Update the _sanitizeResumeData method to include collegeSession
   Map<String, dynamic> _sanitizeResumeData(Map<String, dynamic> data) {
     return {
       'fullName': (data['fullName'] as String?) ?? '',

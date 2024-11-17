@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/company_model/applications.dart';
 import 'favourite_screen.dart';
 
@@ -581,8 +582,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _viewResume(Application application) {
-    // Implement resume viewing logic
-    // You might want to use a package like url_launcher to open the PDF
+    if (application.resumeUrl.isNotEmpty) {
+      launchUrl(Uri.parse(application.resumeUrl));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Resume not available'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Widget _buildMainContent() {
