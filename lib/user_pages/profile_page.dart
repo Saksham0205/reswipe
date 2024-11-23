@@ -42,7 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   final _model = GenerativeModel(
     model: 'gemini-1.5-flash-latest',
-    apiKey: 'AIzaSyCV659yUlgYVKIk_a11SAvEwwnoxQpTCvA',
+    apiKey: 'AIzaSyAB243NYKs2a6cXRPt6etv1KhOdfEJou0E',
   );
 
   @override
@@ -1007,7 +1007,6 @@ ${resumeText.trim()}
     );
   }
 
-// Add these dialog builders
   Widget _buildExperienceEditDialog() {
     return AlertDialog(
       title: const Text('Edit Experience'),
