@@ -433,8 +433,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerPr
       },
     );
 
-    if (shouldLogout ?? false) {
-     Navigator.pushReplacementNamed(context, "/login");
-    }
+    // if (shouldLogout ?? false) {
+    //  Navigator.pushReplacementNamed(context, "/login");
+    // }
   }
 }
