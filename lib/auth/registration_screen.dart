@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -128,12 +129,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.blue[700]!,
-                  Colors.blue[900]!,
+                  Colors.grey[50]!,
+                  Colors.grey[100]!,
                 ],
               ),
             ),
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -155,25 +157,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
   Widget _buildHeader() {
     return Column(
       children: [
-        Lottie.asset(
-          'assets/lottie/job_registration_lottie.json',
-          height: 150,
-          fit: BoxFit.contain,
+        Container(
+          padding: const EdgeInsets.all(20),
+          child: Lottie.asset(
+            'assets/lottie/job_registration_lottie.json',
+            height: 120,
+            fit: BoxFit.contain,
+          ),
         ),
         const SizedBox(height: 20),
-        Text(
-          'Join Reswipe',
-          style: GoogleFonts.poppins(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        ShaderMask(
+          shaderCallback: (bounds) => LinearGradient(
+            colors: [Colors.blue[700]!, Colors.blue[900]!],
+          ).createShader(bounds),
+          child: Text(
+            'Join Reswipe',
+            style: GoogleFonts.poppins(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
         Text(
           'Where talent meets opportunity',
           style: GoogleFonts.poppins(
             fontSize: 16,
-            color: Colors.white70,
+            color: Colors.grey[600],
           ),
         ),
       ],
@@ -184,85 +194,194 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.blue.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildRoleSelector(),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: _nameController,
-                label: 'Full Name',
-                icon: Icons.person_outline,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Name is required';
-                  if (value!.length < 2) return 'Name is too short';
-                  return null;
-                },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildRoleSelector(),
+                  const SizedBox(height: 24),
+                  ..._buildFormFields(),
+                  const SizedBox(height: 32),
+                  _buildRegisterButton(),
+                  const SizedBox(height: 16),
+                  _buildSignInLink(),
+                ],
               ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email',
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Email is required';
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
-                    return 'Enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _passwordController,
-                label: 'Password',
-                icon: Icons.lock_outline,
-                obscureText: _obscurePassword,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.grey,
-                  ),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Password is required';
-                  if (value!.length < 6) return 'Password must be at least 6 characters';
-                  return null;
-                },
-              ),
-              if (_role == 'company') ...[
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _companyNameController,
-                  label: 'Company Name',
-                  icon: Icons.business_outlined,
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) return 'Company name is required';
-                    return null;
-                  },
-                ),
-              ],
-              const SizedBox(height: 32),
-              _buildRegisterButton(),
-              const SizedBox(height: 16),
-              _buildSignInLink(),
-            ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+  String? Function(String?) _getValidator(String label) {
+    switch (label) {
+      case 'Full Name':
+        return (value) {
+          if (value?.isEmpty ?? true) return 'Name is required';
+          if (value!.length < 2) return 'Name is too short';
+          return null;
+        };
+      case 'Email':
+        return (value) {
+          if (value?.isEmpty ?? true) return 'Email is required';
+          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+            return 'Enter a valid email';
+          }
+          return null;
+        };
+      case 'Password':
+        return (value) {
+          if (value?.isEmpty ?? true) return 'Password is required';
+          if (value!.length < 6) return 'Password must be at least 6 characters';
+          return null;
+        };
+      case 'Company Name':
+        return (value) {
+          if (value?.isEmpty ?? true) return 'Company name is required';
+          return null;
+        };
+      default:
+        return (value) => null;
+    }
+  }
+
+  Widget _buildSignInLink() {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: const Interval(0.8, 1.0, curve: Curves.easeOut),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Already have an account?',
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Sign In',
+              style: TextStyle(
+                color: Colors.blue[700],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  List<Widget> _buildFormFields() {
+    return [
+      _buildAnimatedTextField(
+        controller: _nameController,
+        label: 'Full Name',
+        icon: Icons.person_outline,
+        delay: 0.1,
+      ),
+      const SizedBox(height: 16),
+      _buildAnimatedTextField(
+        controller: _emailController,
+        label: 'Email',
+        icon: Icons.email_outlined,
+        delay: 0.2,
+      ),
+      const SizedBox(height: 16),
+      _buildAnimatedTextField(
+        controller: _passwordController,
+        label: 'Password',
+        icon: Icons.lock_outline,
+        isPassword: true,
+        delay: 0.3,
+      ),
+      if (_role == 'company') ...[
+        const SizedBox(height: 16),
+        _buildAnimatedTextField(
+          controller: _companyNameController,
+          label: 'Company Name',
+          icon: Icons.business_outlined,
+          delay: 0.4,
+        ),
+      ],
+    ];
+  }
+
+  Widget _buildAnimatedTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required double delay,
+    bool isPassword = false,
+  }) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0.5, 0),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(delay, delay + 0.2, curve: Curves.easeOut),
+        ),
+      ),
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(delay, delay + 0.2, curve: Curves.easeOut),
+          ),
+        ),
+        child: TextFormField(
+          controller: controller,
+          obscureText: isPassword && _obscurePassword,
+          style: const TextStyle(fontSize: 16),
+          decoration: InputDecoration(
+            labelText: label,
+            prefixIcon: Icon(icon, color: Colors.blue[700]),
+            suffixIcon: isPassword
+                ? IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: Colors.blue[700],
+              ),
+              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blue[200]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blue[200]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.blue[50],
+            labelStyle: TextStyle(color: Colors.blue[700]),
+          ),
+          validator: _getValidator(label),
         ),
       ),
     );
@@ -271,141 +390,112 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
   Widget _buildRoleSelector() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Colors.blue[50],
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _buildRoleOption('job_seeker', 'Job Seeker', Icons.person_search),
-          ),
-          Expanded(
-            child: _buildRoleOption('company', 'Company', Icons.business),
-          ),
+          _buildRoleOption('job_seeker', 'Job Seeker', Icons.person_search, 0.0),
+          _buildRoleOption('company', 'Company', Icons.business, 0.1),
         ],
       ),
     );
   }
 
-  Widget _buildRoleOption(String value, String label, IconData icon) {
+  Widget _buildRoleOption(String value, String label, IconData icon, double delay) {
     final isSelected = _role == value;
-    return GestureDetector(
-      onTap: () => setState(() => _role = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue[700] : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+    return Expanded(
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.5),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(delay, delay + 0.2, curve: Curves.easeOut),
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.grey[600],
-              size: 20,
+        child: GestureDetector(
+          onTap: () => setState(() => _role = value),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: isSelected ? Colors.blue[700] : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: isSelected
+                  ? [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+                  : null,
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey[600],
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? Colors.white : Colors.blue[700],
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.blue[700],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType? keyboardType,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      style: const TextStyle(fontSize: 16),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.grey[600]),
-        suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-      ),
-      validator: validator,
     );
   }
 
   Widget _buildRegisterButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _register,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue[700],
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-      ),
-      child: _isLoading
-          ? const SizedBox(
-        height: 20,
-        width: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      )
-          : const Text(
-        'Create Account',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.5),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _animationController,
+          curve: const Interval(0.6, 0.8, curve: Curves.easeOut),
         ),
       ),
-    );
-  }
-
-  Widget _buildSignInLink() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Already have an account?',
-          style: TextStyle(color: Colors.grey[600]),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _register,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue[700],
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 4,
         ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            'Sign In',
-            style: TextStyle(
-              color: Colors.blue[700],
-              fontWeight: FontWeight.bold,
-            ),
+        child: _isLoading
+            ? const SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        )
+            : const Text(
+          'Create Account',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
-      ],
+      ),
     );
   }
 }
