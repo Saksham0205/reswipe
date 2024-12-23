@@ -87,45 +87,45 @@ class _JobListingsPageState extends State<JobListingsPage>
       }
     });
   }
-  final _model = GenerativeModel(
-    model: 'gemini-1.5-flash-latest',
-    apiKey: 'AIzaSyCV659yUlgYVKIk_a11SAvEwwnoxQpTCvA',
-  );
-
-  Future<String> generateJobSummary({
-    required String title,
-    required String description,
-    required List<String> responsibilities,
-    required List<String> qualifications,
-  }) async {
-    try {
-      final prompt = '''
-        Summarize the following job details concisely:
-        
-        Title: $title
-        
-        Description: $description
-        
-        Key Responsibilities:
-        ${responsibilities.map((r) => "- $r").join("\n")}
-        
-        Required Qualifications:
-        ${qualifications.map((q) => "- $q").join("\n")}
-        
-        Please provide a brief, well-structured summary highlighting:
-        1. Core job function
-        2. Key responsibilities (3-4 main points)
-        3. Essential qualifications
-        4. Any unique aspects or benefits
-      ''';
-
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(content);
-      return response.text ?? 'Unable to generate summary';
-    } catch (e) {
-      throw Exception('Failed to generate summary: $e');
-    }
-  }
+  // final _model = GenerativeModel(
+  //   model: 'gemini-1.5-flash-latest',
+  //   apiKey: 'AIzaSyCV659yUlgYVKIk_a11SAvEwwnoxQpTCvA',
+  // );
+  //
+  // Future<String> generateJobSummary({
+  //   required String title,
+  //   required String description,
+  //   required List<String> responsibilities,
+  //   required List<String> qualifications,
+  // }) async {
+  //   try {
+  //     final prompt = '''
+  //       Summarize the following job details concisely:
+  //
+  //       Title: $title
+  //
+  //       Description: $description
+  //
+  //       Key Responsibilities:
+  //       ${responsibilities.map((r) => "- $r").join("\n")}
+  //
+  //       Required Qualifications:
+  //       ${qualifications.map((q) => "- $q").join("\n")}
+  //
+  //       Please provide a brief, well-structured summary highlighting:
+  //       1. Core job function
+  //       2. Key responsibilities (3-4 main points)
+  //       3. Essential qualifications
+  //       4. Any unique aspects or benefits
+  //     ''';
+  //
+  //     final content = [Content.text(prompt)];
+  //     final response = await _model.generateContent(content);
+  //     return response.text ?? 'Unable to generate summary';
+  //   } catch (e) {
+  //     throw Exception('Failed to generate summary: $e');
+  //   }
+  // }
 
 
 
@@ -184,80 +184,80 @@ class _JobListingsPageState extends State<JobListingsPage>
     }
   }
 
-  void _showJobSummaryDialog(BuildContext context) async {
-    if (filteredJobs.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No jobs available to summarize')),
-      );
-      return;
-    }
-
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
-    try {
-      final currentJob = filteredJobs[_currentIndex];
-      final summary = await generateJobSummary(
-        title: currentJob.title,
-        description: currentJob.description,
-        responsibilities: currentJob.responsibilities,
-        qualifications: currentJob.qualifications,
-      );
-
-      // Hide loading dialog
-      Navigator.pop(context);
-
-      // Show summary dialog
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-            'Job Summary',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  summary,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
-      );
-    } catch (e) {
-      // Hide loading dialog
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating summary: $e')),
-      );
-    }
-  }
+  // void _showJobSummaryDialog(BuildContext context) async {
+  //   if (filteredJobs.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('No jobs available to summarize')),
+  //     );
+  //     return;
+  //   }
+  //
+  //   // Show loading dialog
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => const Center(
+  //       child: CircularProgressIndicator(),
+  //     ),
+  //   );
+  //
+  //   try {
+  //     final currentJob = filteredJobs[_currentIndex];
+  //     final summary = await generateJobSummary(
+  //       title: currentJob.title,
+  //       description: currentJob.description,
+  //       responsibilities: currentJob.responsibilities,
+  //       qualifications: currentJob.qualifications,
+  //     );
+  //
+  //     // Hide loading dialog
+  //     Navigator.pop(context);
+  //
+  //     // Show summary dialog
+  //     showDialog(
+  //       context: context,
+  //       builder: (context) => AlertDialog(
+  //         title: Text(
+  //           'Job Summary',
+  //           style: GoogleFonts.poppins(
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.deepPurple,
+  //           ),
+  //         ),
+  //         content: SingleChildScrollView(
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 summary,
+  //                 style: GoogleFonts.poppins(
+  //                   fontSize: 14,
+  //                   height: 1.5,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text('Close'),
+  //           ),
+  //         ],
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(15),
+  //         ),
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     // Hide loading dialog
+  //     Navigator.pop(context);
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Error generating summary: $e')),
+  //     );
+  //   }
+  // }
 
   Widget _buildEndState() {
     return Center(
@@ -373,19 +373,19 @@ class _JobListingsPageState extends State<JobListingsPage>
                   ),
                 ],
               ),
-              if (!_isLoading && !_showEndState && filteredJobs.isNotEmpty)
-                Positioned(  // Add info button
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton.small(
-                    onPressed: () => _showJobSummaryDialog(context),
-                    backgroundColor: Colors.white,
-                    child: const Icon(
-                      Icons.info_outline,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                ),
+              // if (!_isLoading && !_showEndState && filteredJobs.isNotEmpty)
+                // Positioned(  // Add info button
+                //   bottom: 16,
+                //   right: 16,
+                //   child: FloatingActionButton.small(
+                //     onPressed: () => _showJobSummaryDialog(context),
+                //     backgroundColor: Colors.white,
+                //     child: const Icon(
+                //       Icons.info_outline,
+                //       color: Colors.deepPurple,
+                //     ),
+                //   ),
+                // ),
             ],
           ),
         ),

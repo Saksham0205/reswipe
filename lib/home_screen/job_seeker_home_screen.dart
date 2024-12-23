@@ -17,7 +17,7 @@ class _JobSeekerHomeScreenState extends State<JobSeekerHomeScreen> {
   static final List<Widget> _pages = <Widget>[
     JobListingsPage(),
     ApplicationsPage(),
-    ProfilePage(),
+    ProfileScreen(),
     UserSettingsPage(),
   ];
 
