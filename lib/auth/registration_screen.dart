@@ -169,7 +169,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         SizedBox(height: 20.h),
         ShaderMask(
           shaderCallback: (bounds) => LinearGradient(
-            colors: [Colors.blue[700]!, Colors.blue[900]!],
+            colors: [Colors.deepPurple[700]!, Colors.deepPurple[900]!],
           ).createShader(bounds),
           child: Text(
             'Join Reswipe',
@@ -198,7 +198,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.deepPurple.withOpacity(0.1),
             blurRadius: 20.r,
             offset: const Offset(0, 10),
           ),
@@ -282,7 +282,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
             child: Text(
               'Sign In',
               style: TextStyle(
-                color: Colors.blue[700],
+                color: Colors.deepPurple[700],
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -356,31 +356,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
           style: TextStyle(fontSize: 16.sp),
           decoration: InputDecoration(
             labelText: label,
-            prefixIcon: Icon(icon, color: Colors.blue[700]),
+            prefixIcon: Icon(icon, color: Colors.deepPurple[700]),
             suffixIcon: isPassword
                 ? IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                color: Colors.blue[700],
+                color: Colors.deepPurple[700],
               ),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             )
                 : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.blue[200]!),
+              borderSide: BorderSide(color: Colors.deepPurple[200]!),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.blue[200]!),
+              borderSide: BorderSide(color: Colors.deepPurple[200]!),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(color: Colors.blue[700]!, width: 2.w),
+              borderSide: BorderSide(color: Colors.deepPurple[700]!, width: 2.w),
             ),
             filled: true,
-            fillColor: Colors.blue[50],
-            labelStyle: TextStyle(color: Colors.blue[700]),
+            fillColor: Colors.deepPurple[50],
+            labelStyle: TextStyle(color: Colors.deepPurple[700]),
           ),
           validator: _getValidator(label),
         ),
@@ -391,7 +391,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
   Widget _buildRoleSelector() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: Colors.deepPurple[50],
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -422,12 +422,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
             duration: const Duration(milliseconds: 200),
             padding: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
-              color: isSelected ? Colors.blue[700] : Colors.transparent,
+              color: isSelected ? Colors.deepPurple[700] : Colors.transparent,
               borderRadius: BorderRadius.circular(12.r),
               boxShadow: isSelected
                   ? [
                 BoxShadow(
-                  color: Colors.blue.withOpacity(0.3),
+                  color: Colors.deepPurple.withOpacity(0.3),
                   blurRadius: 8.r,
                   offset: const Offset(0, 4),
                 ),
@@ -439,14 +439,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? Colors.white : Colors.blue[700],
+                  color: isSelected ? Colors.white : Colors.deepPurple[700],
                   size: 20.r,
                 ),
                 SizedBox(width: 8.w),
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.blue[700],
+                    color: isSelected ? Colors.white : Colors.deepPurple[700],
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -472,7 +472,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
       child: ElevatedButton(
         onPressed: _isLoading ? null : _register,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue[700],
+          backgroundColor: Colors.deepPurple[700],
           padding: EdgeInsets.symmetric(vertical: 16.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),

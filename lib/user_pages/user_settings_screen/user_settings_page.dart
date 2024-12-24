@@ -11,7 +11,8 @@ class UserSettingsPage extends StatefulWidget {
   State<UserSettingsPage> createState() => _UserSettingsPageState();
 }
 
-class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerProviderStateMixin {
+class _UserSettingsPageState extends State<UserSettingsPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final List<double> _itemDelays = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 
@@ -96,7 +97,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerPr
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const HelpAndSupportScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const HelpAndSupportScreen()),
                     );
                   },
                 ),
@@ -108,7 +110,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerPr
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AboutScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const AboutScreen()),
                     );
                   },
                 ),
@@ -254,7 +257,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerPr
         ),
       ),
       child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+        position: Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
+            .animate(
           CurvedAnimation(
             parent: _controller,
             curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
@@ -274,7 +278,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerPr
               elevation: 0,
             ),
             onPressed: () => _showLogoutDialog(context),
-            child:  Text(
+            child: Text(
               'Logout',
               style: TextStyle(
                 fontSize: 16.sp,
@@ -360,7 +364,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerPr
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                             ),
-                            onPressed: isLoading ? null : () => Navigator.pop(context, false),
+                            onPressed: isLoading
+                                ? null
+                                : () => Navigator.pop(context, false),
                             child: Text(
                               'Cancel',
                               style: TextStyle(
@@ -385,42 +391,52 @@ class _UserSettingsPageState extends State<UserSettingsPage> with SingleTickerPr
                             onPressed: isLoading
                                 ? null
                                 : () async {
-                              setState(() => isLoading = true);
-                              try {
-                                // Perform logout operations concurrently
-                                await Future.wait([
-                                  FirebaseAuth.instance.signOut(),
-                                  GoogleSignIn().signOut(),
-                                ]);
-                                Navigator.pop(context, true);
-                              } catch (e) {
-                                // Handle error
-                                setState(() => isLoading = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Failed to logout. Please try again.'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            },
+                                    setState(() => isLoading = true);
+                                    try {
+                                      await Future.wait([
+                                        FirebaseAuth.instance.signOut(),
+                                        GoogleSignIn().signOut(),
+                                      ]);
+
+                                      // Remove await since ScreenUtil.init() is synchronous
+                                      ScreenUtil.init(
+                                        context,
+                                        designSize: const Size(375, 812),
+                                        minTextAdapt: true,
+                                        splitScreenMode: true,
+                                      );
+
+                                      Navigator.pop(context, true);
+                                    } catch (e) {
+                                      setState(() => isLoading = false);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Failed to logout. Please try again.'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  },
                             child: isLoading
                                 ? SizedBox(
-                              height: 20.h,
-                              width: 20.w,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.w,
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
+                                    height: 20.h,
+                                    width: 20.w,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.w,
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                              Colors.white),
+                                    ),
+                                  )
                                 : Text(
-                              'Logout',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white
-                              ),
-                            ),
+                                    'Logout',
+                                    style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white),
+                                  ),
                           ),
                         ),
                       ],

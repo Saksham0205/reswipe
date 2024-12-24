@@ -19,7 +19,7 @@ class JobFinderApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: Size(360, 690),
+      designSize: Size(375, 812),
       minTextAdapt: true,
       builder: (context, child) {
         return MaterialApp(
