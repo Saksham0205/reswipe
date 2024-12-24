@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../models/company_model/applications.dart';
 
 class FirstPage extends StatelessWidget {
@@ -35,36 +36,35 @@ class FirstPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0.w), // Responsive padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             application.applicantName,
-            style: const TextStyle(
-              fontSize: 32,
+            style: TextStyle(
+              fontSize: 32.sp, // Responsive font size
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h), // Responsive spacing
           Text(
             application.qualification,
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: 24.sp,
               color: Colors.white,
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 8),
-          if (application.college != null)
-            Text(
-              application.college!,
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.white.withOpacity(0.9),
-              ),
+          SizedBox(height: 8.h),
+          Text(
+            application.college,
+            style: TextStyle(
+              fontSize: 20.sp,
+              color: Colors.white.withOpacity(0.9),
             ),
+          ),
         ],
       ),
     );
@@ -72,10 +72,10 @@ class FirstPage extends StatelessWidget {
 
   Widget _buildSkillsSection() {
     return Container(
-      padding: const EdgeInsets.all(24.0),
-      decoration: const BoxDecoration(
+      padding: EdgeInsets.all(24.0.w),
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,17 +83,17 @@ class FirstPage extends StatelessWidget {
           Text(
             'Skills',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple.shade600,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Expanded(
             child: SingleChildScrollView(
               child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: 8.w, // Responsive spacing
+                runSpacing: 8.h,
                 children: application.skills.map(_buildSkillChip).toList(),
               ),
             ),
@@ -106,20 +106,20 @@ class FirstPage extends StatelessWidget {
 
   Widget _buildSkillChip(String skill) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
         color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(
           color: Colors.deepPurple.shade200,
-          width: 1,
+          width: 1.w,
         ),
       ),
       child: Text(
         skill,
         style: TextStyle(
           color: Colors.deepPurple.shade700,
-          fontSize: 14,
+          fontSize: 14.sp,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -131,26 +131,26 @@ class FirstPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         SizedBox(
-          width: 150,
+          width: 150.w, // Responsive width
           child: ElevatedButton.icon(
             onPressed: onResumeView,
-            icon: const Icon(Icons.description, color: Colors.white, size: 18),
-            label: const Text(
+            icon: Icon(Icons.description, color: Colors.white, size: 18.sp),
+            label: Text(
               'Resume',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white, fontSize: 14.sp),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12.r),
               ),
             ),
           ),
         ),
         IconButton(
           onPressed: onDetailsPressed,
-          icon: const Icon(Icons.info_outline),
+          icon: Icon(Icons.info_outline, size: 24.sp),
           color: Colors.deepPurple,
           tooltip: 'View Details',
         ),

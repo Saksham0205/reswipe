@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import '../constants/app_text_styles.dart';
 import '../services/firestore_service.dart';
@@ -68,30 +69,30 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           animation: _animationController,
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              padding: EdgeInsets.symmetric(horizontal: 24.0.w),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 20),
+                   SizedBox(height: 20.h),
                   Lottie.asset(
                     'assets/lottie/job_lottie.json',
-                    height: 200,
+                    height: 200.h,
                     fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40.h),
                   Text(
                     'Sign in',
                     style: AppTextStyles.heading1,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10.h),
                   Text(
                     'Stay updated on your professional world',
                     style: AppTextStyles.subtitle1,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40.h),
                   LoginForm(
                     isLoading: _isLoading,
                     onLoadingChanged: _setLoading,
@@ -100,14 +101,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       MaterialPageRoute(builder: (_) => ForgotPasswordScreen()),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   const DividerWithText(text: 'or'),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   SocialLoginButtons(
                     isLoading: _isLoading,
                     onGoogleSignIn: _handleGoogleSignIn,
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   SignUpPrompt(
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => RegistrationScreen()),

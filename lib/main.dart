@@ -5,7 +5,7 @@ import 'auth/auth_wrapper.dart';
 import 'auth/login_screen.dart';
 import 'firebase_options.dart';
 import 'home_screen/job_seeker_home_screen.dart';
-
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,20 +18,25 @@ void main() async {
 class JobFinderApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Job Finder',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: AuthWrapper(),
-      routes: {
-        '/login': (context) => LoginScreen(),
-        '/company_home': (context) => CompanyMainScreen(),
-        '/job_seeker_home': (context) => JobSeekerHomeScreen(),
+    return ScreenUtilInit(
+      designSize: Size(360, 690),
+      minTextAdapt: true,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Job Finder',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+          ),
+          home: AuthWrapper(),
+          routes: {
+            '/login': (context) => LoginScreen(),
+            '/company_home': (context) => CompanyMainScreen(),
+            '/job_seeker_home': (context) => JobSeekerHomeScreen(),
+          },
+        );
       },
     );
   }
 }
-

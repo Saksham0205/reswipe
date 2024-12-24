@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PrivacyAndSecurityScreen extends StatelessWidget {
   const PrivacyAndSecurityScreen({Key? key}) : super(key: key);
@@ -7,9 +8,9 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Privacy & Security',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18.sp),
         ),
         backgroundColor: Colors.deepPurpleAccent,
         elevation: 0,
@@ -19,7 +20,7 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
           children: [
             _buildHeader(),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -33,7 +34,7 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
                       'Device information and app analytics',
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   _buildSection(
                     'How We Use Your Data',
                     'Your data is used to:',
@@ -44,7 +45,7 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
                       'Maintain app security and prevent fraud',
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   _buildSection(
                     'Data Security',
                     'We implement the following security measures:',
@@ -55,7 +56,7 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
                       'Industry-standard authentication protocols',
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   _buildSection(
                     'Your Rights',
                     'You have the right to:',
@@ -66,7 +67,7 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
                       'Export your data in a portable format',
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   _buildPrivacyControls(context),
                 ],
               ),
@@ -80,29 +81,29 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       color: Colors.deepPurpleAccent,
-      padding: const EdgeInsets.all(20),
-      child: const Column(
+      padding: EdgeInsets.all(20.w),
+      child: Column(
         children: [
           Icon(
             Icons.security,
-            size: 50,
+            size: 50.r,
             color: Colors.white,
           ),
-          SizedBox(height: 15),
+          SizedBox(height: 15.h),
           Text(
             'Your Privacy Matters',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 5),
+          SizedBox(height: 5.h),
           Text(
             'We are committed to protecting your data',
             style: TextStyle(
               color: Colors.white70,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
         ],
@@ -116,21 +117,21 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 20,
+          style: TextStyle(
+            fontSize: 20.sp,
             fontWeight: FontWeight.bold,
             color: Colors.deepPurpleAccent,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           subtitle,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: 16.sp,
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         ...items.map((item) => _buildListItem(item)),
       ],
     );
@@ -138,21 +139,21 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
 
   Widget _buildListItem(String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 4.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle,
-            size: 20,
+            size: 20.r,
             color: Colors.deepPurpleAccent,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontSize: 15,
+              style: TextStyle(
+                fontSize: 15.sp,
                 color: Colors.black87,
               ),
             ),
@@ -166,47 +167,46 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Privacy Controls',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurpleAccent,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             _buildPrivacyControl(
               'Data Collection',
               'Allow data collection for improved matching',
               true,
             ),
-            const Divider(),
+            Divider(),
             _buildPrivacyControl(
               'Analytics',
               'Share anonymous usage data',
               true,
             ),
-            const Divider(),
+            Divider(),
             _buildPrivacyControl(
               'Marketing',
               'Receive personalized recommendations',
               false,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  // Implement data export functionality
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text('Your data export request has been initiated.'),
                       backgroundColor: Colors.deepPurpleAccent,
                     ),
@@ -214,15 +214,15 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurpleAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Export My Data',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -241,22 +241,21 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
         return SwitchListTile(
           title: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
           subtitle: Text(
             subtitle,
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: 14.sp,
               color: Colors.black54,
             ),
           ),
           value: defaultValue,
           activeColor: Colors.deepPurpleAccent,
           onChanged: (bool value) {
-            // Implement the privacy control toggle functionality
             setState(() {
               // Update the privacy setting
             });

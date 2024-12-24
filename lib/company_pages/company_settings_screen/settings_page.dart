@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:reswipe/user_pages/user_settings_screen/about_screen.dart';
 import 'package:reswipe/user_pages/user_settings_screen/privacy_and_security_screen.dart';
@@ -41,7 +42,7 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
           style: TextStyle(
             color: Colors.blue[900],
             fontWeight: FontWeight.bold,
-            fontSize: 24,
+            fontSize: 24.sp,
           ),
         ),
       ),
@@ -49,7 +50,7 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -111,7 +112,7 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
                     );
                   },
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
                 _buildLogoutButton(),
               ],
             ),
@@ -123,11 +124,11 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 20.0,
+          fontSize: 20.sp,
           fontWeight: FontWeight.bold,
           color: Colors.blue[900],
           letterSpacing: 0.5,
@@ -172,22 +173,22 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 12.0),
+          padding: EdgeInsets.only(bottom: 12.h),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16.r),
               child: Container(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.0),
+                  borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.blue.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 10,
+                      spreadRadius: 1.r,
+                      blurRadius: 10.r,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -195,35 +196,35 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12.w),
                       decoration: BoxDecoration(
                         color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Icon(
                         icon,
                         color: Colors.blue[700],
-                        size: 24.0,
+                        size: 24.r,
                       ),
                     ),
-                    const SizedBox(width: 16.0),
+                    SizedBox(width: 16.w),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             title,
-                            style: const TextStyle(
-                              fontSize: 16.0,
+                            style:  TextStyle(
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(height: 4.0),
+                           SizedBox(height: 4.h),
                           Text(
                             subtitle,
                             style: TextStyle(
-                              fontSize: 14.0,
+                              fontSize: 14.sp,
                               color: Colors.grey[600],
                             ),
                           ),
@@ -261,22 +262,22 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
         ),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding:  EdgeInsets.symmetric(horizontal: 16.w),
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              padding:  EdgeInsets.symmetric(vertical: 16.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(16.r),
               ),
               elevation: 0,
             ),
             onPressed: () => _showLogoutDialog(context),
-            child: const Text(
+            child:  Text(
               'Logout',
               style: TextStyle(
-                fontSize: 16.0,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -297,19 +298,19 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
           builder: (context, setState) {
             return Dialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20.r),
               ),
               elevation: 0,
               backgroundColor: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.all(20),
+                padding:  EdgeInsets.all(20.w),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
+                      blurRadius: 20.r,
                       offset: const Offset(0, 10),
                     ),
                   ],
@@ -318,7 +319,7 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
                         color: Colors.red.shade50,
                         shape: BoxShape.circle,
@@ -326,58 +327,58 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
                       child: Icon(
                         Icons.logout_rounded,
                         color: Colors.red.shade600,
-                        size: 32,
+                        size: 32.r,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    const Text(
+                    SizedBox(height: 20.h),
+                    Text(
                       'Logout',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12.h),
                     Text(
                       'Are you sure you want to logout?',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 16.sp,
                         color: Colors.grey[600],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: TextButton(
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: EdgeInsets.symmetric(vertical: 12.h),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                             ),
                             onPressed: isLoading ? null : () => Navigator.pop(context, false),
                             child: Text(
                               'Cancel',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 16.sp,
                                 color: Colors.grey[600],
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: 16.w),
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red.shade600,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding:EdgeInsets.symmetric(vertical: 12.h),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                               elevation: 0,
                             ),
@@ -404,18 +405,18 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
                               }
                             },
                             child: isLoading
-                                ? const SizedBox(
-                              height: 20,
-                              width: 20,
+                                ?  SizedBox(
+                              height: 20.h,
+                              width: 20.w,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                strokeWidth: 2.w,
+                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                                : const Text(
+                                :  Text(
                               'Logout',
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white
                               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../models/company_model/applications.dart';
 import '../achievement_card.dart';
 
@@ -26,7 +27,7 @@ class ThirdPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -37,19 +38,19 @@ class ThirdPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Achievements & Awards',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 28.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             '${application.achievements.length} accomplishments',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: Colors.white.withOpacity(0.9),
             ),
           ),
@@ -60,7 +61,7 @@ class ThirdPage extends StatelessWidget {
 
   Widget _buildAchievementsList() {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       itemCount: application.achievements.length,
       itemBuilder: (context, index) {
         return AchievementCard(

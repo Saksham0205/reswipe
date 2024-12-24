@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
@@ -9,7 +10,7 @@ class AppColors {
 
 class AppTypography {
   static final TextStyle appBarTitle = GoogleFonts.poppins(
-    fontSize: 22,
+    fontSize: 22.sp,
     fontWeight: FontWeight.w700,
     letterSpacing: 0.5,
   );

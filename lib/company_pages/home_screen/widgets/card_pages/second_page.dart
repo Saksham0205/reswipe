@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../models/company_model/applications.dart';
 import '../experience_card.dart';
 
@@ -26,7 +27,7 @@ class SecondPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -37,19 +38,19 @@ class SecondPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Professional Experience',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 28.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             '${application.experience.length} positions',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: Colors.white.withOpacity(0.9),
             ),
           ),
@@ -60,12 +61,15 @@ class SecondPage extends StatelessWidget {
 
   Widget _buildExperienceList() {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.0.w),
       itemCount: application.experience.length,
       itemBuilder: (context, index) {
-        return ExperienceCard(
-          experience: application.experience[index],
-          index: index + 1,
+        return Padding(
+          padding: EdgeInsets.only(bottom: 8.0.h),
+          child: ExperienceCard(
+            experience: application.experience[index],
+            index: index + 1,
+          ),
         );
       },
     );

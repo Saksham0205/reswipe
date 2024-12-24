@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'company_verification_screen.dart';
@@ -137,12 +138,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: EdgeInsets.all(24.0.w),
                 child: Column(
                   children: [
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     _buildHeader(),
-                    const SizedBox(height: 30),
+                    SizedBox(height: 30.h),
                     _buildRegistrationCard(),
                   ],
                 ),
@@ -158,14 +159,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20.w),
           child: Lottie.asset(
             'assets/lottie/job_registration_lottie.json',
-            height: 120,
+            height: 120.h,
             fit: BoxFit.contain,
           ),
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20.h),
         ShaderMask(
           shaderCallback: (bounds) => LinearGradient(
             colors: [Colors.blue[700]!, Colors.blue[900]!],
@@ -173,7 +174,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
           child: Text(
             'Join Reswipe',
             style: GoogleFonts.poppins(
-              fontSize: 32,
+              fontSize: 32.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -182,7 +183,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         Text(
           'Where talent meets opportunity',
           style: GoogleFonts.poppins(
-            fontSize: 16,
+            fontSize: 16.sp,
             color: Colors.grey[600],
           ),
         ),
@@ -194,32 +195,32 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         boxShadow: [
           BoxShadow(
             color: Colors.blue.withOpacity(0.1),
-            blurRadius: 20,
+            blurRadius: 20.r,
             offset: const Offset(0, 10),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(24.r),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(24.0.w),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildRoleSelector(),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   ..._buildFormFields(),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32.h),
                   _buildRegisterButton(),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   _buildSignInLink(),
                 ],
               ),
@@ -298,14 +299,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         icon: Icons.person_outline,
         delay: 0.1,
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16.h),
       _buildAnimatedTextField(
         controller: _emailController,
         label: 'Email',
         icon: Icons.email_outlined,
         delay: 0.2,
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16.h),
       _buildAnimatedTextField(
         controller: _passwordController,
         label: 'Password',
@@ -314,7 +315,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         delay: 0.3,
       ),
       if (_role == 'company') ...[
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         _buildAnimatedTextField(
           controller: _companyNameController,
           label: 'Company Name',
@@ -352,7 +353,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         child: TextFormField(
           controller: controller,
           obscureText: isPassword && _obscurePassword,
-          style: const TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 16.sp),
           decoration: InputDecoration(
             labelText: label,
             prefixIcon: Icon(icon, color: Colors.blue[700]),
@@ -366,16 +367,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
             )
                 : null,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
               borderSide: BorderSide(color: Colors.blue[200]!),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
               borderSide: BorderSide(color: Colors.blue[200]!),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(color: Colors.blue[700]!, width: 2.w),
             ),
             filled: true,
             fillColor: Colors.blue[50],
@@ -391,7 +392,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
     return Container(
       decoration: BoxDecoration(
         color: Colors.blue[50],
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
         children: [
@@ -419,15 +420,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
           onTap: () => setState(() => _role = value),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: 12.h),
             decoration: BoxDecoration(
               color: isSelected ? Colors.blue[700] : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
               boxShadow: isSelected
                   ? [
                 BoxShadow(
                   color: Colors.blue.withOpacity(0.3),
-                  blurRadius: 8,
+                  blurRadius: 8.r,
                   offset: const Offset(0, 4),
                 ),
               ]
@@ -439,9 +440,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
                 Icon(
                   icon,
                   color: isSelected ? Colors.white : Colors.blue[700],
-                  size: 20,
+                  size: 20.r,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Text(
                   label,
                   style: TextStyle(
@@ -472,25 +473,25 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         onPressed: _isLoading ? null : _register,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.blue[700],
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(vertical: 16.h),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
           elevation: 4,
         ),
         child: _isLoading
-            ? const SizedBox(
-          height: 20,
-          width: 20,
+            ? SizedBox(
+          height: 20.h,
+          width: 20.w,
           child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            strokeWidth: 2.w,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
           ),
         )
-            : const Text(
+            : Text(
           'Create Account',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 16.sp,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
