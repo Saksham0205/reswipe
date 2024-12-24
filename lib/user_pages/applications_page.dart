@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lottie/lottie.dart';
@@ -47,23 +48,23 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
         statusConfig['pending']!;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: config.color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         border: Border.all(color: config.color.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(config.icon, color: config.color, size: 16),
-          const SizedBox(width: 6),
+          Icon(config.icon, color: config.color, size: 16.r),
+          SizedBox(width: 6.w),
           Text(
             config.label,
             style: TextStyle(
               color: config.color,
               fontWeight: FontWeight.w600,
-              fontSize: 13,
+              fontSize: 13.sp,
             ),
           ),
         ],
@@ -73,17 +74,17 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
 
   Widget _buildDetailRow(IconData icon, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12.h),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey[600]),
-          const SizedBox(width: 8),
+          Icon(icon, size: 18.r, color: Colors.grey[600]),
+          SizedBox(width: 8.w),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
                 color: Colors.grey[800],
-                fontSize: 14,
+                fontSize: 14.sp,
               ),
             ),
           ),
@@ -98,34 +99,34 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: 16.sp,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF2D3748),
+            color: const Color(0xFF2D3748),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         ...items.map((item) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: EdgeInsets.only(bottom: 8.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                margin: const EdgeInsets.only(top: 6),
-                width: 6,
-                height: 6,
+                margin: EdgeInsets.only(top: 6.h),
+                width: 6.w,
+                height: 6.h,
                 decoration: BoxDecoration(
                   color: const Color(0xFF6B46C1),
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(3.r),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Text(
                   item,
                   style: TextStyle(
                     color: Colors.grey[800],
-                    height: 1.5,
+                    height: 1.5.h,
                   ),
                 ),
               ),
@@ -143,11 +144,12 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'My Applications',
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: Color(0xFF2D3748),
+            color: const Color(0xFF2D3748),
+            fontSize: 18.sp,
           ),
         ),
         backgroundColor: Colors.white,
@@ -165,11 +167,11 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                  const SizedBox(height: 16),
+                  Icon(Icons.error_outline, size: 48.sp, color: Colors.red[300]),
+                  SizedBox(height: 16.h),
                   Text(
                     'Something went wrong',
-                    style: TextStyle(color: Colors.red[300], fontSize: 16),
+                    style: TextStyle(color: Colors.red[300], fontSize: 16.sp),
                   ),
                 ],
               ),
@@ -177,9 +179,10 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF6B46C1),
+                color: const Color(0xFF6B46C1),
+                strokeWidth: 2.w,
               ),
             );
           }
@@ -191,31 +194,32 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                 children: [
                   Lottie.network(
                     'https://assets7.lottiefiles.com/packages/lf20_hl5n0bwb.json',
-                    height: 200,
+                    height: 200.h,
                     fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
+                  SizedBox(height: 24.h),
+                  Text(
                     'No Applications Yet',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 20.sp,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF2D3748),
+                      color: const Color(0xFF2D3748),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Wrap(
+                  SizedBox(height: 12.h),
+                  Wrap(
                     alignment: WrapAlignment.center,
-                    children: [ Text(
-                      'Start applying to jobs to track your applications here',
-                      style: TextStyle(
-                        color: Color(0xFF718096),
-                        fontSize: 16,
-                        height: 1.5,
-
+                    children: [
+                      Text(
+                        'Start applying to jobs to track your applications here',
+                        style: TextStyle(
+                          color: const Color(0xFF718096),
+                          fontSize: 16.sp,
+                          height: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-              ],
+                    ],
                   ),
                 ],
               ),
@@ -224,7 +228,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
 
           return ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               DocumentSnapshot application = snapshot.data!.docs[index];
@@ -241,27 +245,27 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                   ),
                 ],
                 child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: EdgeInsets.only(bottom: 16.h),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        blurRadius: 10.r,
+                        offset: Offset(0, 4.h),
                       ),
                     ],
                   ),
                   child: Material(
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(16.r),
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(16.r),
                       onTap: () => toggleCard(application.id),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.all(20.w),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -274,17 +278,17 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                     children: [
                                       Text(
                                         data['jobTitle'] ?? 'Unknown Job',
-                                        style: const TextStyle(
-                                          fontSize: 18,
+                                        style: TextStyle(
+                                          fontSize: 18.sp,
                                           fontWeight: FontWeight.bold,
-                                          color: Color(0xFF2D3748),
+                                          color: const Color(0xFF2D3748),
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: 4.h),
                                       Text(
                                         data['companyName'] ?? 'Unknown Company',
                                         style: TextStyle(
-                                          fontSize: 15,
+                                          fontSize: 15.sp,
                                           color: Colors.grey[600],
                                         ),
                                       ),
@@ -294,7 +298,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                 _buildStatusChip(data['status'] ?? 'pending'),
                               ],
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16.h),
                             _buildDetailRow(
                               Icons.calendar_today_rounded,
                               'Applied on: ${DateFormat('MMM d, yyyy').format((data['timestamp'] as Timestamp).toDate())}',
@@ -302,11 +306,11 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                             if (!isExpanded)
                               Center(
                                 child: Container(
-                                  margin: const EdgeInsets.only(top: 8),
-                                  padding: const EdgeInsets.all(4),
+                                  margin: EdgeInsets.only(top: 8.h),
+                                  padding: EdgeInsets.all(4.w),
                                   decoration: BoxDecoration(
                                     color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(12.r),
                                   ),
                                   child: Icon(
                                     Icons.keyboard_arrow_down_rounded,
@@ -315,7 +319,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                 ),
                               ),
                             if (isExpanded) ...[
-                              const Divider(height: 32, thickness: 1),
+                              Divider(height: 32.h, thickness: 1.h),
                               _buildDetailRow(
                                 Icons.location_on_outlined,
                                 data['jobLocation'] ?? 'Unknown Location',
@@ -328,16 +332,16 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                 Icons.currency_rupee,
                                 data['jobSalaryRange'] ?? 'Not specified',
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
+                              SizedBox(height: 16.h),
+                              Text(
                                 'Description',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2D3748),
+                                  color: const Color(0xFF2D3748),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8.h),
                               Text(
                                 data['jobDescription'] ?? 'No description available',
                                 style: TextStyle(
@@ -345,13 +349,13 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                                   height: 1.5,
                                 ),
                               ),
-                              const SizedBox(height: 24),
+                              SizedBox(height: 24.h),
                               if (data['jobResponsibilities'] != null) ...[
                                 _buildSection(
                                   'Responsibilities',
                                   List<String>.from(data['jobResponsibilities']),
                                 ),
-                                const SizedBox(height: 24),
+                                SizedBox(height: 24.h),
                               ],
                               if (data['jobQualifications'] != null) ...[
                                 _buildSection(
@@ -361,11 +365,11 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                               ],
                               Center(
                                 child: Container(
-                                  margin: const EdgeInsets.only(top: 16),
-                                  padding: const EdgeInsets.all(4),
+                                  margin: EdgeInsets.only(top: 16.h),
+                                  padding: EdgeInsets.all(4.w),
                                   decoration: BoxDecoration(
                                     color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(12.r),
                                   ),
                                   child: Icon(
                                     Icons.keyboard_arrow_up_rounded,
