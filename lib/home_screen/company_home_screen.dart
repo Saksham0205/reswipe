@@ -26,13 +26,6 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
     ];
   }
 
-  void _removeFromFavorites(Application application) {
-    setState(() {
-      _favoriteApplications.remove(application);
-    });
-  }
-
-
 
   @override
   Widget build(BuildContext context) {
