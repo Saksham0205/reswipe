@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../controller/profile_controller.dart';
 import '../../shared/profile_text_field.dart';
-
 
 class ProfileHeader extends StatelessWidget {
   final ProfileController controller;
@@ -17,13 +17,13 @@ class ProfileHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildProfileImage(context),
-            const SizedBox(width: 16),
+            SizedBox(width: 16.w),
             Expanded(child: _buildPersonalInfo()),
           ],
         ),
         if (controller.hasUnsavedChanges)
           Padding(
-            padding: const EdgeInsets.only(top: 16),
+            padding: EdgeInsets.only(top: 16.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -35,7 +35,7 @@ class ProfileHeader extends StatelessWidget {
                   ),
                   child: const Text('Discard Changes'),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 ElevatedButton(
                   onPressed: () => controller.saveChanges(context),
                   style: ElevatedButton.styleFrom(
@@ -58,21 +58,21 @@ class ProfileHeader extends StatelessWidget {
             GestureDetector(
               onTap: controller.isImageLoading ? null : () => controller.uploadProfileImage(context),
               child: Container(
-                width: 120,
-                height: 120,
+                width: 120.w,
+                height: 120.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.deepPurple, width: 3),
+                  border: Border.all(color: Colors.deepPurple, width: 3.w),
                 ),
                 child: controller.isImageLoading
                     ? const Center(child: CircularProgressIndicator())
                     : CircleAvatar(
-                  radius: 58,
+                  radius: 58.r,
                   backgroundImage: controller.profileData.profileImageUrl.isNotEmpty
                       ? NetworkImage(controller.profileData.profileImageUrl)
                       : null,
                   child: controller.profileData.profileImageUrl.isEmpty
-                      ? const Icon(Icons.person, size: 60)
+                      ? Icon(Icons.person, size: 60.sp)
                       : null,
                 ),
               ),
@@ -84,17 +84,17 @@ class ProfileHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.deepPurple,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(color: Colors.white, width: 2.w),
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                child: Padding(
+                  padding: EdgeInsets.all(8.w),
+                  child: Icon(Icons.camera_alt, color: Colors.white, size: 18.sp),
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         _buildLikesCounter(),
       ],
     );
@@ -109,20 +109,20 @@ class ProfileHeader extends StatelessWidget {
           labelText: 'Full Name',
           icon: Icons.person,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         ProfileTextField(
           controller: controller.emailController,
           labelText: 'Email',
           icon: Icons.email,
           keyboardType: TextInputType.emailAddress,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         ProfileTextField(
           controller: controller.collegeController,
           labelText: 'College',
           icon: Icons.school,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         ProfileTextField(
           controller: controller.collegeSessionController,
           labelText: 'College Session (YYYY-YYYY)',
@@ -135,40 +135,40 @@ class ProfileHeader extends StatelessWidget {
 
   Widget _buildLikesCounter() {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8.w),
       decoration: BoxDecoration(
         color: Colors.deepPurple.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
       child: Column(
         children: [
-          const Row(
+          Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.favorite, color: Colors.deepPurple, size: 20),
-              SizedBox(width: 4),
+              Icon(Icons.favorite, color: Colors.deepPurple, size: 20.sp),
+              SizedBox(width: 4.w),
               Text(
                 'Company Likes',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           Text(
             '${controller.profileData.companyLikesCount}',
-            style: const TextStyle(
-              fontSize: 20,
+            style: TextStyle(
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple,
             ),
           ),
-          const Text(
+          Text(
             'Total Likes',
-            style: TextStyle(fontSize: 12, color: Colors.deepPurple),
+            style: TextStyle(fontSize: 12.sp, color: Colors.deepPurple),
           ),
         ],
       ),

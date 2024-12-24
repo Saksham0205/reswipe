@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../controller/profile_controller.dart';
 import '../../shared/profile_text_field.dart';
-
 
 class ProfessionalSection extends StatelessWidget {
   final ProfileController controller;
@@ -14,38 +14,38 @@ class ProfessionalSection extends StatelessWidget {
     return Card(
       elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Professional Experience',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.deepPurple,
                     ),
                   ),
                 ),
                 if (controller.hasUnsavedChanges)
-                  const Chip(
+                  Chip(
                     label: Text(
                       'Unsaved Changes',
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(fontSize: 12.sp),
                     ),
                     backgroundColor: Colors.amber,
-                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             _buildEducationSection(),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             _buildExperienceSection(context),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             _buildProjectsSection(context),
           ],
         ),
@@ -62,7 +62,7 @@ class ProfessionalSection extends StatelessWidget {
           labelText: 'Education',
           icon: Icons.school,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         ProfileTextField(
           controller: controller.jobProfileController,
           labelText: 'Current Job Profile',
@@ -78,20 +78,20 @@ class ProfessionalSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.work_history, color: Colors.deepPurple),
-            const SizedBox(width: 8),
-            const Expanded(
+            Icon(Icons.work_history, size: 20.sp, color: Colors.deepPurple),
+            SizedBox(width: 8.w),
+            Expanded(
               child: Text(
                 'Experience',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.deepPurple),
+              icon: Icon(Icons.edit, size: 20.sp, color: Colors.deepPurple),
               onPressed: () => _showEditDialog(
                 context: context,
                 title: 'Edit Experience',
@@ -101,7 +101,7 @@ class ProfessionalSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         _buildList(controller.experienceController.text),
       ],
     );
@@ -113,20 +113,20 @@ class ProfessionalSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.engineering, color: Colors.deepPurple),
-            const SizedBox(width: 8),
-            const Expanded(
+            Icon(Icons.engineering, size: 20.sp, color: Colors.deepPurple),
+            SizedBox(width: 8.w),
+            Expanded(
               child: Text(
                 'Projects',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.deepPurple),
+              icon: Icon(Icons.edit, size: 20.sp, color: Colors.deepPurple),
               onPressed: () => _showEditDialog(
                 context: context,
                 title: 'Edit Projects',
@@ -136,7 +136,7 @@ class ProfessionalSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         _buildList(controller.projectsController.text),
       ],
     );
@@ -146,9 +146,9 @@ class ProfessionalSection extends StatelessWidget {
     final items = text.split('\n')..removeWhere((e) => e.isEmpty);
 
     return items.isEmpty
-        ? const Center(
+        ? Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
+        padding: EdgeInsets.symmetric(vertical: 16.h),
         child: Text(
           'No items added yet',
           style: TextStyle(
@@ -164,13 +164,13 @@ class ProfessionalSection extends StatelessWidget {
       itemCount: items.length,
       itemBuilder: (context, index) {
         return Card(
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: EdgeInsets.only(bottom: 8.h),
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: Colors.deepPurple.withOpacity(0.1),
               child: Text(
                 '${index + 1}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.deepPurple,
                   fontWeight: FontWeight.bold,
                 ),
@@ -178,7 +178,7 @@ class ProfessionalSection extends StatelessWidget {
             ),
             title: Text(
               items[index],
-              style: const TextStyle(fontSize: 14, height: 1.5),
+              style: TextStyle(fontSize: 14.sp, height: 1.5),
             ),
           ),
         );
@@ -197,7 +197,7 @@ class ProfessionalSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
+        title: Text(title, style: TextStyle(fontSize: 16.sp)),
         content: TextField(
           controller: tempController,
           maxLines: null,
@@ -209,14 +209,14 @@ class ProfessionalSection extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
           ),
           TextButton(
             onPressed: () {
               controller.text = tempController.text;
               Navigator.pop(context);
             },
-            child: const Text('Save'),
+            child: Text('Save', style: TextStyle(fontSize: 14.sp)),
           ),
         ],
       ),

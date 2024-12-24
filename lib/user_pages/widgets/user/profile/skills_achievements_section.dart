@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../controller/profile_controller.dart';
 import '../../shared/profile_text_field.dart';
 
@@ -12,26 +13,26 @@ class SkillsAchievementsSection extends StatelessWidget {
     return Card(
       elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Skills & Achievements',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             ProfileTextField(
               controller: controller.skillsController,
               labelText: 'Skills (comma separated)',
               icon: Icons.star,
               onChanged: (value) => controller.updateLocalField('skills', value),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             _buildAchievementsSection(context),
           ],
         ),
@@ -45,25 +46,25 @@ class SkillsAchievementsSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.emoji_events, color: Colors.deepPurple),
-            const SizedBox(width: 8),
-            const Expanded(
+            Icon(Icons.emoji_events, color: Colors.deepPurple, size: 20.sp),
+            SizedBox(width: 8.w),
+            Expanded(
               child: Text(
                 'Achievements',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.deepPurple),
+              icon: Icon(Icons.edit, color: Colors.deepPurple, size: 20.sp),
               onPressed: () => _showEditAchievementsDialog(context),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         _buildAchievementsList(),
       ],
     );
@@ -76,14 +77,15 @@ class SkillsAchievementsSection extends StatelessWidget {
         final achievements = controller.profileData.achievements;
 
         if (achievements.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: 16.h),
               child: Text(
                 'No achievements added yet',
                 style: TextStyle(
                   color: Colors.grey,
                   fontStyle: FontStyle.italic,
+                  fontSize: 14.sp,
                 ),
               ),
             ),
@@ -100,27 +102,28 @@ class SkillsAchievementsSection extends StatelessWidget {
               direction: DismissDirection.endToStart,
               background: Container(
                 alignment: Alignment.centerRight,
-                padding: const EdgeInsets.only(right: 16),
+                padding: EdgeInsets.only(right: 16.w),
                 color: Colors.red,
-                child: const Icon(Icons.delete, color: Colors.white),
+                child: Icon(Icons.delete, color: Colors.white, size: 20.sp),
               ),
               onDismissed: (_) => controller.removeAchievement(index),
               child: Card(
-                margin: const EdgeInsets.only(bottom: 8),
+                margin: EdgeInsets.only(bottom: 8.h),
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Colors.deepPurple.withOpacity(0.1),
                     child: Text(
                       '${index + 1}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.deepPurple,
                         fontWeight: FontWeight.bold,
+                        fontSize: 14.sp,
                       ),
                     ),
                   ),
                   title: Text(
                     achievements[index],
-                    style: const TextStyle(fontSize: 14, height: 1.5),
+                    style: TextStyle(fontSize: 14.sp, height: 1.5.h),
                   ),
                 ),
               ),
@@ -129,44 +132,6 @@ class SkillsAchievementsSection extends StatelessWidget {
         );
       },
     );
-  }
-
-  Future<void> _showAddAchievementDialog(BuildContext context) async {
-    final achievementController = TextEditingController();
-
-    try {
-      await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Add Achievement'),
-          content: TextField(
-            controller: achievementController,
-            decoration: const InputDecoration(
-              hintText: 'Enter your achievement',
-              border: OutlineInputBorder(),
-            ),
-            maxLines: null,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (achievementController.text.trim().isNotEmpty) {
-                  controller.addAchievement(achievementController.text.trim());
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      achievementController.dispose();
-    }
   }
 
   Future<void> _showEditAchievementsDialog(BuildContext context) async {
@@ -178,19 +143,21 @@ class SkillsAchievementsSection extends StatelessWidget {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Edit Achievements'),
+          title: Text('Edit Achievements', style: TextStyle(fontSize: 18.sp)),
           content: TextField(
             controller: tempController,
             maxLines: null,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Enter your achievements (one per line)',
               border: OutlineInputBorder(),
+              hintStyle: TextStyle(fontSize: 14.sp),
             ),
+            style: TextStyle(fontSize: 14.sp),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
             ),
             TextButton(
               onPressed: () {
@@ -201,7 +168,7 @@ class SkillsAchievementsSection extends StatelessWidget {
                 controller.updateLocalField('achievements', achievements);
                 Navigator.pop(context);
               },
-              child: const Text('Save'),
+              child: Text('Save', style: TextStyle(fontSize: 14.sp)),
             ),
           ],
         ),

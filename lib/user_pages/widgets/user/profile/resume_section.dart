@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../controller/profile_controller.dart';
 
 class ResumeSection extends StatelessWidget {
@@ -11,19 +12,19 @@ class ResumeSection extends StatelessWidget {
     return Card(
       elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Resume',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             _buildUploadArea(context),
           ],
         ),
@@ -34,26 +35,26 @@ class ResumeSection extends StatelessWidget {
   Widget _buildUploadArea(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.deepPurple.withOpacity(0.5)),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
       child: Column(
         children: [
           Icon(
             controller.profileData.resumeUrl.isEmpty ? Icons.upload_file : Icons.description,
-            size: 48,
+            size: 48.r,
             color: Colors.deepPurple,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             controller.profileData.resumeUrl.isEmpty
                 ? 'Upload your resume (PDF)'
                 : 'Resume uploaded successfully',
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16.sp),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           if (controller.isParsingResume)
             const CircularProgressIndicator(color: Colors.deepPurple)
           else
@@ -68,7 +69,7 @@ class ResumeSection extends StatelessWidget {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
               ),
             ),
         ],
