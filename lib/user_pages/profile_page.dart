@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:reswipe/user_pages/widgets/user/profile/professional_section.dart';
 import 'package:reswipe/user_pages/widgets/user/profile/profile_header.dart';
 import 'package:reswipe/user_pages/widgets/user/profile/resume_section.dart';
@@ -62,38 +63,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 Container(
-                  height: 50,
-                  decoration: const BoxDecoration(
+                  height: 50.h,
+                  decoration: BoxDecoration(
                     color: Colors.deepPurple,
                     borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
+                      bottomLeft: Radius.circular(30.r),
+                      bottomRight: Radius.circular(30.r),
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ProfileHeader(controller: _controller),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       if (_controller.isParsingResume)
-                        const Center(
+                        Center(
                           child: Column(
                             children: [
                               CircularProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text('Extracting data from resume...'),
+                              SizedBox(height: 16.h),
+                              const Text('Extracting data from resume...'),
                             ],
                           ),
                         ),
                       ResumeSection(controller: _controller),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       ProfessionalSection(controller: _controller),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       SkillsAchievementsSection(controller: _controller),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32.h),
                       _buildUpdateButton(),
                     ],
                   ),
@@ -111,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         width: _controller.isLoading ? 50 : 200,
-        height: 50,
+        height: 50.h,
         child: ElevatedButton(
           onPressed: _controller.isLoading
               ? null
@@ -123,23 +124,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.deepPurple,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
+              borderRadius: BorderRadius.circular(25.r),
             ),
             elevation: 5,
             shadowColor: Colors.deepPurple.withOpacity(0.5),
           ),
           child: _controller.isLoading
               ? const CircularProgressIndicator(color: Colors.white)
-              : const Row(
+              :  Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.save, color: Colors.white),
-              SizedBox(width: 8),
+              const Icon(Icons.save, color: Colors.white),
+              SizedBox(width: 8.w),
               Text(
                 'Save Changes',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
