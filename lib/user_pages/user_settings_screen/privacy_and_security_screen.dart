@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PrivacyAndSecurityScreen extends StatefulWidget {
   const PrivacyAndSecurityScreen({Key? key}) : super(key: key);
@@ -36,7 +37,7 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: Text(
+        title: const Text(
           'Privacy & Security',
           style: TextStyle(
             color: Colors.deepPurple,
@@ -51,7 +52,7 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
             children: [
               _buildHeader(),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -92,41 +93,41 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30.r),
+          bottomRight: Radius.circular(30.r),
         ),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(24.w),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.security,
-              size: 40,
+              size: 40.r,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16.h),
+          Text(
             'Your Privacy Matters',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'We are committed to protecting your data',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
         ],
@@ -153,16 +154,16 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
           ),
         ),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 24),
-          padding: const EdgeInsets.all(20),
+          margin: EdgeInsets.only(bottom: 24.h),
+          padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
                 color: Colors.blue.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                blurRadius: 20.r,
+                offset: Offset(0, 10.h),
               ),
             ],
           ),
@@ -172,20 +173,20 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text(
                 subtitle,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   color: Colors.grey[600],
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               ...items.map((item) => _buildListItem(item)),
             ],
           ),
@@ -196,26 +197,26 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
 
   Widget _buildListItem(String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(4),
+            padding: EdgeInsets.all(4.w),
             decoration: BoxDecoration(
               color: Colors.blue[50],
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.check,
-              size: 16,
+              size: 16.sp,
               color: Colors.blue[700],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Text(
             text,
-            style: const TextStyle(
-              fontSize: 15,
+            style: TextStyle(
+              fontSize: 15.sp,
               color: Colors.black87,
             ),
           ),
@@ -243,15 +244,15 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
           ),
         ),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             boxShadow: [
               BoxShadow(
                 color: Colors.blue.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                blurRadius: 20.r,
+                offset: Offset(0, 10.h),
               ),
             ],
           ),
@@ -261,44 +262,44 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
               Text(
                 'Privacy Controls',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.deepPurple,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               _buildSwitch(
                 'Data Collection',
                 'Allow data collection for improved matching',
                 dataCollection,
                     (value) => setState(() => dataCollection = value),
               ),
-              const Divider(height: 32),
+              Divider(height: 32.h),
               _buildSwitch(
                 'Analytics',
                 'Share anonymous usage data',
                 analytics,
                     (value) => setState(() => analytics = value),
               ),
-              const Divider(height: 32),
+              Divider(height: 32.h),
               _buildSwitch(
                 'Marketing',
                 'Receive personalized recommendations',
                 marketing,
                     (value) => setState(() => marketing = value),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Your data export request has been initiated.'),
+                        content: Text('Your data export request has been initiated.', style: TextStyle(fontSize: 14.sp)),
                         backgroundColor: Colors.blue[700],
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(10.r),
                         ),
                       ),
                     );
@@ -306,16 +307,16 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[700],
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
+                  child: Text(
                     'Export My Data',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -332,15 +333,15 @@ class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> wit
     return SwitchListTile(
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 16,
+          fontSize: 16.sp,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: TextStyle(
-          fontSize: 14,
+          fontSize: 14.sp,
           color: Colors.grey[600],
         ),
       ),

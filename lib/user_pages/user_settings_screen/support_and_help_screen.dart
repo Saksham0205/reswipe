@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class HelpAndSupportScreen extends StatefulWidget {
   const HelpAndSupportScreen({Key? key}) : super(key: key);
@@ -58,7 +59,7 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Help & Support',
           style: TextStyle(
             color: Colors.deepPurple,
@@ -70,13 +71,13 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
           labelColor: Colors.deepPurple,
           unselectedLabelColor: Colors.grey,
           indicatorColor: Colors.deepPurple,
-          tabs: const [
+          tabs: [
             Tab(
-              icon: Icon(Icons.question_answer),
+              icon: Icon(Icons.question_answer, size: 24.sp),
               text: 'FAQs',
             ),
             Tab(
-              icon: Icon(Icons.support_agent),
+              icon: Icon(Icons.support_agent, size: 24.sp),
               text: 'Support',
             ),
           ],
@@ -114,19 +115,19 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
     }).where((category) => (category['faqs'] as List).isNotEmpty).toList();
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       children: [
         _buildSearchBar(),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         if (filteredCategories.isEmpty && _searchQuery.isNotEmpty)
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               child: Text(
                 'No FAQs found matching "$_searchQuery"',
                 style: TextStyle(
                   color: Colors.grey[600],
-                  fontSize: 16,
+                  fontSize: 16.sp,
                 ),
               ),
             ),
@@ -139,14 +140,14 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
 
   Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            blurRadius: 10.r,
             offset: const Offset(0, 2),
           ),
         ],
@@ -185,11 +186,11 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(vertical: 16.h),
           child: Text(
             category['title'],
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple[700],
               letterSpacing: 0.5,
@@ -203,15 +204,15 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
 
   Widget _buildFAQItem(Map<String, String> faq) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -220,21 +221,21 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
           dividerColor: Colors.transparent,
         ),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          tilePadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
           title: Text(
             faq['question']!,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: 16.sp,
             ),
           ),
           children: [
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
               child: Text(
                 faq['answer']!,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 15.sp,
                   color: Colors.grey[700],
                   height: 1.5,
                 ),
@@ -248,12 +249,12 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
 
   Widget _buildSupportTab() {
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.w),
       children: [
         _buildContactHeader(),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         _buildSupportForm(),
-        const SizedBox(height: 32),
+        SizedBox(height: 32.h),
         _buildContactOptions(),
       ],
     );
@@ -261,27 +262,27 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
 
   Widget _buildContactHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.deepPurple.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Need Help?',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'We\'re here to help you with any questions or issues you might have.',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: Colors.black87,
             ),
           ),
@@ -292,15 +293,15 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
 
   Widget _buildSupportForm() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            blurRadius: 10.r,
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -309,15 +310,15 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Submit a Support Request',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             TextFormField(
               controller: _issueController,
               maxLines: 5,
@@ -326,12 +327,12 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
                 filled: true,
                 fillColor: Colors.grey[50],
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(12.r),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.deepPurple, width: 2.w),
                 ),
               ),
               validator: (value) {
@@ -341,32 +342,32 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20.h),
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 50.h,
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitIssue,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
                   elevation: 0,
                 ),
                 child: _isSubmitting
-                    ? const SizedBox(
-                  height: 24,
-                  width: 24,
+                    ? SizedBox(
+                  height: 24.sp,
+                  width: 24.sp,
                   child: CircularProgressIndicator(
                     color: Colors.white,
-                    strokeWidth: 2,
+                    strokeWidth: 2.w,
                   ),
                 )
-                    : const Text(
+                    : Text(
                   'Submit Request',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -383,15 +384,15 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Other Ways to Reach Us',
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 20.sp,
             fontWeight: FontWeight.bold,
             color: Colors.deepPurple,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         ..._buildContactCards(),
       ],
     );
@@ -418,25 +419,25 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
 
   Widget _buildContactCard(Map<String, dynamic> info) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            blurRadius: 10.r,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
+        contentPadding: EdgeInsets.all(16.w),
         leading: Container(
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: (info['color'] as Color).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
           child: Icon(
             info['icon'] as IconData,
@@ -445,16 +446,16 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
         ),
         title: Text(
           info['title'] as String,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 16.sp,
           ),
         ),
         subtitle: Text(
           info['subtitle'] as String,
           style: TextStyle(
             color: Colors.grey[600],
-            height: 1.5,
+            height: 1.5.h,
           ),
         ),
       ),
