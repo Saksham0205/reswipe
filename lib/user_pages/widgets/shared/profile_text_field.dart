@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ProfileTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -27,33 +28,33 @@ class ProfileTextField extends StatelessWidget {
       maxLines: isMultiline ? null : 1,
       keyboardType: keyboardType,
       onChanged: onChanged,
-      style: const TextStyle(fontSize: 14),
+      style: TextStyle(fontSize: 14.sp),
       decoration: InputDecoration(
         labelText: labelText,
         labelStyle: TextStyle(
           color: Colors.grey[600],
-          fontSize: 14,
+          fontSize: 14.sp,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
           borderSide: BorderSide(color: Colors.grey[300]!),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
           borderSide: BorderSide(color: Colors.grey[300]!),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+          borderRadius: BorderRadius.circular(8.r),
+          borderSide: BorderSide(color: Colors.deepPurple, width: 2.w),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
           borderSide: BorderSide(color: Colors.red[400]!),
         ),
-        prefixIcon: Icon(icon, color: Colors.deepPurple, size: 20),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
+        prefixIcon: Icon(icon, color: Colors.deepPurple, size: 20.r),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 16.w,
+          vertical: 12.h,
         ),
         isDense: true,
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ExpandableTextField extends StatelessWidget {
   final String title;
@@ -23,26 +24,26 @@ class ExpandableTextField extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: Colors.deepPurple, size: 20),
-            const SizedBox(width: 8),
+            Icon(icon, color: Colors.deepPurple, size: 20.r),
+            SizedBox(width: 8.w),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
+              style: TextStyle(
+                fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.deepPurple,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         TextFormField(
           initialValue: initialValue,
           maxLines: null,
           decoration: InputDecoration(
             hintText: hint,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: const EdgeInsets.all(16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+            contentPadding: EdgeInsets.all(16.w),
           ),
           onChanged: onChanged,
         ),
