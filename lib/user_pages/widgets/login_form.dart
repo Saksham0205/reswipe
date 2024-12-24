@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/app_text_styles.dart';
 
 class LoginForm extends StatefulWidget {
@@ -61,13 +62,13 @@ class _LoginFormState extends State<LoginForm> {
             hintText: 'Email',
             keyboardType: TextInputType.emailAddress,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           _buildTextField(
             controller: _passwordController,
             hintText: 'Password',
             obscureText: true,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
@@ -80,7 +81,7 @@ class _LoginFormState extends State<LoginForm> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           _buildLoginButton(),
         ],
       ),
@@ -102,14 +103,14 @@ class _LoginFormState extends State<LoginForm> {
         filled: true,
         fillColor: Colors.grey[50],
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(4.r),
           borderSide: BorderSide(color: Colors.grey[400]!),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
+          borderRadius: BorderRadius.circular(4.r),
+          borderSide: BorderSide(color: Colors.blue[700]!, width: 2.w),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       ),
       validator: (value) => value?.isEmpty == true ? 'This field is required' : null,
     );
@@ -121,13 +122,13 @@ class _LoginFormState extends State<LoginForm> {
         : ElevatedButton(
       onPressed: _tryLogin,
       style: ElevatedButton.styleFrom(
-        fixedSize: const Size.fromWidth(150),
+        fixedSize: Size.fromWidth(150.w),
         foregroundColor: Colors.white,
         backgroundColor: Colors.blue[700],
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: EdgeInsets.symmetric(vertical: 16.h),
         textStyle: AppTextStyles.buttonText,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
       ),
       child: const Text('Sign in'),

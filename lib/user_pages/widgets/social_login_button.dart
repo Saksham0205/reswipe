@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SocialLoginButtons extends StatelessWidget {
   final bool isLoading;
@@ -18,10 +19,10 @@ class SocialLoginButtons extends StatelessWidget {
       onPressed: isLoading ? null : onGoogleSignIn,
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.black87,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: 12.h),
         side: const BorderSide(color: Colors.black54),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30.r),
         ),
       ),
     );

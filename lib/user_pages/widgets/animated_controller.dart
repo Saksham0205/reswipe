@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class FadeTransitionContainer extends StatelessWidget {
   final AnimationController animation;
@@ -32,8 +33,8 @@ class DividerWithText extends StatelessWidget {
       children: [
         const Expanded(child: Divider()),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(text, style: TextStyle(color: Colors.black54)),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          child: Text(text, style: const TextStyle(color: Colors.black54)),
         ),
         const Expanded(child: Divider()),
       ],
