@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../controller/profile_controller.dart';
+import '../../../../controller/profile_controller.dart';
 
 class ResumeSection extends StatelessWidget {
   final ProfileController controller;

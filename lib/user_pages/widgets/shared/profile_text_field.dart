@@ -7,6 +7,7 @@ class ProfileTextField extends StatelessWidget {
   final bool isMultiline;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
+  final void Function(String)? onChanged;
 
   const ProfileTextField({
     Key? key,
@@ -16,6 +17,7 @@ class ProfileTextField extends StatelessWidget {
     this.isMultiline = false,
     this.validator,
     this.keyboardType,
+    this.onChanged,
   }) : super(key: key);
 
   @override
@@ -24,6 +26,7 @@ class ProfileTextField extends StatelessWidget {
       controller: controller,
       maxLines: isMultiline ? null : 1,
       keyboardType: keyboardType,
+      onChanged: onChanged,
       style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         labelText: labelText,

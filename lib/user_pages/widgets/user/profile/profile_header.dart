@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../controller/profile_controller.dart';
+import '../../../../controller/profile_controller.dart';
 import '../../shared/profile_text_field.dart';
 
 

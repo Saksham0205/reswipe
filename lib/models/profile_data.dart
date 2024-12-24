@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class ProfileData {
   String name;
   String email;
@@ -6,9 +8,9 @@ class ProfileData {
   String qualification;
   String jobProfile;
   String skills;
-  String experience;
-  String achievements;
-  String projects;
+  List<String> experience;  // Changed to List<String>
+  List<String> achievements;  // Changed to List<String>
+  List<String> projects;  // Changed to List<String>
   String resumeUrl;
   String profileImageUrl;
   int companyLikesCount;
@@ -38,9 +40,9 @@ class ProfileData {
       qualification: '',
       jobProfile: '',
       skills: '',
-      experience: '',
-      achievements: '',
-      projects: '',
+      experience: [],  // Initialize as empty list
+      achievements: [],  // Initialize as empty list
+      projects: [],  // Initialize as empty list
       resumeUrl: '',
       profileImageUrl: '',
       companyLikesCount: 0,
@@ -56,13 +58,25 @@ class ProfileData {
       qualification: map['qualification'] ?? '',
       jobProfile: map['jobProfile'] ?? '',
       skills: map['skills'] ?? '',
-      experience: map['experience'] ?? '',
-      achievements: map['achievements'] ?? '',
-      projects: map['projects'] ?? '',
+      experience: _parseStringOrList(map['experience']),  // Handle both string and list
+      achievements: _parseStringOrList(map['achievements']),  // Handle both string and list
+      projects: _parseStringOrList(map['projects']),  // Handle both string and list
       resumeUrl: map['resumeUrl'] ?? '',
       profileImageUrl: map['profileImageUrl'] ?? '',
       companyLikesCount: map['companyLikesCount'] ?? 0,
     );
+  }
+
+  // Helper method to parse either String or List input
+  static List<String> _parseStringOrList(dynamic value) {
+    if (value == null) return [];
+    if (value is String) {
+      return value.split('\n').where((item) => item.trim().isNotEmpty).toList();
+    }
+    if (value is List) {
+      return value.map((item) => item.toString()).toList();
+    }
+    return [];
   }
 
   Map<String, dynamic> toMap() {
@@ -74,9 +88,9 @@ class ProfileData {
       'qualification': qualification,
       'jobProfile': jobProfile,
       'skills': skills,
-      'experience': experience,
-      'achievements': achievements,
-      'projects': projects,
+      'experience': experience,  // Store as array
+      'achievements': achievements,  // Store as array
+      'projects': projects,  // Store as array
       'resumeUrl': resumeUrl,
       'profileImageUrl': profileImageUrl,
       'companyLikesCount': companyLikesCount,
@@ -91,9 +105,9 @@ class ProfileData {
         qualification == other.qualification &&
         jobProfile == other.jobProfile &&
         skills == other.skills &&
-        experience == other.experience &&
-        achievements == other.achievements &&
-        projects == other.projects &&
+        listEquals(experience, other.experience) &&  // Use listEquals for List comparison
+        listEquals(achievements, other.achievements) &&  // Use listEquals for List comparison
+        listEquals(projects, other.projects) &&  // Use listEquals for List comparison
         resumeUrl == other.resumeUrl &&
         profileImageUrl == other.profileImageUrl &&
         companyLikesCount == other.companyLikesCount;
@@ -107,8 +121,25 @@ class ProfileData {
     qualification = parsedData['education'] ?? qualification;
     jobProfile = parsedData['jobProfile'] ?? jobProfile;
     skills = (parsedData['skills'] as List<String>).join(', ');
-    experience = (parsedData['experience'] as List<String>).join('\n');
-    achievements = (parsedData['formattedAchievements'] as List<String>).join('\n');
-    projects = (parsedData['projects'] as List<String>).join('\n');
+    experience = List<String>.from(parsedData['experience'] ?? []);
+    achievements = List<String>.from(parsedData['formattedAchievements'] ?? []);
+    projects = List<String>.from(parsedData['projects'] ?? []);
+  }
+
+  // Utility methods for working with lists
+  String getExperienceText() => experience.join('\n');
+  String getAchievementsText() => achievements.join('\n');
+  String getProjectsText() => projects.join('\n');
+
+  void setExperienceFromText(String text) {
+    experience = text.split('\n').where((item) => item.trim().isNotEmpty).toList();
+  }
+
+  void setAchievementsFromText(String text) {
+    achievements = text.split('\n').where((item) => item.trim().isNotEmpty).toList();
+  }
+
+  void setProjectsFromText(String text) {
+    projects = text.split('\n').where((item) => item.trim().isNotEmpty).toList();
   }
 }

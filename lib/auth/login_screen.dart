@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lottie/lottie.dart';
 import '../constants/app_text_styles.dart';
 import '../services/firestore_service.dart';
-import '../widgets/animated_controller.dart';
-import '../widgets/login_form.dart';
-import '../widgets/social_login_button.dart';
+import '../user_pages/widgets/animated_controller.dart';
+import '../user_pages/widgets/login_form.dart';
+import '../user_pages/widgets/social_login_button.dart';
 import 'forgot_password.dart';
 import 'registration_screen.dart';
 

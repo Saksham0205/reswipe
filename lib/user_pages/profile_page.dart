@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:reswipe/user_pages/widgets/user/profile/professional_section.dart';
+import 'package:reswipe/user_pages/widgets/user/profile/profile_header.dart';
+import 'package:reswipe/user_pages/widgets/user/profile/resume_section.dart';
+import 'package:reswipe/user_pages/widgets/user/profile/skills_achievements_section.dart';
 
 import '../controller/profile_controller.dart';
-import '../widgets/user/profile/professional_section.dart';
-import '../widgets/user/profile/profile_header.dart';
-import '../widgets/user/profile/resume_section.dart';
-import '../widgets/user/profile/skills_achievements_section.dart';
+
 
 
 class ProfileScreen extends StatefulWidget {

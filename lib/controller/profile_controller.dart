@@ -37,7 +37,7 @@ class ProfileController extends ChangeNotifier {
   late ProfileData _profileData;
   late ProfileData _localProfileData;
 
-  // Getters
+  // Getters remain the same
   bool get isLoading => _isLoading;
   bool get isImageLoading => _isImageLoading;
   bool get isParsingResume => _isParsingResume;
@@ -61,9 +61,9 @@ class ProfileController extends ChangeNotifier {
         qualification: qualificationController.text,
         jobProfile: jobProfileController.text,
         skills: skillsController.text,
-        experience: experienceController.text,
-        achievements: achievementsController.text,
-        projects: projectsController.text,
+        experience: _parseTextToList(experienceController.text),
+        achievements: _parseTextToList(achievementsController.text),
+        projects: _parseTextToList(projectsController.text),
         resumeUrl: _localProfileData.resumeUrl,
         profileImageUrl: _localProfileData.profileImageUrl,
         companyLikesCount: _localProfileData.companyLikesCount,
@@ -84,21 +84,15 @@ class ProfileController extends ChangeNotifier {
     projectsController.addListener(updateLocal);
   }
 
-  @override
-  void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    collegeController.dispose();
-    collegeSessionController.dispose();
-    qualificationController.dispose();
-    jobProfileController.dispose();
-    skillsController.dispose();
-    experienceController.dispose();
-    achievementsController.dispose();
-    projectsController.dispose();
-    super.dispose();
+  // Helper method to parse text to list
+  List<String> _parseTextToList(String text) {
+    return text.split('\n').where((item) => item.trim().isNotEmpty).toList();
   }
-  // Load user profile
+
+  // Helper method to join list to text
+  String _joinListToText(List<String> list) {
+    return list.join('\n');
+  }
 
   Future<void> loadUserProfile() async {
     if (_dataLoaded) return;
@@ -122,9 +116,9 @@ class ProfileController extends ChangeNotifier {
         qualificationController.text = _profileData.qualification;
         jobProfileController.text = _profileData.jobProfile;
         skillsController.text = _profileData.skills;
-        experienceController.text = _profileData.experience;
-        achievementsController.text = _profileData.achievements;
-        projectsController.text = _profileData.projects;
+        experienceController.text = _joinListToText(_profileData.experience);
+        achievementsController.text = _joinListToText(_profileData.achievements);
+        projectsController.text = _joinListToText(_profileData.projects);
 
         _dataLoaded = true;
         _hasUnsavedChanges = false;
@@ -135,6 +129,66 @@ class ProfileController extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  void discardChanges() {
+    nameController.text = _profileData.name;
+    emailController.text = _profileData.email;
+    collegeController.text = _profileData.college;
+    collegeSessionController.text = _profileData.collegeSession;
+    qualificationController.text = _profileData.qualification;
+    jobProfileController.text = _profileData.jobProfile;
+    skillsController.text = _profileData.skills;
+    experienceController.text = _joinListToText(_profileData.experience);
+    achievementsController.text = _joinListToText(_profileData.achievements);
+    projectsController.text = _joinListToText(_profileData.projects);
+
+    _localProfileData = _profileData;
+    _hasUnsavedChanges = false;
+    notifyListeners();
+  }
+
+  // Methods for directly manipulating lists
+  void addExperience(String experience) {
+    _localProfileData.experience.add(experience);
+    experienceController.text = _joinListToText(_localProfileData.experience);
+    _hasUnsavedChanges = true;
+    notifyListeners();
+  }
+
+  void addAchievement(String achievement) {
+    _localProfileData.achievements.add(achievement);
+    achievementsController.text = _joinListToText(_localProfileData.achievements);
+    _hasUnsavedChanges = true;
+    notifyListeners();
+  }
+
+  void addProject(String project) {
+    _localProfileData.projects.add(project);
+    projectsController.text = _joinListToText(_localProfileData.projects);
+    _hasUnsavedChanges = true;
+    notifyListeners();
+  }
+
+  void removeExperience(int index) {
+    _localProfileData.experience.removeAt(index);
+    experienceController.text = _joinListToText(_localProfileData.experience);
+    _hasUnsavedChanges = true;
+    notifyListeners();
+  }
+
+  void removeAchievement(int index) {
+    _localProfileData.achievements.removeAt(index);
+    achievementsController.text = _joinListToText(_localProfileData.achievements);
+    _hasUnsavedChanges = true;
+    notifyListeners();
+  }
+
+  void removeProject(int index) {
+    _localProfileData.projects.removeAt(index);
+    projectsController.text = _joinListToText(_localProfileData.projects);
+    _hasUnsavedChanges = true;
+    notifyListeners();
   }
 
   Future<void> saveChanges(BuildContext context) async {
@@ -164,23 +218,6 @@ class ProfileController extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
-  }
-
-  void discardChanges() {
-    nameController.text = _profileData.name;
-    emailController.text = _profileData.email;
-    collegeController.text = _profileData.college;
-    collegeSessionController.text = _profileData.collegeSession;
-    qualificationController.text = _profileData.qualification;
-    jobProfileController.text = _profileData.jobProfile;
-    skillsController.text = _profileData.skills;
-    experienceController.text = _profileData.experience;
-    achievementsController.text = _profileData.achievements;
-    projectsController.text = _profileData.projects;
-
-    _localProfileData = _profileData;
-    _hasUnsavedChanges = false;
-    notifyListeners();
   }
 
   Future<void> _saveLocalProfile() async {
@@ -322,18 +359,29 @@ class ProfileController extends ChangeNotifier {
   void updateLocalField(String field, dynamic value) {
     switch (field) {
       case 'qualification':
-        _profileData.qualification = value;
+        _localProfileData.qualification = value;
         break;
       case 'jobProfile':
-        _profileData.jobProfile = value;
+        _localProfileData.jobProfile = value;
         break;
       case 'experience':
-        _profileData.experience = value;
+        if (value is List<String>) {
+          _localProfileData.experience = value;
+          experienceController.text = _joinListToText(value);
+        }
+        break;
+      case 'achievements':
+        if (value is List<String>) {
+          _localProfileData.achievements = value;
+          achievementsController.text = _joinListToText(value);
+        }
         break;
       case 'projects':
-        _profileData.projects = value;
+        if (value is List<String>) {
+          _localProfileData.projects = value;
+          projectsController.text = _joinListToText(value);
+        }
         break;
-    // Add other fields as needed
     }
     _hasUnsavedChanges = true;
     _saveLocalProfile();
