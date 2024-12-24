@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/company_model/applications.dart';
 
 class ApplicationDetailsSheet extends StatelessWidget {
@@ -13,21 +14,21 @@ class ApplicationDetailsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: Column(
         children: [
           _buildHandle(),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTitle(),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   _buildDetailItem('Name', application.applicantName),
                   _buildDetailItem('Job Title', application.jobTitle),
                   _buildDetailItem('Job Profile', application.jobProfile),
@@ -49,12 +50,12 @@ class ApplicationDetailsSheet extends StatelessWidget {
 
   Widget _buildHandle() {
     return Container(
-      margin: const EdgeInsets.only(top: 8),
-      width: 40,
-      height: 4,
+      margin: EdgeInsets.only(top: 8.h),
+      width: 40.w,
+      height: 4.h,
       decoration: BoxDecoration(
         color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(2.r),
       ),
     );
   }
@@ -63,7 +64,7 @@ class ApplicationDetailsSheet extends StatelessWidget {
     return Text(
       'Application Details',
       style: TextStyle(
-        fontSize: 24,
+        fontSize: 24.sp,
         fontWeight: FontWeight.bold,
         color: Colors.deepPurple.shade600,
       ),
@@ -72,22 +73,22 @@ class ApplicationDetailsSheet extends StatelessWidget {
 
   Widget _buildDetailItem(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 16.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 14.sp,
               color: Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontSize: 18.sp,
               fontWeight: FontWeight.w500,
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ExperienceCard extends StatelessWidget {
   final String experience;
@@ -13,15 +14,15 @@ class ExperienceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -36,7 +37,7 @@ class ExperienceCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildTimelineIndicator(),
-              const SizedBox(width: 16),
+              SizedBox(width: 16.w),
               Expanded(child: _buildContent()),
             ],
           ),
@@ -49,8 +50,8 @@ class ExperienceCard extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 32.w,
+          height: 32.h,
           decoration: BoxDecoration(
             color: Colors.deepPurple.shade100,
             shape: BoxShape.circle,
@@ -79,19 +80,19 @@ class ExperienceCard extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: 16.sp,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
         ),
         if (description.isNotEmpty) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             description,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.5,
+            style: TextStyle(
+              fontSize: 14.sp,
+              height: 1.5.h,
               color: Colors.black54,
             ),
           ),

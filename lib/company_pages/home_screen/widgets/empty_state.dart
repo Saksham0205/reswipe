@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EmptyState extends StatelessWidget {
   final VoidCallback onRefresh;
@@ -17,27 +18,27 @@ class EmptyState extends StatelessWidget {
         children: [
           Lottie.network(
             'https://assets1.lottiefiles.com/packages/lf20_EMTsq1.json',
-            width: 200,
-            height: 200,
+            width: 200.w,
+            height: 200.h,
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           Text(
             'No More Applications',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple.shade600,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             'Check back later for new applications',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           ElevatedButton.icon(
             onPressed: onRefresh,
             icon: const Icon(Icons.refresh),
@@ -45,7 +46,7 @@ class EmptyState extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
             ),
           ),
         ],

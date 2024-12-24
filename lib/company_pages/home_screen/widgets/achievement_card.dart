@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AchievementCard extends StatelessWidget {
   final String achievement;
@@ -13,15 +14,15 @@ class AchievementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -36,7 +37,7 @@ class AchievementCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildAchievementIcon(),
-              const SizedBox(width: 16),
+              SizedBox(width: 16.w),
               Expanded(child: _buildContent()),
             ],
           ),
@@ -49,8 +50,8 @@ class AchievementCard extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 32.w,
+          height: 32.h,
           decoration: BoxDecoration(
             color: Colors.amber.shade100,
             shape: BoxShape.circle,
@@ -58,7 +59,7 @@ class AchievementCard extends StatelessWidget {
           child: Center(
             child: Icon(
               Icons.emoji_events,
-              size: 18,
+              size: 18.sp,
               color: Colors.amber.shade700,
             ),
           ),
@@ -74,16 +75,16 @@ class AchievementCard extends StatelessWidget {
         Text(
           'Achievement #$index',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 14.sp,
             fontWeight: FontWeight.bold,
             color: Colors.amber.shade700,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           achievement,
-          style: const TextStyle(
-            fontSize: 15,
+          style: TextStyle(
+            fontSize: 15.sp,
             height: 1.5,
             color: Colors.black87,
           ),

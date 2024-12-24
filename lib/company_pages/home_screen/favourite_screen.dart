@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/company_model/applications.dart';
 import 'components/app_class.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -52,7 +53,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       onRefresh: _handleRefresh,
       color: AppColors.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding:  EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         itemCount: _localFavorites.length,
         itemBuilder: (context, index) {
           final application = _localFavorites[index];
@@ -66,7 +67,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   void _handleDeleteApplication(Application application) {
-    // Store the index before removal for potential undo
     final index = _localFavorites.indexOf(application);
     final deletedApplication = application;
 
@@ -75,13 +75,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       widget.removeFromFavorites(application);
     });
 
-    ScaffoldMessenger.of(context).clearSnackBars(); // Clear any existing snackbars
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.person_remove, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
+             Icon(Icons.person_remove, color: Colors.white, size: 20.r),
+            SizedBox(width: 8.w),
             Text('${application.applicantName} removed from matches'),
           ],
         ),
@@ -181,7 +181,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(8.r),
               ),
             ),
             child: const Text('Clear All'),
@@ -194,12 +194,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget _buildDismissBackground() {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 20),
+      padding: EdgeInsets.only(right: 20.w),
       decoration: BoxDecoration(
         color: Colors.red.shade100,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Icon(Icons.delete_forever_rounded, color: Colors.red.shade700, size: 36),
+      child: Icon(Icons.delete_forever_rounded, color: Colors.red.shade700, size: 36.r),
     );
   }
 
@@ -215,24 +215,24 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         children: [
           Icon(
             Icons.favorite_outline,
-            size: 80,
+            size: 80.r,
             color: Colors.grey[400],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Text(
             'No Matches Yet',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.grey[800],
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'Swipe right on profiles you like\nto see them here',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16.sp,
               color: Colors.grey[600],
             ),
           ),
@@ -244,7 +244,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   SliverAppBar _buildSliverAppBar(BuildContext context, bool innerBoxIsScrolled) {
     return SliverAppBar(
       automaticallyImplyLeading: false,
-      expandedHeight: 120,
+      expandedHeight: 120.h,
       floating: true,
       pinned: true,
       snap: true,
@@ -271,7 +271,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ),
         ),
         centerTitle: true,
-        titlePadding: const EdgeInsets.only(bottom: 16),
+        titlePadding: EdgeInsets.only(bottom: 16.h),
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
@@ -298,14 +298,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       background: _buildDismissBackground(),
       child: Card(
         elevation: 2,
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: EdgeInsets.only(bottom: 16.h),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey.shade200, width: 1),
+          borderRadius: BorderRadius.circular(16.r),
+          side: BorderSide(color: Colors.grey.shade200, width: 1.w),
         ),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -316,7 +316,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             onTap: () => _showApplicationDetails(context, application),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,14 +334,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
 
   Widget _buildProfileImage(Application application, {String? heroSuffix}) {
-    // Create a unique tag by combining the ID with an optional suffix
+
     final heroTag = 'profile_${application.id}${heroSuffix ?? ""}';
 
     return Hero(
       tag: heroTag,
       child: Container(
-        width: 60,
-        height: 60,
+        width: 60.w,
+        height: 60.h,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
@@ -353,8 +353,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         child: Center(
           child: Text(
             application.applicantName[0].toUpperCase(),
-            style: const TextStyle(
-              fontSize: 24,
+            style: TextStyle(
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -366,35 +366,35 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildCardHeader(Application application) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Colors.deepPurple.shade50, Colors.white],
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12.r)),
       ),
       child: Row(
         children: [
           _buildProfileImage(application, heroSuffix: '_list'),
-          const SizedBox(width: 16),
+          SizedBox(width: 16.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   application.applicantName,
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   application.jobProfile,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     color: Colors.grey[600],
                   ),
                 ),
@@ -402,21 +402,21 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
               color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(20.r),
               border: Border.all(color: Colors.green.shade200),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
-                const SizedBox(width: 4),
+                Icon(Icons.check_circle, size: 16.sp, color: Colors.green.shade700),
+                SizedBox(width: 4.w),
                 Text(
                   'Matched',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     color: Colors.green.shade700,
                     fontWeight: FontWeight.w500,
                   ),
@@ -432,19 +432,20 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildCardBody(Application application) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInfoRow(Icons.school, application.qualification),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           _buildInfoRow(Icons.location_on, application.college),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           _buildSkillsList(application.skills),
         ],
       ),
     );
   }
+
 
   Widget _buildSkillsList(List<String> skills) {
     return Wrap(
@@ -456,47 +457,45 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildCardActions(BuildContext context, Application application) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(12.r)),
       ),
       child: Center(
         child: OutlinedButton.icon(
           onPressed: () {
-            // Implement resume view functionality
             if (application.resumeUrl.isNotEmpty) {
               launchUrl(Uri.parse(application.resumeUrl));
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Resume not available'),
+                SnackBar(
+                  content: Text('Resume not available', style: TextStyle(fontSize: 14.sp)),
                 ),
               );
             }
           },
-          icon: const Icon(Icons.description, size: 18),
-          label: const Text('View Resume'),
+          icon: Icon(Icons.description, size: 18.sp),
+          label: Text('View Resume', style: TextStyle(fontSize: 16.sp)),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.deepPurple,
-            side: BorderSide(color: Colors.deepPurple.shade200),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            side: BorderSide(color: Colors.deepPurple.shade200, width: 1.w),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
           ),
         ),
       ),
     );
   }
 
-
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: Colors.grey[600]),
-        const SizedBox(width: 8),
+        Icon(icon, size: 18.sp, color: Colors.grey[600]),
+        SizedBox(width: 8.w),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey[800]),
           ),
         ),
       ],
@@ -505,22 +504,23 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildSkillChip(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.deepPurple.shade200),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: Colors.deepPurple.shade200, width: 1.w),
       ),
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 12.sp,
           color: Colors.deepPurple.shade700,
           fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
+
 
   void _showApplicationDetails(BuildContext context, Application application) {
     showModalBottomSheet(
@@ -532,33 +532,33 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: SingleChildScrollView(
             controller: scrollController,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Center(
                   child: Container(
-                    width: 40,
-                    height: 4,
+                    width: 40.w,
+                    height: 4.h,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(2.r),
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(24.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildDetailHeader(application),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       if (application.experience.isNotEmpty)
                         _buildDetailSection('Experience', application.experience),
                       _buildDetailSection('Education', [
@@ -571,7 +571,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         _buildDetailSection('Projects', application.projects),
                       if (application.achievements.isNotEmpty)
                         _buildDetailSection('Achievements', application.achievements),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       Center(
                         child: OutlinedButton.icon(
                           onPressed: () {
@@ -586,12 +586,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                               );
                             }
                           },
-                          icon: const Icon(Icons.description, size: 18),
-                          label: const Text('View Resume'),
+                          icon: Icon(Icons.description, size: 18.sp),
+                          label: Text('View Resume', style: TextStyle(fontSize: 16.sp)),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.deepPurple,
                             side: BorderSide(color: Colors.deepPurple.shade200),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                           ),
                         ),
                       ),
@@ -607,31 +607,31 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildDetailSection(String title, List<String> items) {
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty) return SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
+          style: TextStyle(
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         ...items.map((item) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: EdgeInsets.only(bottom: 8.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.check_circle, color: Colors.deepPurple, size: 18),
-              const SizedBox(width: 8),
+              Icon(Icons.check_circle, color: Colors.deepPurple, size: 18.sp),
+              SizedBox(width: 8.w),
               Expanded(
                 child: Text(
                   item,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     color: Colors.grey[800],
                   ),
                 ),
@@ -639,7 +639,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             ],
           ),
         )).toList(),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
       ],
     );
   }
@@ -648,23 +648,23 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return Row(
       children: [
         _buildProfileImage(application),
-        const SizedBox(width: 16),
+        SizedBox(width: 16.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 application.applicantName,
-                style: const TextStyle(
-                  fontSize: 24,
+                style: TextStyle(
+                  fontSize: 24.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4.h),
               Text(
                 application.jobProfile,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16.sp,
                   color: Colors.grey[600],
                 ),
               ),

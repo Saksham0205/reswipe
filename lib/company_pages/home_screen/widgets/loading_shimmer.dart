@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class LoadingShimmer extends StatelessWidget {
   const LoadingShimmer({Key? key}) : super(key: key);
@@ -10,46 +11,46 @@ class LoadingShimmer extends StatelessWidget {
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: Container(
-        margin: const EdgeInsets.all(16),
+        margin: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20.r),
         ),
         child: Column(
           children: [
             Container(
-              height: 200,
+              height: 200.h,
               color: Colors.white,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 200,
-                    height: 24,
+                    width: 200.w,
+                    height: 24.h,
                     color: Colors.white,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   Container(
-                    width: 150,
-                    height: 16,
+                    width: 150.w,
+                    height: 16.h,
                     color: Colors.white,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 8.w,
+                    runSpacing: 8.h,
                     children: List.generate(
                       6,
                           (index) => Container(
-                        width: 80,
-                        height: 32,
+                        width: 80.w,
+                        height: 32.h,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(16.r),
                         ),
                       ),
                     ),

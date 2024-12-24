@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Import ScreenUtil
 import '../../../models/company_model/applications.dart';
 
 class HomeAppBar extends StatelessWidget {
@@ -14,15 +15,19 @@ class HomeAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: 16.w,
+        vertical: 12.h,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2.h),
           ),
         ],
       ),
@@ -44,16 +49,16 @@ class HomeAppBar extends StatelessWidget {
             gradient: LinearGradient(
               colors: [Colors.deepPurple, Colors.deepPurple.shade300],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          padding: const EdgeInsets.all(8),
-          child: const Icon(Icons.work_outline, color: Colors.white, size: 24),
+          padding: EdgeInsets.all(8.w),
+          child: Icon(Icons.work_outline, color: Colors.white, size: 24.sp),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12.w),
         Text(
           'Reswipe',
           style: GoogleFonts.pacifico(
-            fontSize: 28,
+            fontSize: 28.sp,
             color: Colors.deepPurple,
             fontWeight: FontWeight.w600,
           ),
@@ -66,11 +71,11 @@ class HomeAppBar extends StatelessWidget {
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.notifications_outlined, size: 28),
+          icon: Icon(Icons.notifications_outlined, size: 28.sp),
           color: Colors.deepPurple,
           onPressed: () {},
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8.w),
         _buildFavoritesButton(),
       ],
     );
@@ -82,33 +87,33 @@ class HomeAppBar extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.deepPurple.shade50,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
-        padding: const EdgeInsets.all(8),
+        padding: EdgeInsets.all(8.w),
         child: Stack(
           alignment: Alignment.center,
           children: [
-            const Icon(Icons.favorite, color: Colors.deepPurple, size: 28),
+             Icon(Icons.favorite, color: Colors.deepPurple, size: 28.sp),
             if (favoriteApplications.isNotEmpty)
               Positioned(
-                right: -2,
-                top: -2,
+                right: -2.w,
+                top: -2.h,
                 child: Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: EdgeInsets.all(4.w),
                   decoration: BoxDecoration(
                     color: Colors.red,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                    border: Border.all(color: Colors.white, width: 2.w),
                   ),
-                  constraints: const BoxConstraints(
-                    minWidth: 18,
-                    minHeight: 18,
+                  constraints: BoxConstraints(
+                    minWidth: 18.w,
+                    minHeight: 18.h,
                   ),
                   child: Text(
                     '${favoriteApplications.length}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 10,
+                      fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,

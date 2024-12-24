@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SwipeActions extends StatelessWidget {
   final CardSwiperController controller;
@@ -12,7 +13,7 @@ class SwipeActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: EdgeInsets.symmetric(vertical: 16.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -22,7 +23,7 @@ class SwipeActions extends StatelessWidget {
             color: Colors.red,
             label: 'Skip',
           ),
-          const SizedBox(width: 48),
+          SizedBox(width: 48.w),
           _buildActionButton(
             onPressed: () => controller.swipe(CardSwiperDirection.right),
             icon: Icons.favorite,
@@ -64,22 +65,22 @@ class SwipeActions extends StatelessWidget {
               borderRadius: BorderRadius.circular(50),
               onTap: onPressed,
               child: Padding(
-                padding: EdgeInsets.all(isLarge ? 20 : 16),
+                padding: EdgeInsets.all(isLarge ? 20.w : 16.w),
                 child: Icon(
                   icon,
-                  size: isLarge ? 40 : 32,
+                  size: isLarge ? 40.sp : 32.sp,
                   color: color,
                 ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           label,
           style: TextStyle(
             color: color,
-            fontSize: 14,
+            fontSize: 14.sp,
             fontWeight: FontWeight.w600,
           ),
         ),

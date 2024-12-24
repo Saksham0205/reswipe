@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/company_model/applications.dart';
 import 'card_pages/first_page.dart';
 import 'card_pages/second_page.dart';
@@ -20,12 +21,12 @@ class ApplicationCard extends StatelessWidget {
     final PageController pageController = PageController();
 
     return Card(
-      margin: const EdgeInsets.all(16),
+      margin: EdgeInsets.all(16.w),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         child: PageView(
           controller: pageController,
           children: [
