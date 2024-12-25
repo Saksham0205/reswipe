@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../models/company_model/applications.dart';
 import 'card_pages/first_page.dart';
 import 'card_pages/second_page.dart';
@@ -20,24 +20,34 @@ class ApplicationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final PageController pageController = PageController();
 
-    return Card(
-      margin: EdgeInsets.all(16.w),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20.r),
-        child: PageView(
-          controller: pageController,
-          children: [
-            FirstPage(
-              application: application,
-              onResumeView: () => _viewResume(context),
-              onDetailsPressed: onDetailsPressed,
+    return Center(
+      child: SizedBox(
+        height: 600.h,
+        width: 440.w,
+        child: Card(
+          margin: EdgeInsets.symmetric(
+            horizontal: 12.w,
+            vertical: 16.h,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24.r),
+          ),
+          elevation: 8,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24.r),
+            child: PageView(
+              controller: pageController,
+              children: [
+                FirstPage(
+                  application: application,
+                  onResumeView: () => _viewResume(context),
+                  onDetailsPressed: onDetailsPressed,
+                ),
+                SecondPage(application: application),
+                ThirdPage(application: application),
+              ],
             ),
-            SecondPage(application: application),
-            ThirdPage(application: application),
-          ],
+          ),
         ),
       ),
     );
@@ -48,9 +58,16 @@ class ApplicationCard extends StatelessWidget {
       launchUrl(Uri.parse(application.resumeUrl));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Resume not available'),
+        SnackBar(
+          content: Text(
+            'Resume not available',
+            style: TextStyle(fontSize: 14.sp),
+          ),
           behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(16.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
         ),
       );
     }

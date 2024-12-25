@@ -14,21 +14,19 @@ class AchievementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Container(
-        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.deepPurple.shade50,
               Colors.white,
+              Colors.amber.shade50.withOpacity(0.5),
             ],
           ),
         ),
@@ -36,8 +34,7 @@ class AchievementCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildAchievementIcon(),
-              SizedBox(width: 16.w),
+              _buildIconSection(),
               Expanded(child: _buildContent()),
             ],
           ),
@@ -46,50 +43,56 @@ class AchievementCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAchievementIcon() {
-    return Column(
-      children: [
-        Container(
-          width: 32.w,
-          height: 32.h,
-          decoration: BoxDecoration(
-            color: Colors.amber.shade100,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Icon(
-              Icons.emoji_events,
-              size: 18.sp,
-              color: Colors.amber.shade700,
+  Widget _buildIconSection() {
+    return Container(
+      width: 64.w,
+      decoration: BoxDecoration(
+        color: Colors.amber.withOpacity(0.1),
+        borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 32.w,
+            height: 32.w,
+            decoration: BoxDecoration(
+              color: Colors.amber.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(
+                Icons.emoji_events,
+                size: 18.sp,
+                color: Colors.amber.shade700,
+              ),
             ),
           ),
-        ),
-      ],
+          SizedBox(height: 4.h),
+          Text(
+            '#$index',
+            style: TextStyle(
+              color: Colors.amber.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 12.sp,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Achievement #$index',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.amber.shade700,
-          ),
+    return Padding(
+      padding: EdgeInsets.all(12.w),
+      child: Text(
+        achievement,
+        style: TextStyle(
+          fontSize: 13.sp,
+          color: Colors.black87,
+          height: 1.4,
         ),
-        SizedBox(height: 8.h),
-        Text(
-          achievement,
-          style: TextStyle(
-            fontSize: 15.sp,
-            height: 1.5,
-            color: Colors.black87,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

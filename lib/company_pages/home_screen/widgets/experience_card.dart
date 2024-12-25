@@ -13,22 +13,25 @@ class ExperienceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Split experience string into title and description
+    final parts = experience.split(' - ');
+    final title = parts[0];
+    final description = parts.length > 1 ? parts[1] : '';
+
     return Card(
-      margin: EdgeInsets.only(bottom: 16.h),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Container(
-        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.deepPurple.shade50,
               Colors.white,
+              Colors.deepPurple.shade50.withOpacity(0.5),
             ],
           ),
         ),
@@ -36,9 +39,8 @@ class ExperienceCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildTimelineIndicator(),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildContent()),
+              _buildTimelineBar(),
+              Expanded(child: _buildContent(title, description)),
             ],
           ),
         ),
@@ -46,58 +48,66 @@ class ExperienceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineIndicator() {
-    return Column(
-      children: [
-        Container(
-          width: 32.w,
-          height: 32.h,
-          decoration: BoxDecoration(
-            color: Colors.deepPurple.shade100,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              '$index',
-              style: TextStyle(
-                color: Colors.deepPurple.shade700,
-                fontWeight: FontWeight.bold,
+  Widget _buildTimelineBar() {
+    return Container(
+      width: 64.w,
+      decoration: BoxDecoration(
+        color: Colors.deepPurple.withOpacity(0.1),
+        borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 32.w,
+            height: 32.w,
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$index',
+                style: TextStyle(
+                  color: Colors.deepPurple.shade700,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.sp,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildContent() {
-    final parts = experience.split(' - ');
-    final title = parts[0];
-    final description = parts.length > 1 ? parts[1] : '';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        if (description.isNotEmpty) ...[
-          SizedBox(height: 8.h),
+  Widget _buildContent(String title, String description) {
+    return Padding(
+      padding: EdgeInsets.all(12.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
-            description,
+            title,
             style: TextStyle(
-              fontSize: 14.sp,
-              height: 1.5.h,
-              color: Colors.black54,
+              fontSize: 15.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple.shade700,
             ),
           ),
+          if (description.isNotEmpty) ...[
+            SizedBox(height: 4.h),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

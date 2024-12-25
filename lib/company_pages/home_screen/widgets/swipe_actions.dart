@@ -13,23 +13,23 @@ class SwipeActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 16.h),
+      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildActionButton(
             onPressed: () => controller.swipe(CardSwiperDirection.left),
             icon: Icons.close,
-            color: Colors.red,
-            label: 'Skip',
+            color: Colors.red.shade400,
+            label: 'Reject',
+            size: 60.w,
           ),
-          SizedBox(width: 48.w),
           _buildActionButton(
             onPressed: () => controller.swipe(CardSwiperDirection.right),
             icon: Icons.favorite,
-            color: Colors.green,
+            color: Colors.green.shade400,
             label: 'Like',
-            isLarge: true,
+            size: 72.w,
           ),
         ],
       ),
@@ -41,36 +41,41 @@ class SwipeActions extends StatelessWidget {
     required IconData icon,
     required Color color,
     required String label,
-    bool isLarge = false,
+    required double size,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
+          width: size,
+          height: size,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color,
+                color.withOpacity(0.8),
+              ],
+            ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: color.withOpacity(0.3),
-                blurRadius: 10,
+                blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
-            border: Border.all(color: color.withOpacity(0.5), width: 2),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(50),
+              borderRadius: BorderRadius.circular(size / 2),
               onTap: onPressed,
-              child: Padding(
-                padding: EdgeInsets.all(isLarge ? 20.w : 16.w),
-                child: Icon(
-                  icon,
-                  size: isLarge ? 40.sp : 32.sp,
-                  color: color,
-                ),
+              child: Icon(
+                icon,
+                size: size * 0.5,
+                color: Colors.white,
               ),
             ),
           ),

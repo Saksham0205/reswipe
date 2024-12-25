@@ -125,7 +125,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.r),
-                          borderSide: BorderSide(color: Colors.blue[700]!, width: 2.w),
+                          borderSide: BorderSide(color: Colors.deepPurple[700]!, width: 2.w),
                         ),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 16.w,
@@ -151,7 +151,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     onPressed: _resetPassword,
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      backgroundColor: Colors.blue[700],
+                      backgroundColor: Colors.deepPurple[700],
                       padding: EdgeInsets.symmetric(vertical: 16.h),
                       textStyle: TextStyle(
                         fontSize: 16.sp,
@@ -199,7 +199,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Text(
                       'Try a different email',
                       style: TextStyle(
-                        color: Colors.blue[700],
+                        color: Colors.deepPurple[700],
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -217,7 +217,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: Text(
                         'Sign in',
                         style: TextStyle(
-                          color: Colors.blue[700],
+                          color: Colors.deepPurple[700],
                           fontWeight: FontWeight.bold,
                           fontSize: 14.sp,
                         ),

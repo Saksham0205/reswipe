@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:reswipe/company_pages/home_screen/favourite_screen.dart';
+import 'package:reswipe/company_pages/home_screen/favourites/favourite_screen.dart';
+import 'package:reswipe/company_pages/home_screen/widgets/swipe_actions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/company_model/applications.dart';
 import 'widgets/app_bar.dart';
@@ -9,7 +10,6 @@ import 'widgets/application_card.dart';
 import 'widgets/application_details_sheet.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/loading_shimmer.dart';
-import 'widgets/swipe_actions.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -137,7 +137,26 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
       if (direction == CardSwiperDirection.right) {
         _handleRightSwipe(currentApplication);
-      } else if (direction == CardSwiperDirection.left) {
+      }
+      if(direction == CardSwiperDirection.top){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Swipe Right or Left"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      if(direction == CardSwiperDirection.bottom){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Swipe Right or Left"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      else if (direction == CardSwiperDirection.left) {
         _handleLeftSwipe(currentApplication);
       }
     }

@@ -27,7 +27,7 @@ class SecondPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(24.0.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -41,16 +41,16 @@ class SecondPage extends StatelessWidget {
           Text(
             'Professional Experience',
             style: TextStyle(
-              fontSize: 28.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 4.h),
           Text(
             '${application.experience.length} positions',
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: 14.sp,
               color: Colors.white.withOpacity(0.9),
             ),
           ),
@@ -61,11 +61,11 @@ class SecondPage extends StatelessWidget {
 
   Widget _buildExperienceList() {
     return ListView.builder(
-      padding: EdgeInsets.all(16.0.w),
+      padding: EdgeInsets.all(12.w),
       itemCount: application.experience.length,
       itemBuilder: (context, index) {
         return Padding(
-          padding: EdgeInsets.only(bottom: 8.0.h),
+          padding: EdgeInsets.only(bottom: 8.h),
           child: ExperienceCard(
             experience: application.experience[index],
             index: index + 1,

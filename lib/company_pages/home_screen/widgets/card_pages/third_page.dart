@@ -27,7 +27,7 @@ class ThirdPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -41,16 +41,16 @@ class ThirdPage extends StatelessWidget {
           Text(
             'Achievements & Awards',
             style: TextStyle(
-              fontSize: 28.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 4.h),
           Text(
             '${application.achievements.length} accomplishments',
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: 14.sp,
               color: Colors.white.withOpacity(0.9),
             ),
           ),
@@ -61,12 +61,15 @@ class ThirdPage extends StatelessWidget {
 
   Widget _buildAchievementsList() {
     return ListView.builder(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       itemCount: application.achievements.length,
       itemBuilder: (context, index) {
-        return AchievementCard(
-          achievement: application.achievements[index],
-          index: index + 1,
+        return Padding(
+          padding: EdgeInsets.only(bottom: 8.h),
+          child: AchievementCard(
+            achievement: application.achievements[index],
+            index: index + 1,
+          ),
         );
       },
     );

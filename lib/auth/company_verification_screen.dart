@@ -97,7 +97,7 @@ class _CompanyVerificationScreenState extends State<CompanyVerificationScreen> {
                 onPressed: _resendVerificationEmail,
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue[700],
+                  backgroundColor: Colors.deepPurple[700],
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   textStyle: const TextStyle(fontSize: 18),
                 ),

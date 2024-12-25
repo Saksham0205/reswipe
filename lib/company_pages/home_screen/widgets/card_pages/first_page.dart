@@ -36,35 +36,36 @@ class FirstPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: EdgeInsets.all(24.0.w), // Responsive padding
+      padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             application.applicantName,
             style: TextStyle(
-              fontSize: 32.sp, // Responsive font size
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 16.h), // Responsive spacing
+          SizedBox(height: 8.h),
           Text(
             application.qualification,
             style: TextStyle(
-              fontSize: 24.sp,
+              fontSize: 18.sp,
               color: Colors.white,
               fontWeight: FontWeight.w500,
             ),
           ),
-          SizedBox(height: 8.h),
-          Text(
-            application.college,
-            style: TextStyle(
-              fontSize: 20.sp,
-              color: Colors.white.withOpacity(0.9),
+          SizedBox(height: 4.h),
+          if (application.college != null)
+            Text(
+              application.college!,
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.white.withOpacity(0.9),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -72,10 +73,10 @@ class FirstPage extends StatelessWidget {
 
   Widget _buildSkillsSection() {
     return Container(
-      padding: EdgeInsets.all(24.0.w),
-      decoration: BoxDecoration(
+      padding: EdgeInsets.all(16.w),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,21 +84,22 @@ class FirstPage extends StatelessWidget {
           Text(
             'Skills',
             style: TextStyle(
-              fontSize: 24.sp,
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple.shade600,
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           Expanded(
             child: SingleChildScrollView(
               child: Wrap(
-                spacing: 8.w, // Responsive spacing
-                runSpacing: 8.h,
+                spacing: 6.w,
+                runSpacing: 6.h,
                 children: application.skills.map(_buildSkillChip).toList(),
               ),
             ),
           ),
+          SizedBox(height: 5.h,),
           _buildBottomActions(),
         ],
       ),
@@ -106,10 +108,10 @@ class FirstPage extends StatelessWidget {
 
   Widget _buildSkillChip(String skill) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: Colors.deepPurple.shade200,
           width: 1.w,
@@ -119,7 +121,7 @@ class FirstPage extends StatelessWidget {
         skill,
         style: TextStyle(
           color: Colors.deepPurple.shade700,
-          fontSize: 14.sp,
+          fontSize: 16.sp,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -131,26 +133,26 @@ class FirstPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         SizedBox(
-          width: 150.w, // Responsive width
+          width: 120.w,
           child: ElevatedButton.icon(
             onPressed: onResumeView,
-            icon: Icon(Icons.description, color: Colors.white, size: 18.sp),
+            icon: Icon(Icons.description, color: Colors.white, size: 16.sp),
             label: Text(
               'Resume',
-              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+              style: TextStyle(color: Colors.white, fontSize: 13.sp),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
-              padding: EdgeInsets.symmetric(vertical: 12.h),
+              padding: EdgeInsets.symmetric(vertical: 8.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
         ),
         IconButton(
           onPressed: onDetailsPressed,
-          icon: Icon(Icons.info_outline, size: 24.sp),
+          icon: Icon(Icons.info_outline, size: 20.sp),
           color: Colors.deepPurple,
           tooltip: 'View Details',
         ),
