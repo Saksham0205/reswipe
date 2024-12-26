@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../company_pages/company_settings_screen/settings_page.dart';
 import '../company_pages/home_screen/home_page.dart' show HomeScreen;
 import '../company_pages/job_posts/job_posts_screen.dart';
-import '../company_pages/profile_screen.dart';
+import '../company_pages/profile/profile_screen.dart';
 import '../models/company_model/applications.dart';
 
 class CompanyMainScreen extends StatefulWidget {

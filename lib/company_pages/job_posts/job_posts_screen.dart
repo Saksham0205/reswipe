@@ -66,7 +66,6 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -165,12 +164,6 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
       ),
       backgroundColor: Colors.deepPurple,
       elevation: 0,
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back_ios, color: Colors.white),
-        onPressed: () => _onWillPop().then((canPop) {
-          if (canPop) Navigator.of(context).pop();
-        }),
-      ),
     );
   }
 

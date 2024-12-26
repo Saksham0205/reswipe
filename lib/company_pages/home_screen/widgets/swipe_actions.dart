@@ -26,7 +26,7 @@ class SwipeActions extends StatelessWidget {
           ),
           _buildActionButton(
             onPressed: () => controller.swipe(CardSwiperDirection.right),
-            icon: Icons.favorite,
+            icon: Icons.check,
             color: Colors.green.shade400,
             label: 'Accept',
             size: 72.w,
