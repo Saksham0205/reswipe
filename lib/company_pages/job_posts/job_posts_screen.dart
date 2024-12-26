@@ -270,18 +270,29 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
       await AuthService().addJob(newJob);
       _resetForm();
 
-      // Show success animation instead of immediately popping
+      // Show success animation
       setState(() {
         _isLoading = false;
         _showSuccessAnimation = true;
       });
+
+      // Wait for animation to complete (assuming animation is 2 seconds)
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Navigate back to job posts screen
+      if (mounted) {
+        // Navigator.of(context).pushReplacementNamed('/company/jobs');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => JobPostsScreen()),
+        );
+      }
 
     } catch (e) {
       CustomSnackBar.error(context, 'Error posting job: ${e.toString()}');
       setState(() => _isLoading = false);
     }
   }
-
 
   void _resetForm() {
     _titleController.clear();
