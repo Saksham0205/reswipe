@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({Key? key}) : super(key: key);
 
   Future<void> _launchURL(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      debugPrint('Could not launch $url');
     }
   }
 
@@ -15,9 +19,9 @@ class AboutScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           'About Reswipe',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18.sp),
         ),
         backgroundColor: Colors.deepPurpleAccent,
         elevation: 0,
@@ -29,44 +33,44 @@ class AboutScreen extends StatelessWidget {
             // Purple Header Section
             Container(
               color: Colors.deepPurpleAccent,
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               child: Center(
                 child: Column(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(15),
+                      padding: EdgeInsets.all(15.w),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white,
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            spreadRadius: 1,
+                            blurRadius: 10.r,
+                            spreadRadius: 1.r,
                           ),
                         ],
                       ),
                       child: Icon(
                         Icons.document_scanner_outlined,
-                        size: 50,
+                        size: 50.r,
                         color: Colors.deepPurpleAccent,
                       ),
                     ),
-                    const SizedBox(height: 15),
-                    const Text(
+                    SizedBox(height: 15.h),
+                    Text(
                       'Reswipe v1.0.0',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    const Text(
+                    SizedBox(height: 5.h),
+                    Text(
                       'Simplifying Resume Screening',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: 16,
+                        fontSize: 16.sp,
                       ),
                     ),
                   ],
@@ -76,55 +80,51 @@ class AboutScreen extends StatelessWidget {
 
             // Content Sections
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSectionTitle('About Reswipe'),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10.h),
                   _buildSectionContent(
                     'Reswipe is an innovative application designed to simplify resume screening, bringing speed and precision to the job recruitment process. Built under Ajnabee, Reswipe leverages smart algorithms to quickly identify suitable candidates by swiping through resumes.',
                   ),
-
-                  const SizedBox(height: 25),
+                  SizedBox(height: 25.h),
                   _buildSectionTitle('Key Features'),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10.h),
                   _buildFeatureItem(Icons.speed, 'Quick Screening', 'Screen resumes with simple swipe gestures'),
                   _buildFeatureItem(Icons.psychology, 'Smart Matching', 'AI-powered candidate matching algorithms'),
                   _buildFeatureItem(Icons.analytics, 'Analytics', 'Detailed insights and screening metrics'),
                   _buildFeatureItem(Icons.cloud_sync, 'Cloud Sync', 'Access your data across devices'),
-
-                  const SizedBox(height: 25),
+                  SizedBox(height: 25.h),
                   _buildSectionTitle('About Ajnabee'),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10.h),
                   _buildSectionContent(
                     'Ajnabee, the parent company of Reswipe, focuses on cutting-edge digital solutions in recruitment, fashion, and technology. Through Ajnabee, we aim to provide smart, user-friendly apps to solve real-world challenges.',
                   ),
-
-                  const SizedBox(height: 25),
+                  SizedBox(height: 25.h),
                   _buildSectionTitle('Contact Us'),
-                  const SizedBox(height: 10),
-                  _buildContactItem(Icons.email, 'ajnabee.care@gmail.com'),
-                  _buildContactItem(Icons.language, 'www.ajnabee.in'),
-                  _buildContactItem(Icons.location_on, 'New Delhi, India'),
-
-                  const SizedBox(height: 30),
-                  const Center(
+                  SizedBox(height: 10.h),
+                  _buildContactItem(Icons.email, 'ajnabee.care@gmail.com', 'mailto:ajnabee.care@gmail.com'),
+                  _buildContactItem(Icons.language, 'www.ajnabee.in', 'https://www.ajnabee.in'),
+                  _buildContactItem(Icons.location_on, 'New Delhi, India', ''),
+                  SizedBox(height: 30.h),
+                  Center(
                     child: Column(
                       children: [
                         Text(
                           'Powered by Ajnabee',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 14.sp,
                             color: Colors.grey,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        SizedBox(height: 5),
+                        SizedBox(height: 5.h),
                         Text(
                           '© 2024 All rights reserved',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 12.sp,
                             color: Colors.grey,
                           ),
                         ),
@@ -143,8 +143,8 @@ class AboutScreen extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 22,
+      style: TextStyle(
+        fontSize: 22.sp,
         fontWeight: FontWeight.bold,
         color: Colors.deepPurpleAccent,
       ),
@@ -154,9 +154,9 @@ class AboutScreen extends StatelessWidget {
   Widget _buildSectionContent(String content) {
     return Text(
       content,
-      style: const TextStyle(
-        fontSize: 16,
-        height: 1.5,
+      style: TextStyle(
+        fontSize: 16.sp,
+        height: 1.5.h,
         color: Colors.black87,
       ),
     );
@@ -164,38 +164,38 @@ class AboutScreen extends StatelessWidget {
 
   Widget _buildFeatureItem(IconData icon, String title, String description) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
               color: Colors.deepPurpleAccent.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
               icon,
               color: Colors.deepPurpleAccent,
-              size: 24,
+              size: 24.r,
             ),
           ),
-          const SizedBox(width: 15),
+          SizedBox(width: 15.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2.h),
                 Text(
                   description,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 14.sp,
                     color: Colors.grey[600],
                   ),
                 ),
@@ -207,25 +207,28 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactItem(IconData icon, String text) {
+  Widget _buildContactItem(IconData icon, String text, String url) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: Colors.deepPurpleAccent,
-            size: 20,
-          ),
-          const SizedBox(width: 15),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: GestureDetector(
+        onTap: () => url.isNotEmpty ? _launchURL(url) : null,
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: Colors.deepPurpleAccent,
+              size: 20.r,
             ),
-          ),
-        ],
+            SizedBox(width: 15.w),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

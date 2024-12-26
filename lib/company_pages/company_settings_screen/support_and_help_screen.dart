@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpAndSupportScreen extends StatefulWidget {
@@ -28,10 +29,8 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
     super.dispose();
   }
 
-  // You'll need to implement this method to get the logged-in user's email
   String getUserEmail() {
-    // Return the logged-in user's email from your auth system
-    return "sakshamchauhan02@outlook.com"; // Replace with actual implementation
+    return "sakshamchauhan02@outlook.com";
   }
 
   Future<void> _submitIssue() async {
@@ -188,34 +187,34 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
               children: [
                 // _buildSupportHeader(),
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(20.w),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Submit a Support Request',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 20.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.deepPurpleAccent,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20.sp),
                         TextFormField(
                           controller: _issueController,
                           maxLines: 5,
                           decoration: InputDecoration(
                             hintText: 'Describe your issue or question...',
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(12.r),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
+                              borderRadius: BorderRadius.circular(12.r),
+                              borderSide:  BorderSide(
                                 color: Colors.deepPurpleAccent,
-                                width: 2,
+                                width: 2.w,
                               ),
                             ),
                           ),
@@ -226,40 +225,40 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20.h),
                         SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: 50.h,
                           child: ElevatedButton(
                             onPressed: _isSubmitting ? null : _submitIssue,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.deepPurpleAccent,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
                             ),
                             child: _isSubmitting
                                 ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text(
+                                :  Text(
                               'Submit',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
-                        const Text(
+                        SizedBox(height: 30.h),
+                        Text(
                           'Other Ways to Reach Us',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 20.sp,
                             fontWeight: FontWeight.bold,
                             color: Colors.deepPurpleAccent,
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        SizedBox(height: 15.h),
                         _buildContactCard(
                           icon: Icons.email,
                           title: 'Email',
@@ -292,11 +291,11 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(vertical: 16.h),
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 20,
+            style: TextStyle(
+              fontSize: 20.sp,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurpleAccent,
             ),
@@ -309,24 +308,24 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
 
   Widget _buildFAQItem(String question, String answer) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12.h),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: ExpansionTile(
         title: Text(
           question,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 16.sp,
           ),
         ),
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding:EdgeInsets.all(16.w),
             child: Text(
               answer,
-              style: const TextStyle(fontSize: 15),
+              style:TextStyle(fontSize: 15.sp),
             ),
           ),
         ],
@@ -340,10 +339,10 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen>
     required String subtitle,
   }) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 8.h),
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
       ),
       child: ListTile(
         leading: Icon(

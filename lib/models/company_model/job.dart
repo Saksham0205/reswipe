@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Job {
   final String id;
   final String title;
@@ -9,7 +11,7 @@ class Job {
   final String employmentType;
   final String companyId;
   final String companyName;
-
+  final DateTime timestamp; // Added timestamp field
 
   Job({
     this.id = '',
@@ -22,9 +24,8 @@ class Job {
     required this.employmentType,
     required this.companyId,
     required this.companyName,
-
-
-  });
+    DateTime? timestamp, // Optional parameter with default value
+  }) : timestamp = timestamp ?? DateTime.now(); // Default to current time if not provided
 
   factory Job.fromMap(Map<String, dynamic> data, String id) {
     return Job(
@@ -38,6 +39,7 @@ class Job {
       employmentType: data['employmentType'] ?? '',
       companyId: data['companyId'] ?? '',
       companyName: data['companyName'] ?? '',
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
@@ -52,7 +54,7 @@ class Job {
       'employmentType': employmentType,
       'companyId': companyId,
       'companyName': companyName,
-
+      'timestamp': Timestamp.fromDate(timestamp),
     };
   }
 
@@ -67,6 +69,7 @@ class Job {
     String? employmentType,
     String? companyId,
     String? companyName,
+    DateTime? timestamp,
   }) {
     return Job(
       id: id ?? this.id,
@@ -79,7 +82,7 @@ class Job {
       employmentType: employmentType ?? this.employmentType,
       companyId: companyId ?? this.companyId,
       companyName: companyName ?? this.companyName,
-
+      timestamp: timestamp ?? this.timestamp,
     );
   }
 }

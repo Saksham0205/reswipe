@@ -1,77 +1,85 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class PrivacyAndSecurityScreen extends StatelessWidget {
+class PrivacyAndSecurityScreen extends StatefulWidget {
   const PrivacyAndSecurityScreen({Key? key}) : super(key: key);
+
+  @override
+  State<PrivacyAndSecurityScreen> createState() => _PrivacyAndSecurityScreenState();
+}
+
+class _PrivacyAndSecurityScreenState extends State<PrivacyAndSecurityScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<double> _itemDelays = [0.0, 0.1, 0.2, 0.3, 0.4];
+  bool dataCollection = true;
+  bool analytics = true;
+  bool marketing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         title: const Text(
           'Privacy & Security',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: Colors.deepPurple,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: Colors.deepPurpleAccent,
-        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSection(
-                    'Data Collection',
-                    'We collect and process the following information:',
-                    [
-                      'Profile information (name, email, professional details)',
-                      'Resume data and preferences',
-                      'Usage statistics and interaction data',
-                      'Device information and app analytics',
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildSection(
-                    'How We Use Your Data',
-                    'Your data is used to:',
-                    [
-                      'Improve resume matching algorithms',
-                      'Enhance user experience',
-                      'Provide personalized recommendations',
-                      'Maintain app security and prevent fraud',
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildSection(
-                    'Data Security',
-                    'We implement the following security measures:',
-                    [
-                      'End-to-end encryption for sensitive data',
-                      'Regular security audits and updates',
-                      'Secure cloud storage with redundancy',
-                      'Industry-standard authentication protocols',
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildSection(
-                    'Your Rights',
-                    'You have the right to:',
-                    [
-                      'Access your personal data',
-                      'Request data modification or deletion',
-                      'Opt-out of data collection',
-                      'Export your data in a portable format',
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  _buildPrivacyControls(context),
-                ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            children: [
+              _buildHeader(),
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildAnimatedSection(
+                      'Data Collection',
+                      'We collect and process the following:',
+                      ['Profile information', 'Resume data', 'Usage statistics', 'Device information'],
+                      0.0,
+                    ),
+                    _buildAnimatedSection(
+                      'Data Usage',
+                      'Your data helps us:',
+                      ['Improve matching', 'Enhance experience', 'Provide recommendations', 'Maintain security'],
+                      0.1,
+                    ),
+                    _buildAnimatedSection(
+                      'Security Measures',
+                      'We protect your data with:',
+                      ['End-to-end encryption', 'Regular audits', 'Secure storage', 'Standard protocols'],
+                      0.2,
+                    ),
+                    _buildPrivacyControls(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -79,30 +87,47 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      color: Colors.deepPurpleAccent,
-      padding: const EdgeInsets.all(20),
-      child: const Column(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple.shade800, Colors.deepPurple.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(30.r),
+          bottomRight: Radius.circular(30.r),
+        ),
+      ),
+      padding: EdgeInsets.all(24.w),
+      child: Column(
         children: [
-          Icon(
-            Icons.security,
-            size: 50,
-            color: Colors.white,
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.security,
+              size: 40.r,
+              color: Colors.white,
+            ),
           ),
-          SizedBox(height: 15),
+          SizedBox(height: 16.h),
           Text(
             'Your Privacy Matters',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 5),
+          SizedBox(height: 8.h),
           Text(
             'We are committed to protecting your data',
             style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 16.sp,
             ),
           ),
         ],
@@ -110,51 +135,89 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(String title, String subtitle, List<String> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurpleAccent,
+  Widget _buildAnimatedSection(String title, String subtitle, List<String> items, double delay) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0.5, 0),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Interval(delay, delay + 0.3, curve: Curves.easeOut),
+        ),
+      ),
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Interval(delay, delay + 0.3, curve: Curves.easeOut),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          subtitle,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black87,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 24.h),
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.1),
+                blurRadius: 20.r,
+                offset: Offset(0, 10.h),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 16.h),
+              ...items.map((item) => _buildListItem(item)),
+            ],
           ),
         ),
-        const SizedBox(height: 12),
-        ...items.map((item) => _buildListItem(item)),
-      ],
+      ),
     );
   }
 
   Widget _buildListItem(String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.check_circle,
-            size: 20,
-            color: Colors.deepPurpleAccent,
+          Container(
+            padding: EdgeInsets.all(4.w),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check,
+              size: 16.sp,
+              color: Colors.blue[700],
+            ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.black87,
-              ),
+          SizedBox(width: 12.w),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 15.sp,
+              color: Colors.black87,
             ),
           ),
         ],
@@ -162,107 +225,129 @@ class PrivacyAndSecurityScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPrivacyControls(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+  Widget _buildPrivacyControls() {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.5),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.3, 0.6, curve: Curves.easeOut),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Privacy Controls',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepPurpleAccent,
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.3, 0.6, curve: Curves.easeOut),
+          ),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.1),
+                blurRadius: 20.r,
+                offset: Offset(0, 10.h),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildPrivacyControl(
-              'Data Collection',
-              'Allow data collection for improved matching',
-              true,
-            ),
-            const Divider(),
-            _buildPrivacyControl(
-              'Analytics',
-              'Share anonymous usage data',
-              true,
-            ),
-            const Divider(),
-            _buildPrivacyControl(
-              'Marketing',
-              'Receive personalized recommendations',
-              false,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Implement data export functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Your data export request has been initiated.'),
-                      backgroundColor: Colors.deepPurpleAccent,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Privacy Controls',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              SizedBox(height: 20.h),
+              _buildSwitch(
+                'Data Collection',
+                'Allow data collection for improved matching',
+                dataCollection,
+                    (value) => setState(() => dataCollection = value),
+              ),
+              Divider(height: 32.h),
+              _buildSwitch(
+                'Analytics',
+                'Share anonymous usage data',
+                analytics,
+                    (value) => setState(() => analytics = value),
+              ),
+              Divider(height: 32.h),
+              _buildSwitch(
+                'Marketing',
+                'Receive personalized recommendations',
+                marketing,
+                    (value) => setState(() => marketing = value),
+              ),
+              SizedBox(height: 24.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Your data export request has been initiated.', style: TextStyle(fontSize: 14.sp)),
+                        backgroundColor: Colors.blue[700],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.r),
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[700],
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    elevation: 0,
                   ),
-                ),
-                child: const Text(
-                  'Export My Data',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  child: Text(
+                    'Export My Data',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildPrivacyControl(String title, String subtitle, bool defaultValue) {
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return SwitchListTile(
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
-          ),
-          subtitle: Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
-          ),
-          value: defaultValue,
-          activeColor: Colors.deepPurpleAccent,
-          onChanged: (bool value) {
-            // Implement the privacy control toggle functionality
-            setState(() {
-              // Update the privacy setting
-            });
-          },
-        );
-      },
+  Widget _buildSwitch(String title, String subtitle, bool value, Function(bool) onChanged) {
+    return SwitchListTile(
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 16.sp,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontSize: 14.sp,
+          color: Colors.grey[600],
+        ),
+      ),
+      value: value,
+      activeColor: Colors.blue[700],
+      onChanged: onChanged,
     );
   }
 }

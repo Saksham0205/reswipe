@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../models/company_model/applications.dart';
@@ -71,7 +71,7 @@ class _JobListingsPageState extends State<JobListingsPage>
   void _filterJobs(String filter) {
     setState(() {
       selectedFilter = filter;
-      _showEndState = false; // Reset end state when changing filters
+      _showEndState = false;
       if (filter == 'All') {
         filteredJobs = List.from(jobs);
       } else {
@@ -87,47 +87,6 @@ class _JobListingsPageState extends State<JobListingsPage>
       }
     });
   }
-  final _model = GenerativeModel(
-    model: 'gemini-1.5-flash-latest',
-    apiKey: 'AIzaSyCV659yUlgYVKIk_a11SAvEwwnoxQpTCvA',
-  );
-
-  Future<String> generateJobSummary({
-    required String title,
-    required String description,
-    required List<String> responsibilities,
-    required List<String> qualifications,
-  }) async {
-    try {
-      final prompt = '''
-        Summarize the following job details concisely:
-        
-        Title: $title
-        
-        Description: $description
-        
-        Key Responsibilities:
-        ${responsibilities.map((r) => "- $r").join("\n")}
-        
-        Required Qualifications:
-        ${qualifications.map((q) => "- $q").join("\n")}
-        
-        Please provide a brief, well-structured summary highlighting:
-        1. Core job function
-        2. Key responsibilities (3-4 main points)
-        3. Essential qualifications
-        4. Any unique aspects or benefits
-      ''';
-
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(content);
-      return response.text ?? 'Unable to generate summary';
-    } catch (e) {
-      throw Exception('Failed to generate summary: $e');
-    }
-  }
-
-
 
   Future<void> _fetchJobs() async {
     if (!mounted) return;
@@ -184,81 +143,6 @@ class _JobListingsPageState extends State<JobListingsPage>
     }
   }
 
-  void _showJobSummaryDialog(BuildContext context) async {
-    if (filteredJobs.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No jobs available to summarize')),
-      );
-      return;
-    }
-
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
-    try {
-      final currentJob = filteredJobs[_currentIndex];
-      final summary = await generateJobSummary(
-        title: currentJob.title,
-        description: currentJob.description,
-        responsibilities: currentJob.responsibilities,
-        qualifications: currentJob.qualifications,
-      );
-
-      // Hide loading dialog
-      Navigator.pop(context);
-
-      // Show summary dialog
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-            'Job Summary',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  summary,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
-      );
-    } catch (e) {
-      // Hide loading dialog
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating summary: $e')),
-      );
-    }
-  }
-
   Widget _buildEndState() {
     return Center(
       child: Column(
@@ -266,39 +150,39 @@ class _JobListingsPageState extends State<JobListingsPage>
         children: [
           Lottie.network(
             'https://assets3.lottiefiles.com/packages/lf20_success.json',
-            width: 200,
-            height: 200,
+            width: 200.w,
+            height: 200.h,
             fit: BoxFit.contain,
             repeat: false,
             frameRate: const FrameRate(60),
             errorBuilder: (context, error, stackTrace) => Icon(
               Icons.check_circle_outline,
-              size: 100,
+              size: 100.sp,
               color: Colors.deepPurple.shade200,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           Text(
             'You\'re All Caught Up!',
             style: GoogleFonts.poppins(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Text(
               'You\'ve viewed all available jobs.\nCheck back later for new opportunities!',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                fontSize: 16,
+                fontSize: 16.sp,
                 color: Colors.white.withOpacity(0.8),
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -311,18 +195,19 @@ class _JobListingsPageState extends State<JobListingsPage>
                     });
                   },
                   icon: const Icon(Icons.filter_list, color: Colors.deepPurple),
-                  label: const Text('Show All Jobs',
-                      style: TextStyle(color: Colors.deepPurple)
+                  label: Text(
+                    'Show All Jobs',
+                    style: TextStyle(color: Colors.deepPurple, fontSize: 14.sp),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(30.r),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
               ],
               ElevatedButton.icon(
                 onPressed: () {
@@ -332,14 +217,15 @@ class _JobListingsPageState extends State<JobListingsPage>
                   _fetchJobs();
                 },
                 icon: const Icon(Icons.refresh, color: Colors.white),
-                label: const Text('Refresh',
-                    style: TextStyle(color: Colors.white)
+                label: Text(
+                  'Refresh',
+                  style: TextStyle(color: Colors.white, fontSize: 14.sp),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30.r),
                   ),
                 ),
               ),
@@ -362,7 +248,7 @@ class _JobListingsPageState extends State<JobListingsPage>
           ),
         ),
         child: SafeArea(
-          child: Stack(  // Wrap with Stack
+          child: Stack(
             children: [
               Column(
                 children: [
@@ -373,19 +259,6 @@ class _JobListingsPageState extends State<JobListingsPage>
                   ),
                 ],
               ),
-              if (!_isLoading && !_showEndState && filteredJobs.isNotEmpty)
-                Positioned(  // Add info button
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton.small(
-                    onPressed: () => _showJobSummaryDialog(context),
-                    backgroundColor: Colors.white,
-                    child: const Icon(
-                      Icons.info_outline,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -393,14 +266,15 @@ class _JobListingsPageState extends State<JobListingsPage>
     );
   }
 
+
   Widget _buildHeader() {
-    return const Padding(
-      padding: EdgeInsets.all(16.0),
+    return Padding(
+      padding: EdgeInsets.all(16.0.w),
       child: Text(
         'Reswipe',
         style: TextStyle(
           color: Colors.white,
-          fontSize: 28,
+          fontSize: 28.sp,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -409,22 +283,23 @@ class _JobListingsPageState extends State<JobListingsPage>
 
   Widget _buildFilters() {
     return SizedBox(
-      height: 50,
+      height: 50.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
         itemCount: filters.length,
         itemBuilder: (context, index) {
           final filter = filters[index];
           final isSelected = selectedFilter == filter;
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(right: 8.w),
             child: FilterChip(
               label: Text(
                 filter,
                 style: TextStyle(
                   color: isSelected ? Colors.white : Colors.deepPurple,
                   fontWeight: FontWeight.bold,
+                  fontSize: 14.sp,
                 ),
               ),
               selected: isSelected,
@@ -476,7 +351,7 @@ class _JobListingsPageState extends State<JobListingsPage>
             onSwipe: _onSwipe,
             numberOfCardsDisplayed: 1, // Explicitly set to 1
             backCardOffset: const Offset(0, 0), // Prevent showing partial cards
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(24.0.w),
             cardBuilder: (context, index, _, __) => JobCard(
               job: filteredJobs[index],
               companyName: companyNames[filteredJobs[index].companyId] ?? 'Unknown Company',
@@ -500,38 +375,38 @@ class _JobListingsPageState extends State<JobListingsPage>
         children: [
           Lottie.network(
             lottieUrl,
-            width: 200,
-            height: 200,
+            width: 200.w,
+            height: 200.h,
             fit: BoxFit.contain,
             frameRate: const FrameRate(60),
             errorBuilder: (context, error, stackTrace) => Icon(
               Icons.error_outline,
-              size: 100,
+              size: 100.sp,
               color: Colors.deepPurple.shade200,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           Text(
             message,
             style: GoogleFonts.poppins(
-              fontSize: 24,
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Text(
               subMessage,
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                fontSize: 16,
+                fontSize: 16.sp,
                 color: Colors.white.withOpacity(0.8),
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -540,31 +415,33 @@ class _JobListingsPageState extends State<JobListingsPage>
                   _filterJobs('All');
                 },
                 icon: const Icon(Icons.refresh, color: Colors.deepPurple),
-                label: const Text('Show All Jobs',
-                    style: TextStyle(color: Colors.deepPurple)
+                label: Text(
+                  'Show All Jobs',
+                  style: TextStyle(color: Colors.deepPurple, fontSize: 14.sp),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30.r),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               ElevatedButton.icon(
                 onPressed: () {
                   _fetchJobs();
                 },
                 icon: const Icon(Icons.refresh, color: Colors.white),
-                label: const Text('Refresh',
-                    style: TextStyle(color: Colors.white)
+                label: Text(
+                  'Refresh',
+                  style: TextStyle(color: Colors.white, fontSize: 14.sp),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30.r),
                   ),
                 ),
               ),
@@ -581,13 +458,13 @@ class _JobListingsPageState extends State<JobListingsPage>
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.w),
         child: Card(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
           ),
-          child: const SizedBox(
-            height: 400,
+          child: SizedBox(
+            height: 400.h,
             width: double.infinity,
           ),
         ),
@@ -751,22 +628,23 @@ class _JobListingsPageState extends State<JobListingsPage>
       _showErrorSnackBar('Failed to apply: $e');
     }
   }
+
   void _showSuccessSnackBar(String message) {
     final snackBar = SnackBar(
       content: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Row(
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(child: Text(message)),
           ],
         ),
       ),
       backgroundColor: Colors.green.shade600,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+      margin: EdgeInsets.all(16.w),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
@@ -774,19 +652,19 @@ class _JobListingsPageState extends State<JobListingsPage>
   void _showErrorSnackBar(String message) {
     final snackBar = SnackBar(
       content: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Row(
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(child: Text(message)),
           ],
         ),
       ),
       backgroundColor: Colors.red.shade600,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
+      margin: EdgeInsets.all(16.w),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
@@ -804,15 +682,15 @@ class JobCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context)  {
+  Widget build(BuildContext context) {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(20.0.w),
       ),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(20.0.w),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -825,23 +703,23 @@ class JobCard extends StatelessWidget {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildLocationInfo(),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                     _buildDescription(),
                     if (job.responsibilities.isNotEmpty) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       _buildSection('Key Responsibilities', job.responsibilities),
                     ],
                     if (job.qualifications.isNotEmpty) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       _buildSection('Required Qualifications', job.qualifications),
                     ],
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
@@ -854,14 +732,14 @@ class JobCard extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      height: 120,
+      height: 120.h,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Colors.deepPurple.shade400, Colors.deepPurple.shade700],
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.w)),
       ),
       child: Stack(
         children: [
@@ -869,16 +747,16 @@ class JobCard extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.black.withOpacity(0.1),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20.w)),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(20.w),
             child: Row(
               children: [
                 _buildCompanyLogo(),
-                const SizedBox(width: 16),
+                SizedBox(width: 16.w),
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -893,21 +771,21 @@ class JobCard extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 job.title,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: 20.sp,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4.h),
                             Text(
                               job.companyName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white70,
-                                fontSize: 16,
+                                fontSize: 16.sp,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -928,16 +806,16 @@ class JobCard extends StatelessWidget {
 
   Widget _buildCompanyLogo() {
     return Container(
-      width: 60,
-      height: 60,
+      width: 60.w,
+      height: 60.h,
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
+            blurRadius: 10.r,
+            spreadRadius: 2.r,
           ),
         ],
       ),
@@ -945,31 +823,30 @@ class JobCard extends StatelessWidget {
         child: companyLogo.isNotEmpty
             ? CachedNetworkImage(
           imageUrl: companyLogo,
-          placeholder: (context, url) => const CircularProgressIndicator(),
-          errorWidget: (context, url, error) =>
-          const Icon(Icons.business, color: Colors.deepPurple),
+          placeholder: (context, url) => CircularProgressIndicator(),
+          errorWidget: (context, url, error) => Icon(Icons.business, color: Colors.deepPurple),
           fit: BoxFit.cover,
         )
-            : const Icon(Icons.business, color: Colors.deepPurple, size: 30),
+            : Icon(Icons.business, color: Colors.deepPurple, size: 30.sp),
       ),
     );
   }
 
   Widget _buildLocationInfo() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.w),
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInfoRow(Icons.location_on, job.location ?? 'Location not specified'),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           _buildInfoRow(Icons.work, job.employmentType ?? 'Employment type not specified'),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           _buildInfoRow(Icons.currency_rupee, job.salaryRange ?? 'Salary not specified'),
         ],
       ),
@@ -979,14 +856,14 @@ class JobCard extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.deepPurple),
-        const SizedBox(width: 12),
+        Icon(icon, size: 20.sp, color: Colors.deepPurple),
+        SizedBox(width: 12.w),
         Expanded(
           child: Text(
             text,
             style: TextStyle(
               color: Colors.grey[800],
-              fontSize: 15,
+              fontSize: 15.sp,
               height: 1.5,
             ),
           ),
@@ -995,25 +872,26 @@ class JobCard extends StatelessWidget {
     );
   }
 
+
   Widget _buildDescription() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Job Description',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
             color: Colors.deepPurple,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Text(
           job.description,
           style: TextStyle(
             color: Colors.grey[800],
-            height: 1.6,
-            fontSize: 15,
+            height: 1.6.h,
+            fontSize: 15.sp,
           ),
         ),
       ],
@@ -1026,42 +904,42 @@ class JobCard extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
+          style: TextStyle(
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
             color: Colors.deepPurple,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: items.length,
           itemBuilder: (context, index) {
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: EdgeInsets.only(bottom: 12.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: EdgeInsets.only(top: 8.h),
                     child: Container(
-                      width: 6,
-                      height: 6,
+                      width: 6.w,
+                      height: 6.h,
                       decoration: const BoxDecoration(
                         color: Colors.deepPurple,
                         shape: BoxShape.circle,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: Text(
                       items[index],
                       style: TextStyle(
                         color: Colors.grey[800],
-                        height: 1.6,
-                        fontSize: 15,
+                        height: 1.6.h,
+                        fontSize: 15.sp,
                       ),
                     ),
                   ),

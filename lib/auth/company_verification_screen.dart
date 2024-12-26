@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:reswipe/home_screen/company_home_screen.dart';
+import 'package:reswipe/home_screen/screens/company_home_screen.dart';
 
-import '../home_screen/job_seeker_home_screen.dart';
+import '../home_screen/screens/job_seeker_home_screen.dart';
 import 'login_screen.dart';
 
 class CompanyVerificationScreen extends StatefulWidget {
@@ -97,7 +97,7 @@ class _CompanyVerificationScreenState extends State<CompanyVerificationScreen> {
                 onPressed: _resendVerificationEmail,
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue[700],
+                  backgroundColor: Colors.deepPurple[700],
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   textStyle: const TextStyle(fontSize: 18),
                 ),

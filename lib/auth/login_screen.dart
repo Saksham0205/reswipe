@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
+import '../constants/app_text_styles.dart';
 import '../services/firestore_service.dart';
 import 'forgot_password.dart';
 import 'registration_screen.dart';
@@ -11,198 +12,200 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final AuthService _authService = AuthService();
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  String _email = '';
-  String _password = '';
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
+  bool _obscurePassword = true;
+  late final AnimationController _animationController;
 
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _setLoading(bool value) {
+    if (mounted) setState(() => _isLoading = value);
+  }
+
+  Future<void> _tryLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    _setLoading(true);
     try {
-      final UserCredential? userCredential = await _authService.signInWithGoogle();
-      if (userCredential == null) {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google sign in was cancelled')),
+          SnackBar(
+            content: Text(e.message ?? 'Authentication failed'),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
-      // Navigation will be handled by AuthWrapper
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to sign in with Google: $e')),
-      );
     } finally {
-      setState(() => _isLoading = false);
+      _setLoading(false);
     }
   }
 
-  void _tryLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      _formKey.currentState!.save();
-      try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _email,
-          password: _password,
-        );
-        // Navigation will be handled by AuthWrapper
-      } on FirebaseAuthException catch (e) {
+  Future<void> _handleGoogleSignIn() async {
+    _setLoading(true);
+    try {
+      final UserCredential? userCredential = await _authService.signInWithGoogle();
+      if (userCredential == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to sign in: ${e.message}')),
+          const SnackBar(
+            content: Text('Google sign in was cancelled'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
-      } finally {
-        setState(() => _isLoading = false);
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to sign in with Google: $e'),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      _setLoading(false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.deepPurple.shade50, Colors.white],
+          ),
+        ),
+        child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Lottie.asset(
-                    'assets/lottie/job_lottie.json',
-                    height: 200,
-                    fit: BoxFit.contain,
-                  ),
-                  SizedBox(height: 40),
-                  Text(
-                    'Sign in',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    SizedBox(height: 40.h),
+                    Hero(
+                      tag: 'logo',
+                      child: Lottie.asset(
+                        'assets/lottie/job_lottie.json',
+                        height: 180.h,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Stay updated on your professional world',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black54,
+                    SizedBox(height: 40.h),
+                    Text(
+                      'Welcome Back',
+                      style: TextStyle(
+                        fontSize: 28.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple.shade900,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 40),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildTextField(
-                          hintText: 'Email',
-                          onSaved: (value) => _email = value!,
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Stay updated on your professional world',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: 40.h),
+                    _buildTextField(
+                      controller: _emailController,
+                      hintText: 'Email',
+                      prefixIcon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    SizedBox(height: 16.h),
+                    _buildTextField(
+                      controller: _passwordController,
+                      hintText: 'Password',
+                      prefixIcon: Icons.lock_outlined,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.grey.shade600,
                         ),
-                        SizedBox(height: 16),
-                        _buildTextField(
-                          hintText: 'Password',
-                          obscureText: true,
-                          onSaved: (value) => _password = value!,
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ForgotPasswordScreen()),
                         ),
-                        SizedBox(height: 16),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            child: Text(
-                              'Forgot password?',
-                              style: TextStyle(
-                                color: Colors.blue[700],
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ForgotPasswordScreen(),
-                                ),
-                              );
-                            },
+                        child: Text(
+                          'Forgot Password?',
+                          style: TextStyle(
+                            color: Colors.deepPurple.shade700,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        SizedBox(height: 24),
-                        _isLoading
-                            ? CircularProgressIndicator()
-                            : ElevatedButton(
-
-                          child: Text('Sign in'),
-                          onPressed: _tryLogin,
-                          style: ElevatedButton.styleFrom(
-                            fixedSize: Size.fromWidth(150),
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue[700],
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            textStyle: TextStyle(
-                              fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+                    _buildLoginButton(),
+                    SizedBox(height: 24.h),
+                    _buildSocialLogin(),
+                    SizedBox(height: 24.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => RegistrationScreen()),
+                          ),
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              color: Colors.deepPurple.shade700,
                               fontWeight: FontWeight.bold,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('or', style: TextStyle(color: Colors.black54)),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  OutlinedButton.icon(
-                    icon: Image.asset(
-                      'assets/google_icon.png',
-                    ),
-                    label: Text('Sign in with Google'),
-                    onPressed: _isLoading ? null : _handleGoogleSignIn,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black87,
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      side: BorderSide(color: Colors.black54),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("New to JobFinder?", style: TextStyle(color: Colors.black54)),
-                      TextButton(
-                        child: Text(
-                          'Join now',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => RegistrationScreen(),
-                          ));
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -212,28 +215,144 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hintText,
+    required IconData prefixIcon,
     bool obscureText = false,
-    required Function(String?) onSaved,
+    TextInputType? keyboardType,
+    Widget? suffixIcon,
   }) {
-    return TextFormField(
-      obscureText: obscureText,
-      onSaved: onSaved,
-      decoration: InputDecoration(
-        hintText: hintText,
-        filled: true,
-        fillColor: Colors.grey[50],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: Colors.grey[400]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: Colors.blue[700]!, width: 2),
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      validator: (value) => value!.isEmpty ? 'This field is required' : null,
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: TextStyle(fontSize: 16.sp),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.grey.shade400),
+          prefixIcon: Icon(prefixIcon, color: Colors.grey.shade400),
+          suffixIcon: suffixIcon,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12.r),
+            borderSide: BorderSide(color: Colors.deepPurple.shade700, width: 1.5),
+          ),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        ),
+        validator: (value) {
+          if (value?.isEmpty == true) return 'This field is required';
+          if (hintText == 'Email' && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+            return 'Please enter a valid email';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 55.h,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _tryLogin,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurple.shade700,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          elevation: 2,
+        ),
+        child: _isLoading
+            ? SizedBox(
+          height: 20.h,
+          width: 20.w,
+          child: const CircularProgressIndicator(
+            color: Colors.white,
+            strokeWidth: 2,
+          ),
+        )
+            : Text(
+          'Sign In',
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialLogin() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: Divider(color: Colors.grey.shade300)),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Text(
+                'Or continue with',
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+            Expanded(child: Divider(color: Colors.grey.shade300)),
+          ],
+        ),
+        SizedBox(height: 20.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _socialButton(
+              'assets/google_icon.png',
+              _handleGoogleSignIn,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _socialButton(String iconPath, VoidCallback onPressed) {
+    return Container(
+      width: 60.w,
+      height: 60.h,
+      margin: EdgeInsets.symmetric(horizontal: 8.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: IconButton(
+        onPressed: _isLoading ? null : onPressed,
+        icon: Image.asset(iconPath, width: 24.w),
+      ),
     );
   }
 }
