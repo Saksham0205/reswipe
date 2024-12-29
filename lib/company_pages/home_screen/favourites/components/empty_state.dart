@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class EmptyState extends StatelessWidget {
-  const EmptyState({Key? key}) : super(key: key);
+  final bool isSearching;
+
+  const EmptyState({
+    Key? key,
+    this.isSearching = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -11,26 +16,29 @@ class EmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.favorite_outline,
-            size: 80.r,
+            isSearching ? Icons.search_off : Icons.favorite_border,
+            size: 64.sp,
             color: Colors.grey[400],
           ),
           SizedBox(height: 16.h),
           Text(
-            'No Matches Yet',
+            isSearching
+                ? 'No profiles match your search'
+                : 'No matched profiles yet',
             style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
+              fontSize: 16.sp,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
-            'Swipe right on profiles you like\nto see them here',
-            textAlign: TextAlign.center,
+            isSearching
+                ? 'Try different search terms'
+                : 'Swipe right on profiles to add them here',
             style: TextStyle(
-              fontSize: 16.sp,
-              color: Colors.grey[600],
+              fontSize: 14.sp,
+              color: Colors.grey[500],
             ),
           ),
         ],

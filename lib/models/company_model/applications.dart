@@ -6,6 +6,7 @@ class Application {
   final String jobId;
   final String jobTitle;
   final String jobDescription;
+  final String collegeSession; // Added collegeSession field
   final List<String> jobResponsibilities;
   final List<String> jobQualifications;
   final String jobSalaryRange;
@@ -33,6 +34,7 @@ class Application {
   Application({
     required this.id,
     required this.jobId,
+    required this.collegeSession, // Added to constructor
     required this.jobTitle,
     required this.jobDescription,
     required this.jobResponsibilities,
@@ -66,6 +68,7 @@ class Application {
     return Application(
       id: doc.id,
       jobId: data['jobId'] ?? '',
+      collegeSession: data['collegeSession'] ?? '',
       jobTitle: data['jobTitle'] ?? '',
       jobDescription: data['jobDescription'] ?? '',
       jobResponsibilities: _convertToStringList(data['jobResponsibilities']),
@@ -121,6 +124,7 @@ class Application {
     return {
       'jobId': jobId,
       'jobTitle': jobTitle,
+      'collegeSession': collegeSession,
       'jobDescription': jobDescription,
       'jobResponsibilities': jobResponsibilities,
       'jobQualifications': jobQualifications,
@@ -151,6 +155,7 @@ class Application {
   Application copyWith({
     String? id,
     String? jobId,
+    String? collegeSession,
     String? jobTitle,
     String? jobDescription,
     List<String>? jobResponsibilities,
@@ -180,6 +185,7 @@ class Application {
     return Application(
       id: id ?? this.id,
       jobId: jobId ?? this.jobId,
+      collegeSession: collegeSession?? this.collegeSession,
       jobTitle: jobTitle ?? this.jobTitle,
       jobDescription: jobDescription ?? this.jobDescription,
       jobResponsibilities: jobResponsibilities ?? this.jobResponsibilities,

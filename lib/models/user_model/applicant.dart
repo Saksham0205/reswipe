@@ -7,6 +7,7 @@ class Applicant {
   final String resumeUrl;
   final String profilePhotoUrl;
   final String college;
+  final String collegeSession; // Added collegeSession field
   final int companyLikesCount;
 
   Applicant({
@@ -16,6 +17,7 @@ class Applicant {
     required this.resumeUrl,
     required this.profilePhotoUrl,
     required this.college,
+    required this.collegeSession, // Added to constructor
     required this.companyLikesCount,
   });
 
@@ -27,7 +29,8 @@ class Applicant {
       jobProfile: data['jobProfile'] ?? '',
       resumeUrl: data['resumeUrl'] ?? '',
       profilePhotoUrl: data['profilePhotoUrl'] ?? '',
-      college: data['college'] ?? '', // Parse college field
+      college: data['college'] ?? '',
+      collegeSession: data['collegeSession'] ?? '', // Parse collegeSession field
       companyLikesCount: data['companyLikesCount'] ?? 0,
     );
   }
@@ -39,6 +42,7 @@ class Applicant {
       'resumeUrl': resumeUrl,
       'profilePhotoUrl': profilePhotoUrl,
       'college': college,
+      'collegeSession': collegeSession, // Added to map
       'companyLikesCount': companyLikesCount,
     };
   }

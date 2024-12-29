@@ -600,6 +600,7 @@ class _JobListingsPageState extends State<JobListingsPage>
         jobEmploymentType: job.employmentType,
         companyId: job.companyId,
         companyName: job.companyName,
+        collegeSession: userData['collegeSession'],
         userId: userId,
         applicantName: userData['name']?.toString() ?? 'Unknown',
         email: userData['email']?.toString() ?? '',

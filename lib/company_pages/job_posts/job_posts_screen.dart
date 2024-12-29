@@ -36,7 +36,7 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
     _tabController.addListener(_handleTabChange);
     _successAnimationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
 
     _successAnimationController.addStatusListener((status) {
@@ -84,7 +84,7 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
                   ),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(16),
                       child: FormSections(
                         currentStep: _currentStep,
                         controllers: {
@@ -139,8 +139,8 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
                         _successAnimationController.forward();
                       },
                     ),
-                    SizedBox(height: 20),
-                    Text(
+                    const SizedBox(height: 20),
+                    const Text(
                       'Job Posted Successfully!',
                       style: TextStyle(
                         fontSize: 24,
@@ -158,7 +158,7 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
   }
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text(
+      title: const Text(
         'Post a New Job',
         style: TextStyle(color: Colors.white),
       ),
@@ -317,15 +317,15 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          title: Text('Discard Changes?'),
-          content: Text('Are you sure you want to discard your progress?'),
+          title: const Text('Discard Changes?'),
+          content: const Text('Are you sure you want to discard your progress?'),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(false),
             ),
             ElevatedButton(
-              child: Text('Discard'),
+              child: const Text('Discard'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
