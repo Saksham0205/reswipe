@@ -1,48 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // Import ScreenUtil
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/company_model/applications.dart';
 
-class HomeAppBar extends StatelessWidget {
+class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Application> favoriteApplications;
   final VoidCallback onFavoritesTap;
 
   const HomeAppBar({
-    Key? key,
+    super.key,
     required this.favoriteApplications,
     required this.onFavoritesTap,
-  }) : super(key: key);
+  });
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 16.w,
-        vertical: 12.h,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2.h),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildLogo(),
-          _buildActions(),
-        ],
-      ),
+    return AppBar(
+      elevation: 2,
+      backgroundColor: Colors.white,
+      automaticallyImplyLeading: false,
+      title: _buildLogo(),
+      actions: [
+        Padding(
+          padding: EdgeInsets.only(right: 16.w),
+          child: _buildActions(),
+        ),
+      ],
     );
   }
 
   Widget _buildLogo() {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           decoration: BoxDecoration(
@@ -54,11 +46,11 @@ class HomeAppBar extends StatelessWidget {
           padding: EdgeInsets.all(8.w),
           child: Icon(Icons.work_outline, color: Colors.white, size: 24.sp),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 10.w),
         Text(
           'Reswipe',
           style: GoogleFonts.pacifico(
-            fontSize: 28.sp,
+            fontSize: 20.sp,
             color: Colors.deepPurple,
             fontWeight: FontWeight.w600,
           ),
@@ -69,13 +61,14 @@ class HomeAppBar extends StatelessWidget {
 
   Widget _buildActions() {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.notifications_outlined, size: 28.sp),
+          icon: Icon(Icons.notifications_outlined, size: 24.sp),
           color: Colors.deepPurple,
           onPressed: () {},
         ),
-        SizedBox(width: 8.w),
+        SizedBox(width: 6.w),
         _buildFavoritesButton(),
       ],
     );
@@ -93,7 +86,7 @@ class HomeAppBar extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-             Icon(Icons.favorite, color: Colors.deepPurple, size: 28.sp),
+            Icon(Icons.favorite, color: Colors.deepPurple, size: 24.sp),
             if (favoriteApplications.isNotEmpty)
               Positioned(
                 right: -2.w,

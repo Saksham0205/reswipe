@@ -8,11 +8,11 @@ class FirstPage extends StatelessWidget {
   final VoidCallback onDetailsPressed;
 
   const FirstPage({
-    Key? key,
+    super.key,
     required this.application,
     required this.onResumeView,
     required this.onDetailsPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class FirstPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          Expanded(child: _buildSkillsSection()),
+          Expanded(child: _buildContent()),
         ],
       ),
     );
@@ -36,42 +36,43 @@ class FirstPage extends StatelessWidget {
 
   Widget _buildHeader() {
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             application.applicantName,
             style: TextStyle(
-              fontSize: 24.sp,
+              fontSize: 20.sp, // Reduced from 24.sp
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 4.h),
           Text(
             application.qualification,
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 15.sp, // Reduced from 18.sp
               color: Colors.white,
               fontWeight: FontWeight.w500,
             ),
           ),
-          SizedBox(height: 4.h),
-          if (application.college != null)
-            Text(
-              application.college!,
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: Colors.white.withOpacity(0.9),
-              ),
+          ...[
+          SizedBox(height: 2.h),
+          Text(
+            application.college,
+            style: TextStyle(
+              fontSize: 13.sp, // Reduced from 16.sp
+              color: Colors.white.withOpacity(0.9),
             ),
+          ),
+        ],
         ],
       ),
     );
   }
 
-  Widget _buildSkillsSection() {
+  Widget _buildContent() {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: const BoxDecoration(
@@ -81,47 +82,67 @@ class FirstPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Skills',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple.shade600,
-            ),
-          ),
-          SizedBox(height: 12.h),
+          _buildSectionTitle('Skills & Expertise'),
+          SizedBox(height: 8.h),
           Expanded(
-            child: SingleChildScrollView(
-              child: Wrap(
-                spacing: 6.w,
-                runSpacing: 6.h,
-                children: application.skills.map(_buildSkillChip).toList(),
-              ),
-            ),
+            child: _buildSkillsGrid(),
           ),
-          SizedBox(height: 5.h,),
           _buildBottomActions(),
         ],
       ),
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 4.w,
+          height: 16.h,
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.shade600,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.deepPurple.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkillsGrid() {
+    return SingleChildScrollView(
+      child: Wrap(
+        spacing: 8.w,
+        runSpacing: 8.h,
+        children: application.skills.map(_buildSkillChip).toList(),
+      ),
+    );
+  }
+
   Widget _buildSkillChip(String skill) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: Colors.deepPurple.shade50,
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: Colors.deepPurple.shade200,
-          width: 1.w,
+          color: Colors.deepPurple.shade100,
+          width: 1,
         ),
       ),
       child: Text(
         skill,
         style: TextStyle(
           color: Colors.deepPurple.shade700,
-          fontSize: 16.sp,
+          fontSize: 13.sp, // Reduced from 16.sp
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -129,34 +150,37 @@ class FirstPage extends StatelessWidget {
   }
 
   Widget _buildBottomActions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SizedBox(
-          width: 120.w,
-          child: ElevatedButton.icon(
-            onPressed: onResumeView,
-            icon: Icon(Icons.description, color: Colors.white, size: 16.sp),
-            label: Text(
-              'Resume',
-              style: TextStyle(color: Colors.white, fontSize: 13.sp),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              padding: EdgeInsets.symmetric(vertical: 8.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: EdgeInsets.only(top: 12.h),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onResumeView,
+              icon: Icon(Icons.description, size: 16.sp),
+              label: Text(
+                'View Resume',
+                style: TextStyle(fontSize: 13.sp),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.deepPurple,
+                side: BorderSide(color: Colors.deepPurple.shade300),
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
             ),
           ),
-        ),
-        IconButton(
-          onPressed: onDetailsPressed,
-          icon: Icon(Icons.info_outline, size: 20.sp),
-          color: Colors.deepPurple,
-          tooltip: 'View Details',
-        ),
-      ],
+          SizedBox(width: 12.w),
+          IconButton(
+            onPressed: onDetailsPressed,
+            icon: Icon(Icons.info_outline, size: 20.sp),
+            color: Colors.deepPurple,
+            tooltip: 'More Details',
+          ),
+        ],
+      ),
     );
   }
 }

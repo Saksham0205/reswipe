@@ -22,8 +22,6 @@ class ApplicationCard extends StatelessWidget {
 
     return Center(
       child: SizedBox(
-        height: 600.h,
-        width: 440.w,
         child: Card(
           margin: EdgeInsets.symmetric(
             horizontal: 12.w,

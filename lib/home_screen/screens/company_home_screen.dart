@@ -4,9 +4,10 @@ import '../../company_pages/company_settings_screen/settings_page.dart';
 import '../../company_pages/home_screen/home_page.dart' show HomeScreen;
 import '../../company_pages/job_posts/job_posts_screen.dart';
 import '../../company_pages/profile/profile_screen.dart';
-import '../../models/company_model/applications.dart';
 
 class CompanyMainScreen extends StatefulWidget {
+  const CompanyMainScreen({super.key});
+
   @override
   _CompanyMainScreenState createState() => _CompanyMainScreenState();
 }
@@ -14,21 +15,16 @@ class CompanyMainScreen extends StatefulWidget {
 class _CompanyMainScreenState extends State<CompanyMainScreen> {
   int _currentIndex = 0;
   late List<Widget> _screens;
-  List<Application> _favoriteApplications = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      HomeScreen(),
-      JobPostsScreen(),
-      CompanySettingsPage(),
-      ProfileScreen(),
-    ];
-  }
 
   @override
   Widget build(BuildContext context) {
+    _screens = [
+      const HomeScreen(),
+      JobPostScreen(),
+      CompanySettingsPage(),
+      ProfileScreen(),
+    ];
+
     return Scaffold(
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),

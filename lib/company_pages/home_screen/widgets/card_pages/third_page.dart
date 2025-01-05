@@ -7,9 +7,9 @@ class ThirdPage extends StatelessWidget {
   final Application application;
 
   const ThirdPage({
-    Key? key,
+    super.key,
     required this.application,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,28 +29,34 @@ class ThirdPage extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.deepPurple.shade400, Colors.deepPurple.shade600],
-        ),
+        color: Colors.deepPurple.shade500,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Achievements & Awards',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          Row(
+            children: [
+              Icon(
+                Icons.emoji_events_outlined,
+                color: Colors.white,
+                size: 20.sp,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                'Achievements & Awards',
+                style: TextStyle(
+                  fontSize: 16.sp, // Reduced from 20.sp
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 4.h),
           Text(
-            '${application.achievements.length} accomplishments',
+            '${application.achievements.length} notable accomplishments',
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 12.sp, // Reduced from 14.sp
               color: Colors.white.withOpacity(0.9),
             ),
           ),
@@ -61,11 +67,11 @@ class ThirdPage extends StatelessWidget {
 
   Widget _buildAchievementsList() {
     return ListView.builder(
-      padding: EdgeInsets.all(12.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       itemCount: application.achievements.length,
       itemBuilder: (context, index) {
         return Padding(
-          padding: EdgeInsets.only(bottom: 8.h),
+          padding: EdgeInsets.only(bottom: 12.h),
           child: AchievementCard(
             achievement: application.achievements[index],
             index: index + 1,

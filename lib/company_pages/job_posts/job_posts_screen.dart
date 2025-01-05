@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import '../../State_management/Company_state.dart';
 import '../../models/company_model/job.dart';
-import '../../services/firestore_service.dart';
 import 'components/custom_snackbar.dart';
 import 'components/form_sections.dart';
 import 'components/navigation_buttons.dart';
 import 'components/step_indicator.dart';
-class JobPostsScreen extends StatefulWidget {
+
+class JobPostScreen extends StatefulWidget {
   @override
-  _JobPostsScreenState createState() => _JobPostsScreenState();
+  _JobPostScreenState createState() => _JobPostScreenState();
 }
 
-class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStateMixin {
+class _JobPostScreenState extends State<JobPostScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -67,95 +67,70 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Stack(
-        children: [
-          Scaffold(
-            backgroundColor: Colors.grey[50],
-            appBar: _buildAppBar(),
-            body: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  StepIndicator(
-                    currentStep: _currentStep,
-                    completedSections: _completedSections,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.all(16),
-                      child: FormSections(
-                        currentStep: _currentStep,
-                        controllers: {
-                          'title': _titleController,
-                          'description': _descriptionController,
-                          'responsibilities': _responsibilitiesController,
-                          'qualifications': _qualificationsController,
-                          'salaryRange': _salaryRangeController,
-                          'location': _locationController,
-                        },
-                        employmentType: _employmentType,
-                        onEmploymentTypeChanged: (value) =>
-                            setState(() => _employmentType = value),
-                        onFieldChanged: _validateCurrentSection,
-                      ),
-                    ),
-                  ),
-                  NavigationButtons(
-                    currentStep: _currentStep,
-                    isLoading: _isLoading,
-                    canProceed: _canProceed(),
-                    onPrevious: _handlePrevious,
-                    onNext: _handleNext,
-                    onSubmit: () => _submitForm(context),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_showSuccessAnimation)
-            Container(
-              color: Colors.white,
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
-              height: MediaQuery
-                  .of(context)
-                  .size
-                  .height,
-              child: Center(
+    return BlocListener<JobBloc, JobState>(
+      listener: (context, state) {
+        if (state is JobError) {
+          CustomSnackBar.error(context, state.message);
+        }
+        if (state is JobsLoaded) {
+          _showSuccessAndNavigate();
+        }
+      },
+      child: WillPopScope(
+        onWillPop: _onWillPop,
+        child: Stack(
+          children: [
+            Scaffold(
+              backgroundColor: Colors.grey[50],
+              appBar: _buildAppBar(),
+              body: Form(
+                key: _formKey,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Lottie.asset(
-                      'assets/lottie/success.json',
-
-                      controller: _successAnimationController,
-                      width: 200,
-                      height: 200,
-                      onLoaded: (composition) {
-                        _successAnimationController.forward();
-                      },
+                    StepIndicator(
+                      currentStep: _currentStep,
+                      completedSections: _completedSections,
                     ),
-                    SizedBox(height: 20),
-                    Text(
-                      'Job Posted Successfully!',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(16),
+                        child: FormSections(
+                          currentStep: _currentStep,
+                          controllers: {
+                            'title': _titleController,
+                            'description': _descriptionController,
+                            'responsibilities': _responsibilitiesController,
+                            'qualifications': _qualificationsController,
+                            'salaryRange': _salaryRangeController,
+                            'location': _locationController,
+                          },
+                          employmentType: _employmentType,
+                          onEmploymentTypeChanged: (value) =>
+                              setState(() => _employmentType = value),
+                          onFieldChanged: _validateCurrentSection,
+                        ),
                       ),
+                    ),
+                    NavigationButtons(
+                      currentStep: _currentStep,
+                      isLoading: _isLoading,
+                      canProceed: _canProceed(),
+                      onPrevious: _handlePrevious,
+                      onNext: _handleNext,
+                      onSubmit: _submitForm,
                     ),
                   ],
                 ),
               ),
             ),
-        ],
+            if (_showSuccessAnimation)
+              _buildSuccessOverlay(),
+          ],
+        ),
       ),
     );
   }
+
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       title: Text(
@@ -164,6 +139,39 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
       ),
       backgroundColor: Colors.deepPurple,
       elevation: 0,
+    );
+  }
+
+  Widget _buildSuccessOverlay() {
+    return Container(
+      color: Colors.white,
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              'assets/lottie/success.json',
+              controller: _successAnimationController,
+              width: 200,
+              height: 200,
+              onLoaded: (composition) {
+                _successAnimationController.forward();
+              },
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Job Posted Successfully!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -183,7 +191,6 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
     }
   }
 
-// This function updates the state
   void _validateCurrentSection() {
     setState(() {
       switch (_currentStep) {
@@ -203,24 +210,11 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
     });
   }
 
-// This function returns the validation result
   bool _canProceed() {
-    switch (_currentStep) {
-      case 0:
-        return _titleController.text.isNotEmpty &&
-            _descriptionController.text.isNotEmpty;
-      case 1:
-        return _responsibilitiesController.text.isNotEmpty &&
-            _qualificationsController.text.isNotEmpty;
-      case 2:
-        return _salaryRangeController.text.isNotEmpty &&
-            _locationController.text.isNotEmpty;
-      default:
-        return false;
-    }
+    return _completedSections[_currentStep] ?? false;
   }
 
-  Future<void> _submitForm(BuildContext context) async {
+  void _submitForm() {
     if (!_formKey.currentState!.validate() || !_canProceed()) {
       CustomSnackBar.error(context, 'Please fill in all required fields');
       return;
@@ -228,69 +222,38 @@ class _JobPostsScreenState extends State<JobPostsScreen> with TickerProviderStat
 
     setState(() => _isLoading = true);
 
-    try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        CustomSnackBar.error(context, 'Please log in to post a job');
-        return;
-      }
+    final job = Job(
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      responsibilities: _responsibilitiesController.text
+          .split('\n')
+          .where((line) => line.trim().isNotEmpty)
+          .toList(),
+      qualifications: _qualificationsController.text
+          .split('\n')
+          .where((line) => line.trim().isNotEmpty)
+          .toList(),
+      salaryRange: _salaryRangeController.text.trim(),
+      location: _locationController.text.trim(),
+      employmentType: _employmentType,
+      companyId: '',  // Will be set in bloc
+      companyName: '', // Will be set in bloc
+    );
 
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .get();
+    context.read<JobBloc>().add(AddJob(job));
+  }
 
-      String companyId = userDoc.get('companyId') ?? '';
-      String companyName = userDoc.get('companyName') ?? '';
+  Future<void> _showSuccessAndNavigate() async {
+    setState(() {
+      _isLoading = false;
+      _showSuccessAnimation = true;
+    });
 
-      if (companyId.isEmpty || companyName.isEmpty) {
-        CustomSnackBar.error(
-            context, 'Company information is missing. Please update your profile.');
-        return;
-      }
+    await Future.delayed(const Duration(seconds: 2));
 
-      Job newJob = Job(
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
-        responsibilities: _responsibilitiesController.text
-            .split('\n')
-            .where((line) => line.trim().isNotEmpty)
-            .toList(),
-        qualifications: _qualificationsController.text
-            .split('\n')
-            .where((line) => line.trim().isNotEmpty)
-            .toList(),
-        salaryRange: _salaryRangeController.text.trim(),
-        location: _locationController.text.trim(),
-        employmentType: _employmentType,
-        companyId: companyId,
-        companyName: companyName,
-      );
-
-      await AuthService().addJob(newJob);
-      _resetForm();
-
-      // Show success animation
-      setState(() {
-        _isLoading = false;
-        _showSuccessAnimation = true;
-      });
-
-      // Wait for animation to complete (assuming animation is 2 seconds)
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Navigate back to job posts screen
-      if (mounted) {
-        // Navigator.of(context).pushReplacementNamed('/company/jobs');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => JobPostsScreen()),
-        );
-      }
-
-    } catch (e) {
-      CustomSnackBar.error(context, 'Error posting job: ${e.toString()}');
-      setState(() => _isLoading = false);
+    if (mounted) {
+      Navigator.pop(context);
+      context.read<JobBloc>().add(LoadJobs());
     }
   }
 

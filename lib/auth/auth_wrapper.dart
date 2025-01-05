@@ -1,12 +1,16 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../state_management/company_state.dart';
 import '../home_screen/screens/company_home_screen.dart';
 import '../home_screen/screens/job_seeker_home_screen.dart';
 import 'login_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -25,7 +29,13 @@ class AuthWrapper extends StatelessWidget {
                 if (userData != null && userData.containsKey('role')) {
                   String userRole = userData['role'];
                   if (userRole == 'company') {
-                    return CompanyMainScreen(
+                    // Create a new JobBloc for company users
+                    return BlocProvider(
+                      create: (context) => JobBloc(
+                        firestore: FirebaseFirestore.instance,
+                        messaging: FirebaseMessaging.instance,
+                      )..add(LoadJobs()), // Initialize by loading jobs
+                      child: const CompanyMainScreen(),
                     );
                   } else {
                     return JobSeekerHomeScreen();
@@ -41,5 +51,3 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 }
-
-
