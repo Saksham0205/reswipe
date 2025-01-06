@@ -27,11 +27,11 @@ class FilterSectionWidget extends StatelessWidget {
   final VoidCallback onToggle;
 
   const FilterSectionWidget({
-    Key? key,
+    super.key,
     required this.section,
     required this.isExpanded,
     required this.onToggle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -122,27 +122,6 @@ class FilterSectionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (section.selectedValues.isNotEmpty) ...[
-            Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: section.selectedValues.map((value) {
-                return Chip(
-                  label: Text(
-                    value,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12.sp,
-                    ),
-                  ),
-                  backgroundColor: Colors.deepPurple,
-                  deleteIcon: const Icon(Icons.close, color: Colors.white),
-                  onDeleted: () => section.onSelected(value, false),
-                );
-              }).toList(),
-            ),
-            SizedBox(height: 12.h),
-          ],
           Wrap(
             spacing: 8.w,
             runSpacing: 8.h,
@@ -177,11 +156,11 @@ class FilterDialog extends StatefulWidget {
   final Function(FilterOptions) onApplyFilters;
 
   const FilterDialog({
-    Key? key,
+    super.key,
     required this.applications,
     required this.filterOptions,
     required this.onApplyFilters,
-  }) : super(key: key);
+  });
 
   @override
   _FilterDialogState createState() => _FilterDialogState();
@@ -216,12 +195,16 @@ class _FilterDialogState extends State<FilterDialog> {
     Set<String> getAllSkills() {
       final Set<String> skills = {};
       for (var app in applications) {
-        for (var skill in app.skills) {
-          skills.add(StringUtils.toTitleCase(skill.trim()));
-        }
+        // Split skills by comma and trim
+        final splitSkills = app.skills
+            .expand((skill) => skill.split(','))
+            .map((skill) => StringUtils.toTitleCase(skill.trim()))
+            .where((skill) => skill.isNotEmpty);
+        skills.addAll(splitSkills);
       }
       return skills;
     }
+
 
     return [
       FilterSection(
@@ -329,7 +312,7 @@ class _FilterDialogState extends State<FilterDialog> {
   Set<String> _filterValues(Set<String> values) {
     if (_searchQuery.isEmpty) return values;
     return values
-        .where((value) => value.toLowerCase().contains(_searchQuery))
+        .where((value) => value.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toSet();
   }
   void _updateFilter(bool selected, String value, Set<String> filterSet) {
@@ -351,7 +334,6 @@ class _FilterDialogState extends State<FilterDialog> {
   @override
   Widget build(BuildContext context) {
     final filterSections = _buildFilterSections();
-
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
@@ -436,11 +418,30 @@ class _FilterDialogState extends State<FilterDialog> {
       ),
     );
   }
+  void _handleSearch(String query) {
+    setState(() {
+      _searchQuery = query.toLowerCase();
+      // Auto-expand relevant section based on search
+      if (_searchQuery.isNotEmpty) {
+        final sections = _buildFilterSections();
+        for (var section in sections) {
+          if (section.values.any((value) =>
+              value.toLowerCase().contains(_searchQuery))) {
+            _expandedSectionId = section.id;
+            break;
+          }
+        }
+      }
+    });
+  }
+
   Widget _buildSearchBar() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: TextField(
         controller: _searchController,
+        // Replace the existing onChanged with _handleSearch
+        onChanged: _handleSearch,
         decoration: InputDecoration(
           hintText: 'Search filters...',
           prefixIcon: Icon(Icons.search, size: 20.sp),
@@ -449,6 +450,7 @@ class _FilterDialogState extends State<FilterDialog> {
             icon: Icon(Icons.clear, size: 20.sp),
             onPressed: () {
               _searchController.clear();
+              _handleSearch(''); // Clear search and reset
             },
           )
               : null,

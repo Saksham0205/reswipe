@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:reswipe/company_pages/home_screen/shortlisted_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../state_management/company_state.dart';
 import 'components/applications_list.dart';
-import 'widgets/app_bar.dart';
 import 'widgets/loading_shimmer.dart';
 import 'widgets/empty_state.dart';
 
@@ -33,7 +32,7 @@ class _HomeScreenContentState extends State<HomeScreenContent>
   late CardSwiperController _cardController;
   late AnimationController _animationController;
   late Animation<double> _animation;
-  int _currentJobIndex = 0;
+  bool _showJobFilter = false;
 
   @override
   void initState() {
@@ -73,62 +72,18 @@ class _HomeScreenContentState extends State<HomeScreenContent>
         }
         if (state is JobsLoaded) {
           return Scaffold(
-            appBar: HomeAppBar(
-              favoriteApplications: state.shortlistedApplications,
-              onFavoritesTap: () => {},
-            ),
-            body: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.deepPurple.shade50, Colors.white],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 15.h),
-                  Padding(
-                    padding: EdgeInsets.only(left: 16.w),
-                    child: Text(
-                        'Jobs Dashboard',
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 5.h),
-                  _buildJobList(state),
-                  Expanded(
-                    child: ApplicationList(
-                      applications: state.applications,
-                      controller: _cardController,
-                      animation: _animation,
-                      onSwipe: (application) {
-                        context.read<JobBloc>().add(
-                          SwipeApplication(
-                            application: application,
-                            isRightSwipe: true,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+            appBar: _buildAppBar(context, state),
+            body: Stack(
+              children: [
+                _buildMainContent(state),
+                if (_showJobFilter)
+                  _buildJobFilterOverlay(context, state),
+              ],
             ),
           );
         }
-
-        // For empty state
         return Scaffold(
-          appBar: HomeAppBar(
-            favoriteApplications: const [], // Empty list for empty state
-            onFavoritesTap: () {}, // Empty callback for empty state
-          ),
+          appBar: _buildAppBar(context, null),
           body: EmptyState(
             onRefresh: () => context.read<JobBloc>().add(LoadJobs()),
           ),
@@ -136,119 +91,152 @@ class _HomeScreenContentState extends State<HomeScreenContent>
       },
     );
   }
-  Widget _buildJobList(JobsLoaded state) {
-    return SizedBox(
-      height: 130.h,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: state.jobs.length,
-        itemBuilder: (context, index) {
-          final job = state.jobs[index];
-          final shortlistedCount = state.shortlistedApplications
-              .where((app) => app.jobId == job.id)
-              .length;
+  PreferredSizeWidget _buildAppBar(BuildContext context, JobsLoaded? state) {
+    return AppBar(
+      elevation: 2,
+      backgroundColor: Colors.white,
+      automaticallyImplyLeading: false,
+      title: Text(
+        'Reswipe',
+        style: GoogleFonts.pacifico(
+          fontSize: 20.sp,
+          color: Colors.deepPurple,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      actions: [
+        Flexible(
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 200.w),
+            child: _buildJobSelector(context, state),
+          ),
+        ),
+        SizedBox(width: 16.w),
+      ],
+    );
+  }
+  Widget _buildJobSelector(BuildContext context, JobsLoaded? state) {
+    final selectedJob = state?.selectedJob;
 
-          return Container(
-            width: 200.w,
-            margin: EdgeInsets.all(4.w),
-            child: Card(
-              elevation: _currentJobIndex == index ? 4 : 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                side: BorderSide(
-                  color: _currentJobIndex == index
-                      ? Colors.deepPurple
-                      : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              child: InkWell(
-                onTap: () {
-                  setState(() => _currentJobIndex = index);
-                  context.read<JobBloc>().add(SelectJob(job));
-                },
-                child: Padding(
-                  padding: EdgeInsets.all(12.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        job.title,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        job.companyName,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.grey[600],
-                        ),
-                        maxLines: 1,
-                      ),
-                      const Spacer(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            '$shortlistedCount shortlisted',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.deepPurple,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => _navigateToShortlisted(
-                              context,
-                              job.id,
-                              job.title,
-                            ),
-                            child: Text(
-                              'View',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.deepPurple,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 8.w),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          setState(() {
+            _showJobFilter = !_showJobFilter;
+          });
         },
+        icon: Icon(Icons.work, size: 20.sp,color: Colors.white,),
+        label: Text(
+          selectedJob?.title ?? 'Select Job',
+          style: TextStyle(fontSize: 14.sp),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
       ),
     );
   }
-  void _navigateToShortlisted(BuildContext context, String jobId, String jobTitle) {
-    try {
-      final jobBloc = context.read<JobBloc>();
-
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => BlocProvider.value(
-            value: jobBloc,
-            child: ShortlistedScreen(
-              jobId: jobId,
-              jobTitle: jobTitle,
+  Widget _buildJobFilterOverlay(BuildContext context, JobsLoaded state) {
+    return GestureDetector(
+      onTap: () => setState(() => _showJobFilter = false),
+      child: Container(
+        color: Colors.black54,
+        child: Center(
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 24.w),
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Select Job Position',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                Container(
+                  constraints: BoxConstraints(maxHeight: 300.h),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: state.jobs.length,
+                    itemBuilder: (context, index) {
+                      final job = state.jobs[index];
+                      return ListTile(
+                        title: Text(job.title),
+                        subtitle: Text(job.companyName),
+                        trailing: Text(
+                          '${state.shortlistedApplications.where((app) => app.jobId == job.id).length} candidates',
+                          style: TextStyle(
+                            color: Colors.deepPurple,
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                        onTap: () {
+                          context.read<JobBloc>().add(SelectJob(job));
+                          setState(() => _showJobFilter = false);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      );
-    } catch (e) {
-      print('Error accessing JobBloc: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred. Please try again.'),
+      ),
+    );
+  }
+  Widget _buildMainContent(JobsLoaded state) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.deepPurple.shade50, Colors.white],
         ),
-      );
-    }
+      ),
+      child: Column(
+        children: [
+          SizedBox(height: 16.h),
+          Expanded(
+            child: ApplicationList(
+              applications: state.applications,
+              controller: _cardController,
+              animation: _animation,
+              onSwipe: (application) {
+                context.read<JobBloc>().add(
+                  SwipeApplication(
+                    application: application,
+                    isRightSwipe: true,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -27,94 +27,98 @@ class ShortlistedScreen extends StatefulWidget {
 class _ShortlistedScreenState extends State<ShortlistedScreen> {
   String _searchQuery = '';
   bool _isLoading = true;
-  late FilterOptions _filterOptions;
+  late FilterOptions filterOptions;
   List<Application> filteredApplications = [];
-  List<Application> _currentApplications = [];
+  List<Application> originalApplications = [];
 
-  void _applyFilters(List<Application> applications) {
+  void _applyFilters() {
     setState(() {
-      filteredApplications = applications.where((application) {
-        // Search query filter
+      filteredApplications = originalApplications.where((application) {
+        bool matchesSearch = true;
         if (_searchQuery.isNotEmpty) {
+          final searchLower = _searchQuery.toLowerCase();
           final nameLower = application.applicantName.toLowerCase();
-          final queryLower = _searchQuery.toLowerCase();
-          final skills = application.skills.join(' ').toLowerCase();
-          if (!nameLower.contains(queryLower) && !skills.contains(queryLower)) {
-            return false;
-          }
+          final skillsLower = application.skills
+              .expand((skill) => skill.split(','))
+              .map((s) => s.trim().toLowerCase())
+              .join(' ');
+          matchesSearch = nameLower.contains(searchLower) ||
+              skillsLower.contains(searchLower);
         }
 
-        // Skills filter
-        if (_filterOptions.selectedSkills.isNotEmpty) {
-          bool hasMatchingSkill = false;
-          for (var skill in application.skills) {
-            if (_filterOptions.selectedSkills
-                .contains(StringUtils.toTitleCase(skill.trim()))) {
-              hasMatchingSkill = true;
-              break;
-            }
-          }
-          if (!hasMatchingSkill) return false;
+        bool matchesFilters = true;
+
+        if (filterOptions.selectedSkills.isNotEmpty) {
+          final appSkills = application.skills
+              .expand((skill) => skill.split(','))
+              .map((s) => StringUtils.toTitleCase(s.trim()))
+              .toSet();
+          matchesFilters = appSkills
+              .any((skill) => filterOptions.selectedSkills.contains(skill));
         }
 
-        // Location filter
-        if (_filterOptions.selectedLocations.isNotEmpty &&
-            !_filterOptions.selectedLocations.contains(
-                StringUtils.toTitleCase(application.jobLocation))) {
-          return false;
+        if (filterOptions.selectedLocations.isNotEmpty) {
+          matchesFilters = matchesFilters &&
+              filterOptions.selectedLocations
+                  .contains(StringUtils.toTitleCase(application.jobLocation));
         }
 
-        // Qualification filter
-        if (_filterOptions.selectedQualifications.isNotEmpty &&
-            !_filterOptions.selectedQualifications.contains(
-                StringUtils.toTitleCase(application.qualification))) {
-          return false;
+        if (filterOptions.selectedQualifications.isNotEmpty) {
+          matchesFilters = matchesFilters &&
+              filterOptions.selectedQualifications
+                  .contains(StringUtils.toTitleCase(application.qualification));
         }
 
-        // Employment type filter
-        if (_filterOptions.selectedEmploymentTypes.isNotEmpty &&
-            !_filterOptions.selectedEmploymentTypes.contains(
-                StringUtils.toTitleCase(application.jobEmploymentType))) {
-          return false;
+        if (filterOptions.selectedEmploymentTypes.isNotEmpty) {
+          matchesFilters = matchesFilters &&
+              filterOptions.selectedEmploymentTypes.contains(
+                  StringUtils.toTitleCase(application.jobEmploymentType));
         }
 
-        // College filter
-        if (_filterOptions.selectedColleges.isNotEmpty &&
-            !_filterOptions.selectedColleges
-                .contains(StringUtils.toTitleCase(application.college))) {
-          return false;
+        if (filterOptions.selectedColleges.isNotEmpty) {
+          matchesFilters = matchesFilters &&
+              filterOptions.selectedColleges
+                  .contains(StringUtils.toTitleCase(application.college));
         }
 
-        // Job profile filter
-        if (_filterOptions.selectedJobProfiles.isNotEmpty &&
-            !_filterOptions.selectedJobProfiles
-                .contains(StringUtils.toTitleCase(application.jobProfile))) {
-          return false;
+        if (filterOptions.selectedJobProfiles.isNotEmpty) {
+          matchesFilters = matchesFilters &&
+              filterOptions.selectedJobProfiles
+                  .contains(StringUtils.toTitleCase(application.jobProfile));
         }
 
-        return true;
+        return matchesSearch && matchesFilters;
       }).toList();
     });
   }
-  void _showFilterDialog(List<Application> applications) {
+  void _showFilterDialog() {
     showDialog(
       context: context,
       builder: (context) => FilterDialog(
-        applications: applications,
-        filterOptions: _filterOptions,
+        applications: originalApplications,
+        filterOptions: filterOptions,
         onApplyFilters: (newFilters) {
           setState(() {
-            _filterOptions = newFilters;
-            _applyFilters(applications);
+            filterOptions = newFilters;
+            _applyFilters();
           });
         },
       ),
     );
   }
+  void _updateApplicationLists() {
+    if (context.read<JobBloc>().state is JobsLoaded) {
+      final state = context.read<JobBloc>().state as JobsLoaded;
+      originalApplications = state.shortlistedApplications
+          .where((app) => app.jobId == widget.jobId)
+          .toList();
+      _applyFilters();
+    }
+  }
   void _updateSearchResults(String query) {
     setState(() {
       _searchQuery = query;
-      _applyFilters(_currentApplications);
+      _applyFilters();
     });
   }
   Future<void> _showRemoveConfirmation(
@@ -180,15 +184,22 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
   @override
   void initState() {
     super.initState();
-    _filterOptions = FilterOptions();
+    filterOptions = FilterOptions();
     context.read<JobBloc>().add(LoadJobs());
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _updateApplicationLists();
         });
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(ShortlistedScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateApplicationLists();
   }
 
   @override
@@ -199,101 +210,73 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
           );
+        } else if (state is JobsLoaded) {
+          _updateApplicationLists();
         }
       },
       builder: (context, state) {
-        // Handle initial and loading states
         if (state is JobInitial || state is JobLoading) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // Handle error state
         if (state is JobError) {
           return Scaffold(
-            body: Center(
-              child: Text('Error: ${state.message}'),
-            ),
+            body: Center(child: Text('Error: ${state.message}')),
           );
         }
 
-        // Handle loaded state
-        if (state is JobsLoaded) {
-          final shortlistedApplications = state.shortlistedApplications
-              .where((app) => app.jobId == widget.jobId)
-              .toList();
-
-          final filteredApplications = _searchQuery.isEmpty
-              ? shortlistedApplications
-              : shortlistedApplications.where((application) {
-            final nameLower = application.applicantName.toLowerCase();
-            final queryLower = _searchQuery.toLowerCase();
-            final skills = application.skills.join(' ').toLowerCase();
-            return nameLower.contains(queryLower) ||
-                skills.contains(queryLower);
-          }).toList();
-
-          return Scaffold(
-            backgroundColor: Colors.grey[50],
-            appBar: AppBar(
-              elevation: 0,
-              backgroundColor: Colors.deepPurple,
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Shortlisted Candidates',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18.sp,
-                    ),
-                  ),
-                  Text(
-                    widget.jobTitle,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14.sp,
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    Icons.filter_list,
-                    size: 24.sp,
-                    color: _filterOptions.hasActiveFilters
-                        ? Colors.amber
-                        : Colors.white,
-                  ),
-                  onPressed: () => _showFilterDialog(shortlistedApplications),
-                ),
-              ],
-            ),
-            body: Column(
+        return Scaffold(
+          backgroundColor: Colors.grey[50],
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.deepPurple,
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSearchBar(),
-                _buildStatisticsCards(shortlistedApplications),
-                Expanded(
-                  child: _isLoading
-                      ? _buildLoadingShimmer()
-                      : _buildApplicationsList(
-                    filteredApplications,
-                    context.read<JobBloc>(),
+                Text(
+                  'Shortlisted Candidates',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.sp,
+                  ),
+                ),
+                Text(
+                  widget.jobTitle,
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14.sp,
                   ),
                 ),
               ],
             ),
-          );
-        }
-
-        // Default case - should never happen if all states are handled
-        return const Scaffold(
-          body: Center(
-            child: Text('Unknown state'),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  Icons.filter_list,
+                  size: 24.sp,
+                  color: filterOptions.hasActiveFilters
+                      ? Colors.amber
+                      : Colors.white,
+                ),
+                onPressed: _showFilterDialog,
+              ),
+            ],
+          ),
+          body: Column(
+            children: [
+              _buildSearchBar(),
+              _buildStatisticsCards(originalApplications),
+              Expanded(
+                child: _isLoading
+                    ? _buildLoadingShimmer()
+                    : _buildApplicationsList(
+                  filteredApplications,
+                  context.read<JobBloc>(),
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -565,6 +548,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
                   runSpacing: 8.h,
                   children: application.skills.map((skill) {
                     return Container(
+                      margin: EdgeInsets.only(bottom: 8.h),
                       padding: EdgeInsets.symmetric(
                         horizontal: 8.w,
                         vertical: 4.h,
