@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../State_management/Company_state.dart';
 import '../../models/company_model/job.dart';
-import '../../services/firestore_service.dart';
-import 'utils/job_sorter.dart';
 import 'widgets/header_section.dart';
 import 'widgets/filter_section.dart';
 import 'widgets/job_list_section.dart';
@@ -14,64 +14,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final AuthService _authService = AuthService();
-  Stream<List<Job>>? _companyJobsStream;
-  String _selectedFilter = 'All';
-  SortOrder _sortOrder = SortOrder.newest;
   final List<String> _filters = ['All', 'Full-time', 'Part-time', 'Internship', 'Contract'];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCompanyJobs();
-  }
-  void _loadCompanyJobs() async {
-    String? companyId = await _authService.getCurrentCompanyId();
-    if (companyId != null) {
-      setState(() {
-        _companyJobsStream = _authService.getJobsByCompany(companyId);
-      });
-    }
-  }
-
-  Future<void> _deleteJob(Job job) async {
-    try {
-      await _authService.deleteJob(job.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Job deleted successfully',
-              style: TextStyle(fontSize: 14.sp),
-            ),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(16.w),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error deleting job: $e',
-              style: TextStyle(fontSize: 14.sp),
-            ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.all(16.w),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-          ),
-        );
-      }
-    }
-  }
 
   void _showJobDetails(BuildContext context, Job job) {
     showDialog(
@@ -82,7 +25,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
   void _confirmDeleteJob(BuildContext context, Job job) {
     showDialog(
       context: context,
@@ -96,7 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           content: Text(
-            "Are you sure you want to delete this job posting? This action cannot be undone.",
+            "Are you sure you want to delete this job posting?",
             style: TextStyle(fontSize: 14.sp),
           ),
           shape: RoundedRectangleBorder(
@@ -109,21 +51,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 "CANCEL",
                 style: TextStyle(fontSize: 14.sp),
               ),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.grey,
-              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _deleteJob(job);
+                context.read<JobBloc>().add(DeleteJob(job.id));
               },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
               child: Text(
                 "DELETE",
                 style: TextStyle(fontSize: 14.sp),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
               ),
             ),
           ],
@@ -133,30 +72,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Dispatch LoadJobs event when the screen initializes
+    context.read<JobBloc>().add(LoadJobs());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            HeaderSection(
-              currentSortOrder: _sortOrder,
-              onSortChanged: (order) => setState(() => _sortOrder = order),
-            ),
-            FilterSection(
-              filters: _filters,
-              selectedFilter: _selectedFilter,
-              onFilterSelected: (filter) => setState(() => _selectedFilter = filter),
+        child: BlocConsumer<JobBloc, JobState>(
+          listener: (context, state) {
+            if (state is JobError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is JobInitial) {
+              // Add LoadJobs event if we're still in initial state
+              context.read<JobBloc>().add(LoadJobs());
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is JobLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is JobsLoaded) {
+              return Column(
+                children: [
+                  HeaderSection(
+                    currentSortOrder: state.sortOrder,
+                    onSortChanged: (order) =>
+                        context.read<JobBloc>().add(SortJobs(order)),
+                  ),
+                  FilterSection(
+                    filters: _filters,
+                    selectedFilter: state.jobFilter,
+                    onFilterSelected: (filter) =>
+                        context.read<JobBloc>().add(FilterJobs(filter)),
+                  ),
+                  Expanded(
+                    child: JobListSection(
+                      jobsStream: Stream.value(state.jobs),
+                      selectedFilter: state.jobFilter,
+                      onJobTap: (context, job) => _showJobDetails(context, job),
+                      onJobUpdate: (job, updates) =>
+                          context.read<JobBloc>().add(UpdateJob(job, updates)),
+                      sortOrder: state.sortOrder,
+                    ),
+                  ),
+                ],
+              );
+            }
 
-            ),
-            Expanded(
-              child: JobListSection(
-                jobsStream: _companyJobsStream,
-                selectedFilter: _selectedFilter,
-                onJobTap: _showJobDetails,
-                sortOrder: _sortOrder,
-              ),
-            ),
-          ],
+            return const Center(
+              child: Text('Something went wrong. Please try again.'),
+            );
+          },
         ),
       ),
     );

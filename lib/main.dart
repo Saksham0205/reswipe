@@ -32,7 +32,6 @@ class JobFinderApp extends StatelessWidget {
             BlocProvider<JobBloc>(
               create: (context) => JobBloc(),
             ),
-            // Add other BlocProviders if needed
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -42,10 +41,26 @@ class JobFinderApp extends StatelessWidget {
               visualDensity: VisualDensity.adaptivePlatformDensity,
             ),
             home: const AuthWrapper(),
-            routes: {
-              '/login': (context) => LoginScreen(),
-              '/company_home': (context) => const CompanyMainScreen(),
-              '/job_seeker_home': (context) => JobSeekerHomeScreen(),
+            onGenerateRoute: (settings) {
+              switch (settings.name) {
+                case '/login':
+                  return MaterialPageRoute(
+                    builder: (_) => LoginScreen(),
+                  );
+                case '/company_home':
+                  return MaterialPageRoute(
+                    builder: (context) => BlocProvider.value(
+                      value: BlocProvider.of<JobBloc>(context),
+                      child: const CompanyMainScreen(),
+                    ),
+                  );
+                case '/job_seeker_home':
+                  return MaterialPageRoute(
+                    builder: (_) => JobSeekerHomeScreen(),
+                  );
+                default:
+                  return null;
+              }
             },
           ),
         );

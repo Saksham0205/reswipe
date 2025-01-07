@@ -18,16 +18,6 @@ class HeaderSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -47,7 +37,7 @@ class HeaderSection extends StatelessWidget {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(width: 8.w),
+          SizedBox(height: 8.w),
           SortButton(
             currentOrder: currentSortOrder,
             onSortChanged: onSortChanged,

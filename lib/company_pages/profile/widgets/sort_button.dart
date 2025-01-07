@@ -25,12 +25,12 @@ class SortButton extends StatelessWidget {
       itemBuilder: (context) => [
         _buildPopupMenuItem(
           SortOrder.newest,
-          'Newest First',
+          'Oldest First',
           Icons.arrow_downward,
         ),
         _buildPopupMenuItem(
           SortOrder.oldest,
-          'Oldest First',
+          'Newest First',
           Icons.arrow_upward,
         ),
       ],
@@ -54,7 +54,7 @@ class SortButton extends StatelessWidget {
             ),
             SizedBox(width: 4.w),
             Text(
-              currentOrder == SortOrder.newest ? 'Newest First' : 'Oldest First',
+              currentOrder == SortOrder.newest ? 'Oldest First' : 'Newest First',
               style: TextStyle(
                 fontSize: 12.sp,
                 color: Colors.deepPurple,

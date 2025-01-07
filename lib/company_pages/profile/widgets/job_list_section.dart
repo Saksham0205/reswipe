@@ -8,15 +8,17 @@ class JobListSection extends StatelessWidget {
   final Stream<List<Job>>? jobsStream;
   final String selectedFilter;
   final Function(BuildContext, Job) onJobTap;
+  final Function(Job, Map<String, dynamic>) onJobUpdate;
   final SortOrder sortOrder;
 
   const JobListSection({
-    Key? key,
+    super.key,
     required this.jobsStream,
     required this.selectedFilter,
     required this.onJobTap,
+    required this.onJobUpdate,
     required this.sortOrder,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,7 @@ class JobListSection extends StatelessWidget {
       stream: jobsStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
+          return const Center(
             child: CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
             ),
@@ -68,7 +70,6 @@ class JobListSection extends StatelessWidget {
           jobs = jobs.where((job) => job.employmentType == selectedFilter).toList();
         }
 
-        // Apply sorting
         jobs = JobSorter.sortByDate(jobs, sortOrder);
 
         return ListView.separated(
@@ -78,6 +79,8 @@ class JobListSection extends StatelessWidget {
           itemBuilder: (context, index) => JobCard(
             job: jobs[index],
             onTap: () => onJobTap(context, jobs[index]),
+            onUpdate: onJobUpdate,
+            isEditable: true,
           ),
         );
       },

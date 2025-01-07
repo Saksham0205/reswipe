@@ -1,99 +1,56 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import '../company_pages/profile/utils/job_sorter.dart';
 import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 
-// job_state.dart
-abstract class JobState extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
-
-class JobInitial extends JobState {}
-class JobLoading extends JobState {}
-class JobsLoaded extends JobState {
-  final List<Job> jobs;
-  final Job? selectedJob;
-  final List<Application> applications;
-  final List<Application> shortlistedApplications;
-  final List<Application> rejectedApplications;
-  final List<Application> filteredApplications;  // Added this property
-  final Map<String, dynamic> filters;
-
-  JobsLoaded({
-    required this.jobs,
-    this.selectedJob,
-    required this.applications,
-    required this.shortlistedApplications,
-    required this.rejectedApplications,
-    List<Application>? filteredApplications,  // Made optional with default
-    this.filters = const {},
-  }) : this.filteredApplications = filteredApplications ?? applications;  // Initialize with applications if not provided
-
-  @override
-  List<Object?> get props => [
-    jobs,
-    selectedJob,
-    applications,
-    shortlistedApplications,
-    rejectedApplications,
-    filteredApplications,
-    filters,
-  ];
-
-  JobsLoaded copyWith({
-    List<Job>? jobs,
-    Job? selectedJob,
-    List<Application>? applications,
-    List<Application>? shortlistedApplications,
-    List<Application>? rejectedApplications,
-    List<Application>? filteredApplications,
-    Map<String, dynamic>? filters,
-  }) {
-    return JobsLoaded(
-      jobs: jobs ?? this.jobs,
-      selectedJob: selectedJob ?? this.selectedJob,
-      applications: applications ?? this.applications,
-      shortlistedApplications: shortlistedApplications ?? this.shortlistedApplications,
-      rejectedApplications: rejectedApplications ?? this.rejectedApplications,
-      filteredApplications: filteredApplications ?? this.filteredApplications,
-      filters: filters ?? this.filters,
-    );
-  }
-}
-class AddJob extends JobEvent {
-  final Job job;
-
-  AddJob(this.job);
-
-  @override
-  List<Object?> get props => [job];
-}
-
-class JobError extends JobState {
-  final String message;
-  JobError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// job_event.dart
+// Events
 abstract class JobEvent extends Equatable {
   @override
   List<Object?> get props => [];
 }
 
 class LoadJobs extends JobEvent {}
+class Refresh extends JobEvent {}
 class SelectJob extends JobEvent {
   final Job job;
   SelectJob(this.job);
-
   @override
   List<Object?> get props => [job];
+}
+class DeleteJob extends JobEvent {
+  final String jobId;
+  DeleteJob(this.jobId);
+
+  @override
+  List<Object?> get props => [jobId];
+}
+class SortJobs extends JobEvent {
+  final SortOrder order;
+  SortJobs(this.order);
+
+  @override
+  List<Object?> get props => [order];
+}
+class FilterJobs extends JobEvent {
+  final String filter;
+  FilterJobs(this.filter);
+
+  @override
+  List<Object?> get props => [filter];
+}
+class UpdateJob extends JobEvent {
+  final Job job;
+  final Map<String, dynamic> updates;
+
+  UpdateJob(this.job, this.updates);
+
+  @override
+  List<Object?> get props => [job, updates];
 }
 
 class SwipeApplication extends JobEvent {
@@ -101,7 +58,6 @@ class SwipeApplication extends JobEvent {
   final bool isRightSwipe;
 
   SwipeApplication({required this.application, required this.isRightSwipe});
-
   @override
   List<Object?> get props => [application, isRightSwipe];
 }
@@ -111,43 +67,143 @@ class FilterApplications extends JobEvent {
   final String? location;
   final List<String>? skills;
   final String? experience;
-  final String? qualification;  // Added qualification parameter
+  final String? qualification;
+  final String? employmentType;
 
   FilterApplications({
     this.searchQuery,
     this.location,
     this.skills,
     this.experience,
-    this.qualification,  // Added to constructor
+    this.qualification,
+    this.employmentType,
   });
 
   @override
-  List<Object?> get props => [searchQuery, location, skills, experience, qualification];
+  List<Object?> get props => [
+    searchQuery,
+    location,
+    skills,
+    experience,
+    qualification,
+    employmentType,
+  ];
 }
 
-class RemoveFromShortlistEvent extends JobEvent {
-  final Application application;
-  final String jobId;
-
-  RemoveFromShortlistEvent({
-    required this.application,
-    required this.jobId,
-  });
+class AddJob extends JobEvent {
+  final Job job;
+  AddJob(this.job);
+  @override
+  List<Object?> get props => [job];
 }
 
-class AddToShortlistEvent extends JobEvent {
-  final Application application;
-  final String jobId;
-
-  AddToShortlistEvent({
-    required this.application,
-    required this.jobId,
-  });
+// States
+abstract class JobState extends Equatable {
+  @override
+  List<Object?> get props => [];
 }
 
-class SendNotifications extends JobEvent {}
+class JobInitial extends JobState {}
 
-// job_bloc.dart
+class JobLoading extends JobState {}
+
+class JobError extends JobState {
+  final String message;
+  JobError(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+class JobsLoaded extends JobState {
+  List<Application> getApplicationsForJob(String jobId) {
+    return applicationsByJob[jobId] ?? [];
+  }
+
+  // Add a method to get shortlisted applications for a job
+  List<Application> getShortlistedForJob(String jobId) {
+    return shortlistedByJob[jobId] ?? [];
+  }
+
+  // Add a method to get rejected applications for a job
+  List<Application> getRejectedForJob(String jobId) {
+    return rejectedByJob[jobId] ?? [];
+  }
+  final List<Job> jobs;
+  final Job? selectedJob;
+  final Map<String, List<Application>> applicationsByJob;
+  final Map<String, List<Application>> shortlistedByJob;
+  final Map<String, List<Application>> rejectedByJob;
+  final Map<String, Set<String>> swipedApplicationIdsByJob;
+  final List<Application> filteredApplications;
+  final Map<String, dynamic> filters;
+  final Map<String, int> applicationCountByJob;
+  final SortOrder sortOrder; // Added
+  final String jobFilter;
+
+  JobsLoaded({
+    required this.jobs,
+    this.selectedJob,
+    required this.applicationsByJob,
+    required this.shortlistedByJob,
+    required this.rejectedByJob,
+    required this.swipedApplicationIdsByJob,
+    List<Application>? filteredApplications,
+    this.filters = const {},
+    required this.applicationCountByJob,
+    this.sortOrder = SortOrder.newest, // Default value
+    this.jobFilter = 'All',
+  }) : filteredApplications = filteredApplications ??
+      (selectedJob != null ? applicationsByJob[selectedJob.id] ?? [] : []);
+
+  @override
+  List<Object?> get props => [
+    jobs,
+    selectedJob,
+    applicationsByJob,
+    shortlistedByJob,
+    rejectedByJob,
+    swipedApplicationIdsByJob,
+    filteredApplications,
+    filters,
+    applicationCountByJob,
+    sortOrder,
+    jobFilter,
+  ];
+
+  JobsLoaded copyWith({
+    List<Job>? jobs,
+    Job? selectedJob,
+    Map<String, List<Application>>? applicationsByJob,
+    Map<String, List<Application>>? shortlistedByJob,
+    Map<String, List<Application>>? rejectedByJob,
+    Map<String, Set<String>>? swipedApplicationIdsByJob,
+    List<Application>? filteredApplications,
+    Map<String, dynamic>? filters,
+    Map<String, int>? applicationCountByJob,
+    SortOrder? sortOrder,
+    String? jobFilter,
+  }) {
+    return JobsLoaded(
+      jobs: jobs ?? this.jobs,
+      selectedJob: selectedJob ?? this.selectedJob,
+      applicationsByJob: applicationsByJob ?? this.applicationsByJob,
+      shortlistedByJob: shortlistedByJob ?? this.shortlistedByJob,
+      rejectedByJob: rejectedByJob ?? this.rejectedByJob,
+      swipedApplicationIdsByJob: swipedApplicationIdsByJob ?? this.swipedApplicationIdsByJob,
+      filteredApplications: filteredApplications ?? this.filteredApplications,
+      filters: filters ?? this.filters,
+      applicationCountByJob: applicationCountByJob ?? this.applicationCountByJob,
+      sortOrder: sortOrder ?? this.sortOrder,
+      jobFilter: jobFilter ?? this.jobFilter,
+    );
+  }
+
+  bool isApplicationSwiped(String jobId, String applicationId) {
+    return swipedApplicationIdsByJob[jobId]?.contains(applicationId) ?? false;
+  }
+}
+
+// BLoC
 class JobBloc extends Bloc<JobEvent, JobState> {
   final FirebaseFirestore _firestore;
   final FirebaseMessaging _messaging;
@@ -158,107 +214,27 @@ class JobBloc extends Bloc<JobEvent, JobState> {
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
         _messaging = messaging ?? FirebaseMessaging.instance,
         super(JobInitial()) {
+    on<Refresh>((event, emit) => add(LoadJobs()));
     on<LoadJobs>(_onLoadJobs);
     on<SelectJob>(_onSelectJob);
     on<SwipeApplication>(_onSwipeApplication);
     on<FilterApplications>(_onFilterApplications);
-    on<SendNotifications>(_onSendNotifications);
     on<AddJob>(_onAddJob);
-    on<RemoveFromShortlistEvent>(_onRemoveFromShortlist);
-    on<AddToShortlistEvent>(_onAddToShortlist);
+    on<DeleteJob>(_onDeleteJob);
+    on<SortJobs>(_onSortJobs);
+    on<FilterJobs>(_onFilterJobs);
+    on<UpdateJob>(_onUpdateJob);
   }
 
-  Future<void> _onRemoveFromShortlist(
-      RemoveFromShortlistEvent event,
-      Emitter<JobState> emit,
-      ) async {if (state is JobsLoaded) {
-      final currentState = state as JobsLoaded;
-
-      try {
-        // Update status in Firestore
-        await _firestore
-            .collection('applications')
-            .doc(event.application.id)
-            .update({
-          'status': 'removed',
-          'statusUpdatedAt': FieldValue.serverTimestamp(),
-        });
-
-        // Remove from shortlisted applications list
-        final updatedShortlisted = currentState.shortlistedApplications
-            .where((app) => app.id != event.application.id)
-            .toList();
-
-        // Emit new state with updated shortlisted applications
-        emit(currentState.copyWith(
-          shortlistedApplications: updatedShortlisted,
-        ));
-
-        // Optionally notify the applicant
-        await _sendNotificationToApplicant(
-          event.application.userId,
-          'removed',
-          event.application.jobTitle,
-        );
-      } catch (e) {
-        emit(JobError(e.toString()));
-      }
-    }}
-  Future<void> _onAddToShortlist(
-      AddToShortlistEvent event,
-      Emitter<JobState> emit,
-      ) async {if (state is JobsLoaded) {
-      final currentState = state as JobsLoaded;
-
-      try {
-        // Update status in Firestore
-        await _firestore
-            .collection('applications')
-            .doc(event.application.id)
-            .update({
-          'status': 'shortlisted',
-          'statusUpdatedAt': FieldValue.serverTimestamp(),
-        });
-
-        // Add back to shortlisted applications list if not already present
-        if (!currentState.shortlistedApplications
-            .any((app) => app.id == event.application.id)) {
-          final updatedShortlisted = List<Application>.from(
-            currentState.shortlistedApplications,
-          )..add(event.application);
-
-          // Emit new state with updated shortlisted applications
-          emit(currentState.copyWith(
-            shortlistedApplications: updatedShortlisted,
-          ));
-
-          // Notify the applicant of being shortlisted again
-          await _sendNotificationToApplicant(
-            event.application.userId,
-            'shortlistPending',
-            event.application.jobTitle,
-          );
-        }
-      } catch (e) {
-        emit(JobError(e.toString()));
-      }
-    }}
   Future<void> _onLoadJobs(LoadJobs event, Emitter<JobState> emit) async {
     emit(JobLoading());
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        emit(JobError('User not authenticated'));
-        return;
-      }
+      if (user == null) throw Exception('User not authenticated');
 
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
       final companyId = userDoc.get('companyId') ?? user.uid;
 
-      // Fetch jobs
       final jobsSnapshot = await _firestore
           .collection('jobs')
           .where('companyId', isEqualTo: companyId)
@@ -272,234 +248,248 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       if (jobs.isEmpty) {
         emit(JobsLoaded(
           jobs: const [],
-          applications: const [],
-          shortlistedApplications: const [],
-          rejectedApplications: const [],
+          applicationsByJob: const {},
+          shortlistedByJob: const {},
+          rejectedByJob: const {},
+          swipedApplicationIdsByJob: const {},
+          applicationCountByJob: const {},
         ));
         return;
       }
 
-      final selectedJob = jobs.first;
-
-      // Load all applications for each job
-      Map<String, List<Application>> allApplications = {};
-      Map<String, List<Application>> shortlistedApplications = {};
-      Map<String, List<Application>> rejectedApplications = {};
+      Map<String, List<Application>> applicationsByJob = {};
+      Map<String, List<Application>> shortlistedByJob = {};
+      Map<String, List<Application>> rejectedByJob = {};
+      Map<String, Set<String>> swipedApplicationIdsByJob = {};
+      Map<String, int> applicationCountByJob = {};
 
       for (var job in jobs) {
-        // Get all applications for this job
         final applicationsSnapshot = await _firestore
             .collection('applications')
             .where('jobId', isEqualTo: job.id)
+            .orderBy('timestamp', descending: true)
             .get();
 
         final applications = applicationsSnapshot.docs
             .map((doc) => Application.fromFirestore(doc))
             .toList();
 
-        allApplications[job.id] = applications;
+        applicationsByJob[job.id] = applications;
+        applicationCountByJob[job.id] = applications.length;
 
-        // Filter shortlisted and rejected applications
-        shortlistedApplications[job.id] = applications
+        shortlistedByJob[job.id] = applications
             .where((app) => app.status == 'shortlisted')
             .toList();
 
-        rejectedApplications[job.id] = applications
+        rejectedByJob[job.id] = applications
             .where((app) => app.status == 'rejected')
             .toList();
-      }
 
-      // Get applications for selected job
-      final currentApplications = allApplications[selectedJob.id] ?? [];
-      final currentShortlisted = shortlistedApplications[selectedJob.id] ?? [];
-      final currentRejected = rejectedApplications[selectedJob.id] ?? [];
+        swipedApplicationIdsByJob[job.id] = applications
+            .where((app) => app.status != 'pending')
+            .map((app) => app.id)
+            .toSet();
+      }
 
       emit(JobsLoaded(
         jobs: jobs,
-        selectedJob: selectedJob,
-        applications: currentApplications,
-        shortlistedApplications: currentShortlisted,
-        rejectedApplications: currentRejected,
+        selectedJob: jobs.first,
+        applicationsByJob: applicationsByJob,
+        shortlistedByJob: shortlistedByJob,
+        rejectedByJob: rejectedByJob,
+        swipedApplicationIdsByJob: swipedApplicationIdsByJob,
+        applicationCountByJob: applicationCountByJob,
       ));
     } catch (e) {
       emit(JobError(e.toString()));
+    }
+  }
+  Future<void> _onUpdateJob(UpdateJob event, Emitter<JobState> emit) async {
+    try {
+      await _firestore.collection('jobs').doc(event.job.id).update(event.updates);
+      add(LoadJobs()); // Reload jobs after update
+    } catch (e) {
+      emit(JobError(e.toString()));
+    }
+  }
+  Future<void> _onDeleteJob(DeleteJob event, Emitter<JobState> emit) async {
+    if (state is JobsLoaded) {
+      try {
+        await _firestore.collection('jobs').doc(event.jobId).delete();
+        add(LoadJobs()); // Reload jobs after deletion
+      } catch (e) {
+        emit(JobError(e.toString()));
+      }
+    }
+  }
+  void _onSortJobs(SortJobs event, Emitter<JobState> emit) {
+    if (state is JobsLoaded) {
+      final currentState = state as JobsLoaded;
+      final sortedJobs = JobSorter.sortByDate(currentState.jobs, event.order);
+      emit(currentState.copyWith(
+        jobs: sortedJobs,
+        sortOrder: event.order,
+      ));
+    }
+  }
+  void _onFilterJobs(FilterJobs event, Emitter<JobState> emit) {
+    if (state is JobsLoaded) {
+      final currentState = state as JobsLoaded;
+      emit(currentState.copyWith(jobFilter: event.filter));
     }
   }
   Future<void> _onSelectJob(SelectJob event, Emitter<JobState> emit) async {
     if (state is JobsLoaded) {
       final currentState = state as JobsLoaded;
-      emit(JobLoading());
 
       try {
-        // Load all applications for the selected job
-        final applicationsSnapshot = await _firestore
-            .collection('applications')
-            .where('jobId', isEqualTo: event.job.id)
-            .get();
-
-        final applications = applicationsSnapshot.docs
-            .map((doc) => Application.fromFirestore(doc))
-            .toList();
-
-        // Filter shortlisted and rejected applications
-        final shortlistedApplications = applications
-            .where((app) => app.status == 'shortlisted')
-            .toList();
-
-        final rejectedApplications = applications
-            .where((app) => app.status == 'rejected')
-            .toList();
+        final applications = currentState.applicationsByJob[event.job.id] ?? [];
+        final shortlisted = currentState.shortlistedByJob[event.job.id] ?? [];
+        final rejected = currentState.rejectedByJob[event.job.id] ?? [];
 
         emit(currentState.copyWith(
           selectedJob: event.job,
-          applications: applications,
-          shortlistedApplications: shortlistedApplications,
-          rejectedApplications: rejectedApplications,
+          filteredApplications: applications,
         ));
       } catch (e) {
         emit(JobError(e.toString()));
       }
     }
   }
-  Future<List<Application>> _loadApplicationsForJob(String jobId) async {
-    final snapshot = await _firestore
-        .collection('applications')
-        .where('jobId', isEqualTo: jobId)
-        .orderBy('timestamp', descending: true)
-        .get();
-
-    return snapshot.docs
-        .map((doc) => Application.fromFirestore(doc))
-        .toList();
-  }
-  Future<void> _onAddJob(AddJob event, Emitter<JobState> emit) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        emit(JobError('User not authenticated'));
-        return;
-      }
-
-      // Get company info
-      final userDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .get();
-
-      String companyId = userDoc.get('companyId') ?? '';
-      String companyName = userDoc.get('companyName') ?? '';
-
-      if (companyId.isEmpty || companyName.isEmpty) {
-        emit(JobError('Company information is missing. Please update your profile.'));
-        return;
-      }
-
-      // Create job with company info
-      final job = Job(
-        title: event.job.title,
-        description: event.job.description,
-        responsibilities: event.job.responsibilities,
-        qualifications: event.job.qualifications,
-        salaryRange: event.job.salaryRange,
-        location: event.job.location,
-        employmentType: event.job.employmentType,
-        companyId: companyId,
-        companyName: companyName,
-      );
-
-      // Add to Firestore
-      await _firestore.collection('jobs').add(job.toMap());
-
-      // Reload jobs after adding
-      final jobsSnapshot = await _firestore
-          .collection('jobs')
-          .where('companyId', isEqualTo: companyId)
-          .orderBy('timestamp', descending: true)
-          .get();
-
-      final jobs = jobsSnapshot.docs
-          .map((doc) => Job.fromMap(doc.data(), doc.id))
-          .toList();
-
-      emit(JobsLoaded(
-        jobs: jobs,
-        applications: const [],
-        shortlistedApplications: const [],
-        rejectedApplications: const [],
-      ));
-    } catch (e) {
-      emit(JobError(e.toString()));
-    }
-  }
-  Future<void> _onSwipeApplication(
-      SwipeApplication event,
-      Emitter<JobState> emit,
-      ) async {if (state is JobsLoaded) {
+  Future<void> _onSwipeApplication(SwipeApplication event, Emitter<JobState> emit) async {
+    if (state is JobsLoaded) {
       final currentState = state as JobsLoaded;
+      final jobId = event.application.jobId;
       final status = event.isRightSwipe ? 'shortlisted' : 'rejected';
+
       try {
-        await _firestore
-            .collection('applications')
-            .doc(event.application.id)
-            .update({
+        // Update Firebase
+        await _firestore.collection('applications').doc(event.application.id).update({
           'status': status,
           'statusUpdatedAt': FieldValue.serverTimestamp(),
+          'companyLikesCount': event.isRightSwipe ?
+          FieldValue.increment(1) : event.application.companyLikesCount,
         });
 
-        if (event.isRightSwipe) {
-          final shortlisted = List<Application>.from(currentState.shortlistedApplications)
-            ..add(event.application);
-          emit(currentState.copyWith(shortlistedApplications: shortlisted));
+        // Update local state
+        Map<String, List<Application>> updatedShortlisted = Map.from(currentState.shortlistedByJob);
+        Map<String, List<Application>> updatedRejected = Map.from(currentState.rejectedByJob);
+        Map<String, List<Application>> updatedApplicationsByJob = Map.from(currentState.applicationsByJob);
+        Map<String, Set<String>> updatedSwipedIds = Map.from(currentState.swipedApplicationIdsByJob);
 
-          // Send immediate notification for right swipe
+        // Remove from current applications
+        updatedApplicationsByJob[jobId] = (updatedApplicationsByJob[jobId] ?? [])
+            .where((app) => app.id != event.application.id)
+            .toList();
+
+        // Add to appropriate list based on swipe direction
+        final updatedApplication = event.application.copyWith(
+          status: status,
+          statusUpdatedAt: DateTime.now(),
+          companyLikesCount: event.isRightSwipe ?
+          event.application.companyLikesCount + 1 : event.application.companyLikesCount,
+        );
+
+        if (event.isRightSwipe) {
+          updatedShortlisted[jobId] = [
+            ...updatedShortlisted[jobId] ?? [],
+            updatedApplication,
+          ];
+
+          // Remove from rejected if it was there
+          updatedRejected[jobId] = (updatedRejected[jobId] ?? [])
+              .where((app) => app.id != event.application.id)
+              .toList();
+
           await _sendNotificationToApplicant(
             event.application.userId,
-            'shortlistPending',
+            'shortlisted',
             event.application.jobTitle,
           );
         } else {
-          final rejected = List<Application>.from(currentState.rejectedApplications)
-            ..add(event.application);
-          emit(currentState.copyWith(rejectedApplications: rejected));
+          updatedRejected[jobId] = [
+            ...updatedRejected[jobId] ?? [],
+            updatedApplication,
+          ];
+
+          // Remove from shortlisted if it was there
+          updatedShortlisted[jobId] = (updatedShortlisted[jobId] ?? [])
+              .where((app) => app.id != event.application.id)
+              .toList();
         }
+
+        // Update swiped IDs
+        final swipedIds = Set<String>.from(updatedSwipedIds[jobId] ?? {})..add(event.application.id);
+        updatedSwipedIds[jobId] = swipedIds;
+
+        // Check if all applications have been processed
+        final noMoreApplications = updatedApplicationsByJob[jobId]?.isEmpty ?? true;
+
+        emit(currentState.copyWith(
+          shortlistedByJob: updatedShortlisted,
+          rejectedByJob: updatedRejected,
+          applicationsByJob: updatedApplicationsByJob,
+          swipedApplicationIdsByJob: updatedSwipedIds,
+          filteredApplications: noMoreApplications ? [] : updatedApplicationsByJob[jobId],
+        ));
+
       } catch (e) {
         emit(JobError(e.toString()));
       }
-    }}
+    }
+  }
   void _onFilterApplications(FilterApplications event, Emitter<JobState> emit) {
     if (state is JobsLoaded) {
       final currentState = state as JobsLoaded;
+      final selectedJobId = currentState.selectedJob?.id;
+
+      if (selectedJobId == null) return;
+
+      // Get the applications list for the selected job
+      final applications = currentState.applicationsByJob[selectedJobId] ?? [];
+
       final filters = {
         if (event.searchQuery != null) 'searchQuery': event.searchQuery,
         if (event.location != null) 'location': event.location,
         if (event.skills != null) 'skills': event.skills,
         if (event.experience != null) 'experience': event.experience,
-        if (event.qualification != null) 'qualification': event.qualification,  // Added qualification
+        if (event.qualification != null) 'qualification': event.qualification,
+        if (event.employmentType != null) 'employmentType': event.employmentType,
       };
 
-      final filteredApplications = currentState.applications.where((application) {
-        bool matchesSearch = event.searchQuery?.isEmpty ?? true ||
-            application.applicantName.toLowerCase().contains(event.searchQuery!.toLowerCase()) ||
-            application.skills.any((skill) =>
-                skill.toLowerCase().contains(event.searchQuery!.toLowerCase()));
+      // Filter the applications list
+      final filteredApplications = applications.where((application) {
+        bool matchesSearch = true;
+        if (event.searchQuery != null && event.searchQuery!.isNotEmpty) {
+          matchesSearch = application.applicantName.toLowerCase().contains(event.searchQuery!.toLowerCase()) ||
+              application.skills.any((skill) => skill.toLowerCase().contains(event.searchQuery!.toLowerCase()));
+        }
 
-        bool matchesLocation = event.location?.isEmpty ?? true ||
-            application.jobLocation.toLowerCase() == event.location!.toLowerCase();
+        bool matchesLocation = true;
+        if (event.location != null && event.location!.isNotEmpty) {
+          matchesLocation = application.jobLocation.toLowerCase() == event.location!.toLowerCase();
+        }
 
-        bool matchesSkills = event.skills?.isEmpty ?? true ||
-            event.skills!.every((skill) => application.skills.contains(skill));
+        bool matchesSkills = true;
+        if (event.skills != null && event.skills!.isNotEmpty) {
+          matchesSkills = event.skills!.every((skill) => application.skills.contains(skill));
+        }
 
-        bool matchesExperience = event.experience?.isEmpty ?? true ||
-            _matchesExperienceFilter(application.experience as String, event.experience!);
+        bool matchesExperience = true;
+        if (event.experience != null && event.experience!.isNotEmpty) {
+          matchesExperience = _matchesExperienceFilter(application.experience.toString(), event.experience!);
+        }
 
-        bool matchesQualification = event.qualification?.isEmpty ?? true ||
-            application.qualification == event.qualification;  // Added qualification check
+        bool matchesQualification = true;
+        if (event.qualification != null && event.qualification!.isNotEmpty) {
+          matchesQualification = application.qualification == event.qualification;
+        }
 
         return matchesSearch &&
             matchesLocation &&
             matchesSkills &&
             matchesExperience &&
-            matchesQualification;  // Include qualification in filtering
+            matchesQualification;
       }).toList();
 
       emit(currentState.copyWith(
@@ -509,92 +499,117 @@ class JobBloc extends Bloc<JobEvent, JobState> {
     }
   }
   bool _matchesExperienceFilter(String applicationExp, String filterExp) {
-    // Convert experience strings to comparable values
     final appExp = double.tryParse(applicationExp.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
     final filterExpValue = double.tryParse(filterExp.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
     return appExp >= filterExpValue;
   }
-  Future<void> _onSendNotifications(
-      SendNotifications event,
-      Emitter<JobState> emit,
-      ) async {if (state is JobsLoaded) {
-      final currentState = state as JobsLoaded;
+  Future<void> _onAddJob(AddJob event, Emitter<JobState> emit) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('User not authenticated');
 
-      try {
-        // Send notifications to shortlisted applications
-        for (var application in currentState.shortlistedApplications) {
-          await _sendNotificationToApplicant(
-            application.userId,
-            'selected',
-            application.jobTitle,
-          );
-        }
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      final companyId = userDoc.get('companyId');
+      final companyName = userDoc.get('companyName');
 
-        // Send notifications to rejected applications
-        for (var application in currentState.rejectedApplications) {
-          await _sendNotificationToApplicant(
-            application.userId,
-            'rejected',
-            application.jobTitle,
-          );
-        }
-
-        // Clear the lists after sending notifications
-        emit(currentState.copyWith(
-          shortlistedApplications: [],
-          rejectedApplications: [],
-        ));
-      } catch (e) {
-        emit(JobError(e.toString()));
+      if (companyId == null || companyName == null) {
+        throw Exception('Company information is missing. Please update your profile.');
       }
-    }}
-  Future<void> _sendNotificationToApplicant(
-      String userId,
-      String status,
-      String jobTitle,
-      ) async {
+
+      final job = event.job.copyWith(
+        companyId: companyId,
+        companyName: companyName,
+      );
+
+      await _firestore.collection('jobs').add(job.toMap());
+      add(LoadJobs()); // Reload jobs after adding
+    } catch (e) {
+      emit(JobError(e.toString()));
+    }
+  }
+  Future<void> _sendNotificationToApplicant(String userId, String status, String jobTitle,) async {
     try {
       final userDoc = await _firestore.collection('users').doc(userId).get();
-      final tokens = userDoc.data()?['fcmTokens'] as List<dynamic>? ?? [];
+      final tokens = List<String>.from(userDoc.data()?['fcmTokens'] ?? []);
 
-      for (String token in tokens.cast<String>()) {
+      for (String token in tokens) {
         String title;
         String body;
 
         switch (status) {
-          case 'removed':
-            title = 'Application Update';
-            body = 'Your application status for $jobTitle has been updated.';
-            break;
-          case 'shortlistPending':
-            title = 'Application Update';
-            body = 'Your application for $jobTitle has caught our attention! We\'re reviewing it further.';
-            break;
-          case 'selected':
-            title = 'Congratulations!';
-            body = 'You have been selected for the position of $jobTitle!';
-            break;
-          case 'rejected':
-            title = 'Application Update';
-            body = 'Thank you for applying to $jobTitle. Unfortunately, we have decided to move forward with other candidates.';
-            break;
+        case 'shortlisted':
+        title = 'Application Update';
+        body = 'Your application for $jobTitle has been shortlisted!';
+        break;
+        case 'rejected':
+        title = 'Application Status';
+        body = 'Thank you for your interest in $jobTitle.';
+        break;
           default:
-            title = 'Application Status';
+            title = 'Application Update';
             body = 'There has been an update to your application for $jobTitle.';
         }
 
         await _firestore.collection('notifications').add({
+          'userId': userId,
           'token': token,
           'title': title,
           'body': body,
-          'timestamp': FieldValue.serverTimestamp(),
-          'userId': userId,
-          'status': status,
           'jobTitle': jobTitle,
+          'status': status,
+          'timestamp': FieldValue.serverTimestamp(),
         });
       }
     } catch (e) {
-      print('Error sending notification: $e');
+      if (kDebugMode) {
+        print('Error sending notification: $e');
+      }
+    }
+  }
+  Future<void> _refreshApplications(String jobId) async {
+    if (state is JobsLoaded) {
+      final currentState = state as JobsLoaded;
+
+      try {
+        final applicationsSnapshot = await _firestore
+            .collection('applications')
+            .where('jobId', isEqualTo: jobId)
+            .orderBy('timestamp', descending: true)
+            .get();
+
+        final applications = applicationsSnapshot.docs
+            .map((doc) => Application.fromFirestore(doc))
+            .toList();
+
+        final shortlisted = applications
+            .where((app) => app.status == 'shortlisted')
+            .toList();
+
+        final rejected = applications
+            .where((app) => app.status == 'rejected')
+            .toList();
+
+        final swiped = applications
+            .where((app) => app.status != 'pending')
+            .map((app) => app.id)
+            .toSet();
+
+        emit(currentState.copyWith(
+          applicationsByJob: Map.from(currentState.applicationsByJob)
+            ..[jobId] = applications,
+          shortlistedByJob: Map.from(currentState.shortlistedByJob)
+            ..[jobId] = shortlisted,
+          rejectedByJob: Map.from(currentState.rejectedByJob)
+            ..[jobId] = rejected,
+          swipedApplicationIdsByJob: Map.from(currentState.swipedApplicationIdsByJob)
+            ..[jobId] = swiped,
+          applicationCountByJob: Map.from(currentState.applicationCountByJob)
+            ..[jobId] = applications.length,
+          filteredApplications: currentState.selectedJob?.id == jobId ? applications : null,
+        ));
+      } catch (e) {
+        emit(JobError(e.toString()));
+      }
     }
   }
 }

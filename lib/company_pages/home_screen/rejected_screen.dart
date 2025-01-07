@@ -10,21 +10,21 @@ import 'favourites/components/application_details.dart';
 import 'filters_shortlist_screen/filter_option.dart';
 import 'filters_shortlist_screen/filter_section.dart';
 
-class ShortlistedScreen extends StatefulWidget {
+class RejectedScreen extends StatefulWidget {
   final String jobId;
   final String jobTitle;
 
-  const ShortlistedScreen({
+  const RejectedScreen({
     super.key,
     required this.jobId,
     required this.jobTitle,
   });
 
   @override
-  _ShortlistedScreenState createState() => _ShortlistedScreenState();
+  _RejectedScreenState createState() => _RejectedScreenState();
 }
 
-class _ShortlistedScreenState extends State<ShortlistedScreen> {
+class _RejectedScreenState extends State<RejectedScreen> {
   String _searchQuery = '';
   bool _isLoading = true;
   late FilterOptions filterOptions;
@@ -35,10 +35,10 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
     if (context.read<JobBloc>().state is JobsLoaded) {
       final state = context.read<JobBloc>().state as JobsLoaded;
       final applications = state.applicationsByJob[widget.jobId] ?? [];
-      final shortlistedApps = applications.where((app) => app.status == 'shortlisted').toList();
+      final rejectedApps = applications.where((app) => app.status == 'rejected').toList();
 
       setState(() {
-        filteredApplications = shortlistedApps.where((application) {
+        filteredApplications = rejectedApps.where((application) {
           bool matchesSearch = true;
           if (_searchQuery.isNotEmpty) {
             final searchLower = _searchQuery.toLowerCase();
@@ -97,6 +97,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
       });
     }
   }
+
   void _showFilterDialog() {
     showDialog(
       context: context,
@@ -112,31 +113,34 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
       ),
     );
   }
+
   void _updateApplicationLists() {
     if (context.read<JobBloc>().state is JobsLoaded) {
       final state = context.read<JobBloc>().state as JobsLoaded;
       final applications = state.applicationsByJob[widget.jobId] ?? [];
-      _originalApplications = applications.where((app) => app.status == 'shortlisted').toList();
+      _originalApplications = applications.where((app) => app.status == 'rejected').toList();
       _applyFilters();
     }
   }
+
   void _updateSearchResults(String query) {
     setState(() {
       _searchQuery = query;
       _applyFilters();
     });
   }
-  Future<void> _showRemoveConfirmation(Application application) async {
+
+  Future<void> _showRestoreConfirmation(Application application) async {
     final bloc = context.read<JobBloc>();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Remove Candidate',
+          'Restore Candidate',
           style: TextStyle(fontSize: 18.sp),
         ),
         content: Text(
-          'Are you sure you want to remove ${application.applicantName} from the shortlist?',
+          'Are you sure you want to restore ${application.applicantName} to the shortlist?',
           style: TextStyle(fontSize: 14.sp),
         ),
         actions: [
@@ -147,34 +151,34 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.green,
               foregroundColor: Colors.white,
             ),
-            child: Text('Remove', style: TextStyle(fontSize: 14.sp)),
+            child: Text('Restore', style: TextStyle(fontSize: 14.sp)),
           ),
         ],
       ),
     );
 
     if (result ?? false) {
-      // Update application status to rejected
+      // Update application status to shortlisted
       bloc.add(SwipeApplication(
         application: application,
-        isRightSwipe: false,
+        isRightSwipe: true,
       ));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${application.applicantName} removed from shortlist'),
-            backgroundColor: Colors.red,
+            content: Text('${application.applicantName} restored to shortlist'),
+            backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'Undo',
               textColor: Colors.white,
               onPressed: () {
                 bloc.add(SwipeApplication(
                   application: application,
-                  isRightSwipe: true,
+                  isRightSwipe: false,
                 ));
               },
             ),
@@ -200,7 +204,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
   }
 
   @override
-  void didUpdateWidget(ShortlistedScreen oldWidget) {
+  void didUpdateWidget(RejectedScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateApplicationLists();
   }
@@ -224,18 +228,18 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
           );
         }
 
-        final shortlistedApps = state.shortlistedByJob[widget.jobId] ?? [];
+        final rejectedApps = state.rejectedByJob[widget.jobId] ?? [];
 
         return Scaffold(
           backgroundColor: Colors.grey[50],
           appBar: AppBar(
             elevation: 0,
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: Colors.red,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Shortlisted Candidates',
+                  'Rejected Candidates',
                   style: TextStyle(color: Colors.white, fontSize: 18.sp),
                 ),
                 Text(
@@ -260,13 +264,13 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
           body: Column(
             children: [
               _buildSearchBar(),
-              _buildStatisticsCards(shortlistedApps),
+              _buildStatisticsCards(rejectedApps),
               Expanded(
                 child: _isLoading
                     ? _buildLoadingShimmer()
                     : _buildApplicationsList(
                   filteredApplications.isEmpty
-                      ? shortlistedApps
+                      ? rejectedApps
                       : filteredApplications,
                 ),
               ),
@@ -276,6 +280,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
       },
     );
   }
+
   Widget _buildSearchBar() {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -306,7 +311,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.r),
-            borderSide: const BorderSide(color: Colors.deepPurple),
+            borderSide: const BorderSide(color: Colors.red),
           ),
           filled: true,
           fillColor: Colors.grey[50],
@@ -318,6 +323,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
       ),
     );
   }
+
   Widget _buildStatisticsCards(List<Application> applications) {
     final newToday = applications
         .where((app) =>
@@ -326,7 +332,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
         .length;
 
     final pendingReview = applications
-        .where((app) => app.status == 'shortlisted')
+        .where((app) => app.status == 'rejected')
         .length;
 
     return Container(
@@ -337,27 +343,28 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         children: [
           _buildStatCard(
-            'Total Shortlisted',
+            'Total Rejected',
             applications.length.toString(),
             Icons.people_outline,
-            Colors.blue,
+            Colors.red,
           ),
           _buildStatCard(
             'New Today',
             newToday.toString(),
             Icons.today,
-            Colors.green,
+            Colors.orange,
           ),
           _buildStatCard(
             'Pending Review',
             pendingReview.toString(),
             Icons.pending_outlined,
-            Colors.orange,
+            Colors.grey,
           ),
         ],
       ),
     );
   }
+
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
       width: 140.w,
@@ -399,6 +406,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
       ),
     );
   }
+
   Widget _buildLoadingShimmer() {
     return ListView.builder(
       itemCount: 5,
@@ -419,8 +427,8 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
       },
     );
   }
+
   Widget _buildApplicationsList(List<Application> applications) {
-    final bloc = context.read<JobBloc>();
     if (applications.isEmpty) {
       return Center(
         child: Column(
@@ -430,7 +438,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
             SizedBox(height: 16.h),
             Text(
               _searchQuery.isEmpty
-                  ? 'No shortlisted candidates yet'
+                  ? 'No rejected candidates yet'
                   : 'No candidates match your search',
               style: TextStyle(
                 fontSize: 16.sp,
@@ -452,123 +460,109 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
             motion: const ScrollMotion(),
             children: [
               SlidableAction(
-                onPressed: (_) => _showRemoveConfirmation(application),
-                backgroundColor: Colors.red,
+                onPressed: (_) => _showRestoreConfirmation(application),
+                backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                icon: Icons.delete,
-                label: 'Remove',
+                icon: Icons.restore,
+                label: 'Restore',
               ),
             ],
           ),
-          child: _buildApplicationCard(application, bloc),
+          child: _buildApplicationCard(application),
         );
       },
     );
   }
-  Widget _buildApplicationCard(Application application, JobBloc bloc) {
-    return Slidable(
-      endActionPane: ActionPane(
-        motion: const ScrollMotion(),
-        children: [
-          SlidableAction(
-            onPressed: (_) => _showRemoveConfirmation(application),
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            icon: Icons.delete,
-            label: 'Remove',
-          ),
-        ],
+  Widget _buildApplicationCard(Application application) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 16.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
       ),
-      child: Card(
-        margin: EdgeInsets.only(bottom: 16.h),
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: InkWell(
-          onTap: () => _showApplicationDetails(application),
-          borderRadius: BorderRadius.circular(12.r),
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20.r,
-                      backgroundColor: Colors.deepPurple,
-                      child: Text(
-                        application.applicantName[0].toUpperCase(),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            application.applicantName,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            application.jobTitle,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      timeago.format(application.timestamp ?? DateTime.now()),
+      child: InkWell(
+        onTap: () => _showApplicationDetails(application),
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20.r,
+                    backgroundColor: Colors.red,
+                    child: Text(
+                      application.applicantName[0].toUpperCase(),
                       style: TextStyle(
-                        color: Colors.grey[500],
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          application.applicantName,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          application.jobTitle,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    timeago.format(application.timestamp ?? DateTime.now()),
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: application.skills.map((skill) {
+                  return Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      skill,
+                      style: TextStyle(
+                        color: Colors.red,
                         fontSize: 12.sp,
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: application.skills.map((skill) {
-                    return Container(
-                      margin: EdgeInsets.only(bottom: 8.h),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Text(
-                        skill,
-                        style: TextStyle(
-                          color: Colors.deepPurple,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+
   void _showApplicationDetails(Application application) {
     showModalBottomSheet(
       context: context,

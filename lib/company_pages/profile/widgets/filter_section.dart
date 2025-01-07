@@ -40,6 +40,7 @@ class FilterSection extends StatelessWidget {
                           : Colors.deepPurple,
                     ),
                   ),
+                  checkmarkColor: Colors.white,
                   selected: selectedFilter == filter,
                   onSelected: (selected) => onFilterSelected(filter),
                   selectedColor: Colors.deepPurple,
