@@ -15,6 +15,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  Bloc.observer = SimpleBlocObserver();
   runApp(const JobFinderApp());
 }
 
@@ -31,6 +32,7 @@ class JobFinderApp extends StatelessWidget {
           providers: [
             BlocProvider<JobBloc>(
               create: (context) => JobBloc(),
+              lazy: false, // Initialize immediately
             ),
           ],
           child: MaterialApp(
@@ -42,25 +44,29 @@ class JobFinderApp extends StatelessWidget {
             ),
             home: const AuthWrapper(),
             onGenerateRoute: (settings) {
+              // Wrap all routes that need JobBloc access with BlocProvider
+              Widget? page;
               switch (settings.name) {
                 case '/login':
-                  return MaterialPageRoute(
-                    builder: (_) => LoginScreen(),
-                  );
+                  page = LoginScreen();
+                  break;
                 case '/company_home':
-                  return MaterialPageRoute(
-                    builder: (context) => BlocProvider.value(
-                      value: BlocProvider.of<JobBloc>(context),
-                      child: const CompanyMainScreen(),
-                    ),
-                  );
+                  page = const CompanyMainScreen();
+                  break;
                 case '/job_seeker_home':
-                  return MaterialPageRoute(
-                    builder: (_) => JobSeekerHomeScreen(),
-                  );
+                  page = JobSeekerHomeScreen();
+                  break;
                 default:
                   return null;
               }
+
+              // Wrap the page with BlocProvider to ensure JobBloc is available
+              return MaterialPageRoute(
+                builder: (context) => BlocProvider.value(
+                  value: BlocProvider.of<JobBloc>(context),
+                  child: page,
+                ),
+              );
             },
           ),
         );

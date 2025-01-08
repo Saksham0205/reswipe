@@ -244,7 +244,18 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
                                 children: [
                                   IconButton(
                                     icon: const Icon(Icons.thumb_up_outlined, color: Colors.green),
-                                    onPressed: () => NavigationHelper.navigateToShortlisted(context, job.id, job.title),
+                                    onPressed: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => BlocProvider.value(
+                                          value: BlocProvider.of<JobBloc>(context),
+                                          child: ShortlistedScreen(
+                                            jobId: job.id,
+                                            jobTitle: job.title,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.thumb_down_outlined, color: Colors.red),
@@ -300,7 +311,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
       ),
     );
   }
-
   Widget _buildMainContent(JobsLoaded state) {
     return Container(
       decoration: BoxDecoration(
@@ -366,11 +376,16 @@ class NavigationHelper {
       String jobId,
       String jobTitle,
       ) {
-    Navigator.of(context).push(
+    // Get the current JobBloc instance
+    final jobBloc = BlocProvider.of<JobBloc>(context);
+
+    Navigator.push(
+      context,
       MaterialPageRoute(
-        builder: (context) => JobScreenWrapper(
-          jobId: jobId,
-          jobTitle: jobTitle,
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: jobBloc),
+          ],
           child: ShortlistedScreen(
             jobId: jobId,
             jobTitle: jobTitle,
@@ -385,11 +400,16 @@ class NavigationHelper {
       String jobId,
       String jobTitle,
       ) {
-    Navigator.of(context).push(
+    // Get the current JobBloc instance
+    final jobBloc = BlocProvider.of<JobBloc>(context);
+
+    Navigator.push(
+      context,
       MaterialPageRoute(
-        builder: (context) => JobScreenWrapper(
-          jobId: jobId,
-          jobTitle: jobTitle,
+        builder: (_) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: jobBloc),
+          ],
           child: RejectedScreen(
             jobId: jobId,
             jobTitle: jobTitle,
