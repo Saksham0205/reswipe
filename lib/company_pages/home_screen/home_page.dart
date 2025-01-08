@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:reswipe/State_management/company_state.dart';
 import 'package:reswipe/company_pages/home_screen/rejected_screen.dart';
 import 'package:reswipe/company_pages/home_screen/shortlisted_screen.dart';
-import '../../State_management/Company_state.dart';
 import 'components/applications_list.dart';
 import 'widgets/loading_shimmer.dart';
 import 'widgets/empty_state.dart';
@@ -376,7 +376,7 @@ class NavigationHelper {
       String jobId,
       String jobTitle,
       ) {
-    // Get the current JobBloc instance
+
     final jobBloc = BlocProvider.of<JobBloc>(context);
 
     Navigator.push(

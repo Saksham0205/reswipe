@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:reswipe/home_screen/screens/company_home_screen.dart';
-import 'State_management/Company_state.dart';
+import 'State_management/company_state.dart';
 import 'auth/auth_wrapper.dart';
 import 'auth/login_screen.dart';
 import 'firebase_options.dart';

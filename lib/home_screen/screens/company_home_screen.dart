@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:reswipe/home_screen/widgets/custom_button_nav.dart';
-import '../../State_management/Company_state.dart';
+import '../../State_management/company_state.dart';
 import '../../company_pages/company_settings_screen/settings_page.dart';
 import '../../company_pages/home_screen/home_page.dart' show HomeScreen;
 import '../../company_pages/job_posts/job_posts_screen.dart';

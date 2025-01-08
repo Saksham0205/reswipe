@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:reswipe/state_management/company_state.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../State_management/company_state.dart';
 import '../../models/company_model/applications.dart';
 import 'favourites/components/application_details.dart';
 import 'filters_shortlist_screen/filter_option.dart';
