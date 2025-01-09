@@ -11,7 +11,7 @@ import 'favourites/components/application_details.dart';
 import 'filters_shortlist_screen/filter_option.dart';
 import 'filters_shortlist_screen/filter_section.dart';
 
-class ShortlistedScreen extends StatefulWidget {
+class ShortlistedScreen extends StatelessWidget {
   final String jobId;
   final String jobTitle;
 
@@ -22,10 +22,35 @@ class ShortlistedScreen extends StatefulWidget {
   });
 
   @override
-  _ShortlistedScreenState createState() => _ShortlistedScreenState();
+  Widget build(BuildContext context) {
+    return BlocBuilder<JobBloc, JobState>(
+      builder: (context, state) {
+        if (state is JobInitial) {
+          context.read<JobBloc>().add(LoadJobs());
+        }
+        return ShortlistedScreenContent(
+          jobId: jobId,
+          jobTitle: jobTitle,
+        );
+      },
+    );
+  }
 }
 
-class _ShortlistedScreenState extends State<ShortlistedScreen> {
+class ShortlistedScreenContent extends StatefulWidget {
+  final String jobId;
+  final String jobTitle;
+
+  const ShortlistedScreenContent({
+    super.key,
+    required this.jobId,
+    required this.jobTitle,
+  });
+
+  @override
+  _ShortlistedScreenContentState createState() => _ShortlistedScreenContentState();
+}
+class _ShortlistedScreenContentState extends State<ShortlistedScreenContent> {
   String _searchQuery = '';
   bool _isLoading = true;
   late FilterOptions filterOptions;
@@ -61,26 +86,31 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
             matchesFilters = appSkills
                 .any((skill) => filterOptions.selectedSkills.contains(skill));
           }
+
           if (filterOptions.selectedLocations.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedLocations
                     .contains(StringUtils.toTitleCase(application.jobLocation));
           }
+
           if (filterOptions.selectedQualifications.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedQualifications
                     .contains(StringUtils.toTitleCase(application.qualification));
           }
+
           if (filterOptions.selectedEmploymentTypes.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedEmploymentTypes.contains(
                     StringUtils.toTitleCase(application.jobEmploymentType));
           }
+
           if (filterOptions.selectedColleges.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedColleges
                     .contains(StringUtils.toTitleCase(application.college));
           }
+
           if (filterOptions.selectedJobProfiles.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedJobProfiles
@@ -287,7 +317,6 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
     );
 
     if (result ?? false) {
-      // Update the application status to rejected
       await FirebaseFirestore.instance
           .collection('applications')
           .doc(application.id)
@@ -301,7 +330,6 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
         statusUpdatedAt: DateTime.now(),
       );
 
-      // Use the SwipeApplication event to update the state
       bloc.add(SwipeApplication(
         application: updatedApplication,
         isRightSwipe: false,
@@ -316,7 +344,6 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
               label: 'Undo',
               textColor: Colors.white,
               onPressed: () {
-                // Revert the application back to shortlisted status
                 bloc.add(SwipeApplication(
                   application: application,
                   isRightSwipe: true,
@@ -333,7 +360,6 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
   void initState() {
     super.initState();
     filterOptions = FilterOptions();
-    context.read<JobBloc>().add(LoadJobs());
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
         setState(() {
@@ -345,11 +371,10 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
   }
 
   @override
-  void didUpdateWidget(ShortlistedScreen oldWidget) {
+  void didUpdateWidget(ShortlistedScreenContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateApplicationLists();
   }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<JobBloc, JobState>(

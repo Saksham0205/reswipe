@@ -10,7 +10,7 @@ import 'favourites/components/application_details.dart';
 import 'filters_shortlist_screen/filter_option.dart';
 import 'filters_shortlist_screen/filter_section.dart';
 
-class RejectedScreen extends StatefulWidget {
+class RejectedScreen extends StatelessWidget {
   final String jobId;
   final String jobTitle;
 
@@ -21,10 +21,36 @@ class RejectedScreen extends StatefulWidget {
   });
 
   @override
-  _RejectedScreenState createState() => _RejectedScreenState();
+  Widget build(BuildContext context) {
+    return BlocBuilder<JobBloc, JobState>(
+      builder: (context, state) {
+        if (state is JobInitial) {
+          context.read<JobBloc>().add(LoadJobs());
+        }
+        return RejectedScreenContent(
+          jobId: jobId,
+          jobTitle: jobTitle,
+        );
+      },
+    );
+  }
 }
 
-class _RejectedScreenState extends State<RejectedScreen> {
+class RejectedScreenContent extends StatefulWidget {
+  final String jobId;
+  final String jobTitle;
+
+  const RejectedScreenContent({
+    super.key,
+    required this.jobId,
+    required this.jobTitle,
+  });
+
+  @override
+  _RejectedScreenContentState createState() => _RejectedScreenContentState();
+}
+
+class _RejectedScreenContentState extends State<RejectedScreenContent> {
   String _searchQuery = '';
   bool _isLoading = true;
   late FilterOptions filterOptions;
@@ -97,7 +123,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       });
     }
   }
-
   void _showFilterDialog() {
     showDialog(
       context: context,
@@ -113,7 +138,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       ),
     );
   }
-
   void _updateApplicationLists() {
     if (context.read<JobBloc>().state is JobsLoaded) {
       final state = context.read<JobBloc>().state as JobsLoaded;
@@ -122,14 +146,12 @@ class _RejectedScreenState extends State<RejectedScreen> {
       _applyFilters();
     }
   }
-
   void _updateSearchResults(String query) {
     setState(() {
       _searchQuery = query;
       _applyFilters();
     });
   }
-
   Future<void> _showRestoreConfirmation(Application application) async {
     final bloc = context.read<JobBloc>();
     final result = await showDialog<bool>(
@@ -161,7 +183,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
     );
 
     if (result ?? false) {
-      // Update application status to shortlisted
       bloc.add(SwipeApplication(
         application: application,
         isRightSwipe: true,
@@ -192,7 +213,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
   void initState() {
     super.initState();
     filterOptions = FilterOptions();
-    context.read<JobBloc>().add(LoadJobs());
     Future.delayed(const Duration(milliseconds: 800), () {
       if (mounted) {
         setState(() {
@@ -204,7 +224,7 @@ class _RejectedScreenState extends State<RejectedScreen> {
   }
 
   @override
-  void didUpdateWidget(RejectedScreen oldWidget) {
+  void didUpdateWidget(RejectedScreenContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateApplicationLists();
   }
@@ -280,7 +300,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       },
     );
   }
-
   Widget _buildSearchBar() {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -323,7 +342,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       ),
     );
   }
-
   Widget _buildStatisticsCards(List<Application> applications) {
     final newToday = applications
         .where((app) =>
@@ -364,7 +382,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       ),
     );
   }
-
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
       width: 140.w,
@@ -406,7 +423,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       ),
     );
   }
-
   Widget _buildLoadingShimmer() {
     return ListView.builder(
       itemCount: 5,
@@ -427,7 +443,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       },
     );
   }
-
   Widget _buildApplicationsList(List<Application> applications) {
     if (applications.isEmpty) {
       return Center(
@@ -562,7 +577,6 @@ class _RejectedScreenState extends State<RejectedScreen> {
       ),
     );
   }
-
   void _showApplicationDetails(Application application) {
     showModalBottomSheet(
       context: context,
