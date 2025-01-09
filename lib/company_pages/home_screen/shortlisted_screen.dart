@@ -1,10 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../State_management/company_state.dart';
+import '../../State_management/company_backend.dart';
 import '../../models/company_model/applications.dart';
 import 'favourites/components/application_details.dart';
 import 'filters_shortlist_screen/filter_option.dart';
@@ -34,11 +35,10 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
   void _applyFilters() {
     if (context.read<JobBloc>().state is JobsLoaded) {
       final state = context.read<JobBloc>().state as JobsLoaded;
-      final applications = state.applicationsByJob[widget.jobId] ?? [];
-      final shortlistedApps = applications.where((app) => app.status == 'shortlisted').toList();
+      final applications = state.shortlistedByJob[widget.jobId] ?? [];
 
       setState(() {
-        filteredApplications = shortlistedApps.where((application) {
+        filteredApplications = applications.where((application) {
           bool matchesSearch = true;
           if (_searchQuery.isNotEmpty) {
             final searchLower = _searchQuery.toLowerCase();
@@ -61,31 +61,26 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
             matchesFilters = appSkills
                 .any((skill) => filterOptions.selectedSkills.contains(skill));
           }
-
           if (filterOptions.selectedLocations.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedLocations
                     .contains(StringUtils.toTitleCase(application.jobLocation));
           }
-
           if (filterOptions.selectedQualifications.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedQualifications
                     .contains(StringUtils.toTitleCase(application.qualification));
           }
-
           if (filterOptions.selectedEmploymentTypes.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedEmploymentTypes.contains(
                     StringUtils.toTitleCase(application.jobEmploymentType));
           }
-
           if (filterOptions.selectedColleges.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedColleges
                     .contains(StringUtils.toTitleCase(application.college));
           }
-
           if (filterOptions.selectedJobProfiles.isNotEmpty) {
             matchesFilters = matchesFilters &&
                 filterOptions.selectedJobProfiles
@@ -115,8 +110,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
   void _updateApplicationLists() {
     if (context.read<JobBloc>().state is JobsLoaded) {
       final state = context.read<JobBloc>().state as JobsLoaded;
-      final applications = state.applicationsByJob[widget.jobId] ?? [];
-      _originalApplications = applications.where((app) => app.status == 'shortlisted').toList();
+      _originalApplications = state.shortlistedByJob[widget.jobId] ?? [];
       _applyFilters();
     }
   }
@@ -126,17 +120,153 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
       _applyFilters();
     });
   }
+  void _acceptShortlistedApplications() async {
+    final bloc = context.read<JobBloc>();
+    final state = bloc.state;
+
+    if (state is JobsLoaded) {
+      final applications = state.shortlistedByJob[widget.jobId] ?? [];
+
+      if (applications.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('No shortlisted applications to accept'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        return;
+      }
+
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          backgroundColor: Colors.white,
+          elevation: 8,
+          title: Column(
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.deepPurple,
+                size: 48,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Accept Shortlisted Candidates',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple[800],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: Container(
+            decoration: BoxDecoration(
+              color: Colors.deepPurple[50],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Are you sure you want to accept ${applications.length} shortlisted candidate(s)?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.deepPurple[900],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'This action cannot be undone.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.deepPurple[700],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.deepPurple[700],
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 2,
+              ),
+              child: const Text(
+                'Accept',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (result ?? false) {
+        bloc.add(AcceptShortlistedApplications(widget.jobId, applications));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Successfully accepted shortlisted candidates'),
+                ],
+              ),
+              backgroundColor: Colors.deepPurple,
+              duration: const Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
   Future<void> _showRemoveConfirmation(Application application) async {
     final bloc = context.read<JobBloc>();
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Remove Candidate',
+          'Remove and Reject Candidate',
           style: TextStyle(fontSize: 18.sp),
         ),
         content: Text(
-          'Are you sure you want to remove ${application.applicantName} from the shortlist?',
+          'Are you sure you want to remove ${application.applicantName} from the shortlist? This will mark their application as rejected.',
           style: TextStyle(fontSize: 14.sp),
         ),
         actions: [
@@ -150,28 +280,43 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text('Remove', style: TextStyle(fontSize: 14.sp)),
+            child: Text('Remove & Reject', style: TextStyle(fontSize: 14.sp)),
           ),
         ],
       ),
     );
 
     if (result ?? false) {
-      // Update application status to rejected
+      // Update the application status to rejected
+      await FirebaseFirestore.instance
+          .collection('applications')
+          .doc(application.id)
+          .update({
+        'status': 'rejected',
+        'statusUpdatedAt': FieldValue.serverTimestamp(),
+      });
+
+      final updatedApplication = application.copyWith(
+        status: 'rejected',
+        statusUpdatedAt: DateTime.now(),
+      );
+
+      // Use the SwipeApplication event to update the state
       bloc.add(SwipeApplication(
-        application: application,
+        application: updatedApplication,
         isRightSwipe: false,
       ));
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${application.applicantName} removed from shortlist'),
+            content: Text('${application.applicantName} removed from shortlist and marked as rejected'),
             backgroundColor: Colors.red,
             action: SnackBarAction(
               label: 'Undo',
               textColor: Colors.white,
               onPressed: () {
+                // Revert the application back to shortlisted status
                 bloc.add(SwipeApplication(
                   application: application,
                   isRightSwipe: true,
@@ -272,6 +417,17 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
               ),
             ],
           ),
+          floatingActionButton: shortlistedApps.isNotEmpty
+              ? FloatingActionButton.extended(
+            onPressed: _acceptShortlistedApplications,
+            backgroundColor: Colors.green,
+            icon: Icon(Icons.check_circle_outline, size: 24.sp),
+            label: Text(
+              'Accept All',
+              style: TextStyle(fontSize: 14.sp),
+            ),
+          )
+              : null,
         );
       },
     );
@@ -352,7 +508,7 @@ class _ShortlistedScreenState extends State<ShortlistedScreen> {
             'Pending Review',
             pendingReview.toString(),
             Icons.pending_outlined,
-            Colors.orange,
+            Colors.grey,
           ),
         ],
       ),

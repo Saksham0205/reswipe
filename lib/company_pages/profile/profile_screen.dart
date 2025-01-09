@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../State_management/company_state.dart';
+import '../../State_management/company_backend.dart';
 import '../../models/company_model/job.dart';
 import 'widgets/header_section.dart';
 import 'widgets/filter_section.dart';
 import 'widgets/job_list_section.dart';
 import 'widgets/job_details_dialog.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  Widget build(BuildContext context) {
+    return BlocBuilder<JobBloc, JobState>(
+      builder: (context, state) {
+        if (state is JobInitial) {
+          context.read<JobBloc>().add(LoadJobs());
+        }
+        return const ProfileScreenContent();
+      },
+    );
+  }
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class ProfileScreenContent extends StatefulWidget {
+  const ProfileScreenContent({super.key});
+
+  @override
+  _ProfileScreenContentState createState() => _ProfileScreenContentState();
+}
+
+class _ProfileScreenContentState extends State<ProfileScreenContent> {
   final List<String> _filters = ['All', 'Full-time', 'Part-time', 'Internship', 'Contract'];
 
   void _showJobDetails(BuildContext context, Job job) {
@@ -25,6 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
   void _confirmDeleteJob(BuildContext context, Job job) {
     showDialog(
       context: context,
@@ -72,13 +89,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    // Dispatch LoadJobs event when the screen initializes
-    context.read<JobBloc>().add(LoadJobs());
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -94,11 +104,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
           },
           builder: (context, state) {
-            if (state is JobInitial) {
-              // Add LoadJobs event if we're still in initial state
-              context.read<JobBloc>().add(LoadJobs());
-              return const Center(child: CircularProgressIndicator());
-            }
             if (state is JobLoading) {
               return const Center(child: CircularProgressIndicator());
             }

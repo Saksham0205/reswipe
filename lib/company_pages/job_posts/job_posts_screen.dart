@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
-import '../../State_management/company_state.dart';
+import '../../State_management/company_backend.dart';
 import '../../models/company_model/job.dart';
 import 'components/custom_snackbar.dart';
 import 'components/form_sections.dart';

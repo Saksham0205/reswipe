@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:reswipe/State_management/company_state.dart';
 import 'package:reswipe/company_pages/home_screen/rejected_screen.dart';
 import 'package:reswipe/company_pages/home_screen/shortlisted_screen.dart';
+import '../../State_management/company_backend.dart';
 import 'components/applications_list.dart';
 import 'widgets/loading_shimmer.dart';
 import 'widgets/empty_state.dart';
@@ -38,6 +38,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
   late AnimationController _animationController;
   late Animation<double> _animation;
   bool _showJobFilter = false;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
@@ -61,6 +62,11 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
     super.dispose();
   }
 
+  Future<void> _handleRefresh() async {
+    context.read<JobBloc>().add(Refresh());
+    return Future.delayed(const Duration(seconds: 1)); // Minimum refresh time
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<JobBloc, JobState>(
@@ -78,25 +84,53 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
         if (state is JobsLoaded) {
           return Scaffold(
             appBar: _buildAppBar(context, state),
-            body: Stack(
-              children: [
-                _buildMainContent(state),
-                if (_showJobFilter)
-                  _buildJobFilterOverlay(context, state),
-              ],
+            body: RefreshIndicator(
+              key: _refreshIndicatorKey,
+              onRefresh: _handleRefresh,
+              child: Stack(
+                children: [
+                  _buildMainContent(state),
+                  if (_showJobFilter)
+                    _buildJobFilterOverlay(context, state),
+                  if (state.lastSwipedApplication != null)
+                    _buildFloatingUndoButton(context, state),
+                ],
+              ),
             ),
           );
         }
         return Scaffold(
           appBar: _buildAppBar(context, null),
-          body: EmptyState(
-            onRefresh: () => context.read<JobBloc>().add(Refresh()),
+          body: RefreshIndicator(
+            key: _refreshIndicatorKey,
+            onRefresh: _handleRefresh,
+            child: EmptyState(
+              onRefresh: () => context.read<JobBloc>().add(Refresh()),
+            ),
           ),
         );
       },
     );
   }
+  Widget _buildFloatingUndoButton(BuildContext context, JobsLoaded state) {
+    if (state.lastSwipedApplication == null) return const SizedBox.shrink();
 
+    return Positioned(
+      bottom: 100.h,
+      right: 16.w,
+      child: FloatingActionButton.extended(
+        backgroundColor: Colors.deepPurple.withOpacity(0.9),
+        onPressed: () {
+          context.read<JobBloc>().add(UndoSwipe(state.lastSwipedApplication!));
+        },
+        icon: const Icon(Icons.undo, color: Colors.white),
+        label: const Text(
+          'Undo',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
   PreferredSizeWidget _buildAppBar(BuildContext context, JobsLoaded? state) {
     return AppBar(
       elevation: 2,
@@ -121,7 +155,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
       ],
     );
   }
-
   Widget _buildJobSelector(BuildContext context, JobsLoaded? state) {
     final selectedJob = state?.selectedJob;
     return Padding(
@@ -150,7 +183,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
       ),
     );
   }
-
   Widget _buildJobFilterOverlay(BuildContext context, JobsLoaded state) {
     return GestureDetector(
       onTap: () => setState(() => _showJobFilter = false),
@@ -191,11 +223,10 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
                       itemCount: state.jobs.length,
                       itemBuilder: (context, index) {
                         final job = state.jobs[index];
-                        final totalApplications = state.applicationsByJob[job.id]?.length ?? 0;
+                        final totalApplications = state.applicationCountByJob[job.id] ?? 0;
                         final shortlistedCount = state.shortlistedByJob[job.id]?.length ?? 0;
                         final rejectedCount = state.rejectedByJob[job.id]?.length ?? 0;
-                        final pendingCount = totalApplications - shortlistedCount - rejectedCount;
-
+                        final pendingCount = state.applicationsByJob[job.id]?.length ?? 0;
                         return Column(
                           children: [
                             ListTile(
@@ -225,16 +256,24 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
                                         '$totalApplications total',
                                         Colors.blue,
                                       ),
-                                      _buildStatChip(
-                                        Icons.thumb_up_outlined,
-                                        '$shortlistedCount right',
-                                        Colors.green,
-                                      ),
-                                      _buildStatChip(
-                                        Icons.thumb_down_outlined,
-                                        '$rejectedCount left',
-                                        Colors.red,
-                                      ),
+                                      if (shortlistedCount > 0)
+                                        _buildStatChip(
+                                          Icons.thumb_up_outlined,
+                                          '$shortlistedCount shortlisted',
+                                          Colors.green,
+                                        ),
+                                      if (rejectedCount > 0)
+                                        _buildStatChip(
+                                          Icons.thumb_down_outlined,
+                                          '$rejectedCount rejected',
+                                          Colors.red,
+                                        ),
+                                      if (pendingCount > 0)
+                                        _buildStatChip(
+                                          Icons.pending_outlined,
+                                          '$pendingCount pending',
+                                          Colors.orange,
+                                        ),
                                     ],
                                   ),
                                 ],
@@ -283,7 +322,6 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
       ),
     );
   }
-
   Widget _buildStatChip(IconData icon, String label, Color color) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -312,6 +350,21 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
     );
   }
   Widget _buildMainContent(JobsLoaded state) {
+    final selectedJob = state.selectedJob;
+    if (selectedJob == null) {
+      return const Center(
+        child: Text('Please select a job to view applications'),
+      );
+    }
+
+    final jobId = selectedJob.id;
+    final totalApplications = state.applicationCountByJob[jobId] ?? 0;
+    final shortlisted = state.shortlistedByJob[jobId]?.length ?? 0;
+    final rejected = state.rejectedByJob[jobId]?.length ?? 0;
+
+    // Get only pending applications (not filtered)
+    final currentApplications = state.applicationsByJob[jobId] ?? [];
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -325,46 +378,29 @@ class _HomeScreenContentState extends State<HomeScreenContent> with SingleTicker
           SizedBox(height: 16.h),
           Expanded(
             child: ApplicationList(
-              applications: state.filteredApplications,
+              applications: currentApplications,
               controller: _cardController,
               animation: _animation,
-              onSwipe: (application) {
+              onSwipe: (application, isRightSwipe) {
                 context.read<JobBloc>().add(
                   SwipeApplication(
                     application: application,
-                    isRightSwipe: true,
+                    isRightSwipe: isRightSwipe,
                   ),
                 );
               },
+              onReset: () {
+                context.read<JobBloc>().add(
+                  ResetJobApplications(selectedJob.id),
+                );
+              },
+              lastSwipedApplication: state.lastSwipedApplication,
+              totalApplications: totalApplications,
+              swipedLeft: rejected,
+              swipedRight: shortlisted,
             ),
           ),
         ],
-      ),
-    );
-  }
-  void navigateToShortlisted(BuildContext context, String jobId, String jobTitle) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: context.read<JobBloc>(),
-          child: ShortlistedScreen(
-            jobId: jobId,
-            jobTitle: jobTitle,
-          ),
-        ),
-      ),
-    );
-  }
-  void navigateToRejected(BuildContext context, String jobId, String jobTitle) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: context.read<JobBloc>(),
-          child: RejectedScreen(
-            jobId: jobId,
-            jobTitle: jobTitle,
-          ),
-        ),
       ),
     );
   }
@@ -425,11 +461,11 @@ class JobScreenWrapper extends StatelessWidget {
   final Widget child;
 
   const JobScreenWrapper({
-    Key? key,
+    super.key,
     required this.jobId,
     required this.jobTitle,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

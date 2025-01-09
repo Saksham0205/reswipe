@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:reswipe/home_screen/widgets/custom_button_nav.dart';
-import '../../State_management/company_state.dart';
+import '../../State_management/company_backend.dart';
 import '../../company_pages/company_settings_screen/settings_page.dart';
 import '../../company_pages/home_screen/home_page.dart' show HomeScreen;
 import '../../company_pages/job_posts/job_posts_screen.dart';
@@ -22,13 +22,11 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
   @override
   void initState() {
     super.initState();
-    // Get the JobBloc instance from the parent context
     _jobBloc = BlocProvider.of<JobBloc>(context, listen: false);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Wrap the entire screen with BlocProvider.value
     return BlocProvider.value(
       value: _jobBloc,
       child: Builder(

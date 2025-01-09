@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Application {
@@ -93,6 +94,109 @@ class Application {
       companyLikesCount: data['companyLikesCount'] ?? 0,
     );
   }
+  String toJson() {
+    return json.encode({
+      'id': id,
+      'jobId': jobId,
+      'jobTitle': jobTitle,
+      'jobDescription': jobDescription,
+      'jobResponsibilities': jobResponsibilities,
+      'jobQualifications': jobQualifications,
+      'jobSalaryRange': jobSalaryRange,
+      'jobLocation': jobLocation,
+      'jobEmploymentType': jobEmploymentType,
+      'companyId': companyId,
+      'companyName': companyName,
+      'userId': userId,
+      'applicantName': applicantName,
+      'email': email,
+      'qualification': qualification,
+      'jobProfile': jobProfile,
+      'skills': skills,
+      'experience': experience,
+      'achievements': achievements,
+      'college': college,
+      'projects': projects,
+      'resumeUrl': resumeUrl,
+      'profileImageUrl': profileImageUrl,
+      'status': status,
+      'timestamp': timestamp?.toIso8601String(),
+      'statusUpdatedAt': statusUpdatedAt?.toIso8601String(),
+      'companyLikesCount': companyLikesCount,
+    });
+  }
+  factory Application.fromJson(String jsonString) {
+    final Map<String, dynamic> data = json.decode(jsonString);
+
+    return Application(
+      id: data['id'] ?? '',
+      jobId: data['jobId'] ?? '',
+      jobTitle: data['jobTitle'] ?? '',
+      jobDescription: data['jobDescription'] ?? '',
+      jobResponsibilities: _convertToStringList(data['jobResponsibilities']),
+      jobQualifications: _convertToStringList(data['jobQualifications']),
+      jobSalaryRange: data['jobSalaryRange'] ?? '',
+      jobLocation: data['jobLocation'] ?? '',
+      jobEmploymentType: data['jobEmploymentType'] ?? '',
+      companyId: data['companyId'] ?? '',
+      companyName: data['companyName'] ?? '',
+      userId: data['userId'] ?? '',
+      applicantName: data['applicantName'] ?? '',
+      email: data['email'] ?? '',
+      qualification: data['qualification'] ?? '',
+      jobProfile: data['jobProfile'] ?? '',
+      skills: _convertToStringList(data['skills']),
+      experience: _convertToStringList(data['experience']),
+      achievements: _convertToStringList(data['achievements']),
+      college: data['college'] ?? '',
+      projects: _convertToStringList(data['projects']),
+      resumeUrl: data['resumeUrl'] ?? '',
+      profileImageUrl: data['profileImageUrl'] ?? '',
+      status: data['status'] ?? 'pending',
+      timestamp: data['timestamp'] != null
+          ? DateTime.parse(data['timestamp'])
+          : null,
+      statusUpdatedAt: data['statusUpdatedAt'] != null
+          ? DateTime.parse(data['statusUpdatedAt'])
+          : null,
+      companyLikesCount: data['companyLikesCount'] ?? 0,
+    );
+  }
+  factory Application.fromMap(Map<String, dynamic> data) {
+    return Application(
+      id: data['id'] ?? '',
+      jobId: data['jobId'] ?? '',
+      jobTitle: data['jobTitle'] ?? '',
+      jobDescription: data['jobDescription'] ?? '',
+      jobResponsibilities: _convertToStringList(data['jobResponsibilities']),
+      jobQualifications: _convertToStringList(data['jobQualifications']),
+      jobSalaryRange: data['jobSalaryRange'] ?? '',
+      jobLocation: data['jobLocation'] ?? '',
+      jobEmploymentType: data['jobEmploymentType'] ?? '',
+      companyId: data['companyId'] ?? '',
+      companyName: data['companyName'] ?? '',
+      userId: data['userId'] ?? '',
+      applicantName: data['applicantName'] ?? '',
+      email: data['email'] ?? '',
+      qualification: data['qualification'] ?? '',
+      jobProfile: data['jobProfile'] ?? '',
+      skills: _convertToStringList(data['skills']),
+      experience: _convertToStringList(data['experience']),
+      achievements: _convertToStringList(data['achievements']),
+      college: data['college'] ?? '',
+      projects: _convertToStringList(data['projects']),
+      resumeUrl: data['resumeUrl'] ?? '',
+      profileImageUrl: data['profileImageUrl'] ?? '',
+      status: data['status'] ?? 'pending',
+      timestamp: data['timestamp'] is Timestamp
+          ? (data['timestamp'] as Timestamp).toDate()
+          : data['timestamp']?.toDate(),
+      statusUpdatedAt: data['statusUpdatedAt'] is Timestamp
+          ? (data['statusUpdatedAt'] as Timestamp).toDate()
+          : data['statusUpdatedAt']?.toDate(),
+      companyLikesCount: data['companyLikesCount'] ?? 0,
+    );
+  }
 
   // Updated helper method to handle various data types more robustly
   static List<String> _convertToStringList(dynamic value) {
@@ -119,6 +223,7 @@ class Application {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'jobId': jobId,
       'jobTitle': jobTitle,
       'jobDescription': jobDescription,
@@ -142,8 +247,8 @@ class Application {
       'resumeUrl': resumeUrl,
       'profileImageUrl': profileImageUrl,
       'status': status,
-      'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : FieldValue.serverTimestamp(),
-      'statusUpdatedAt': statusUpdatedAt != null ? Timestamp.fromDate(statusUpdatedAt!) : FieldValue.serverTimestamp(),
+      'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : null,
+      'statusUpdatedAt': statusUpdatedAt != null ? Timestamp.fromDate(statusUpdatedAt!) : null,
       'companyLikesCount': companyLikesCount,
     };
   }

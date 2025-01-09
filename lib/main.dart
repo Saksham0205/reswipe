@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:reswipe/home_screen/screens/company_home_screen.dart';
-import 'State_management/company_state.dart';
+import 'State_management/company_backend.dart';
 import 'auth/auth_wrapper.dart';
 import 'auth/login_screen.dart';
 import 'firebase_options.dart';
@@ -14,13 +15,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
+  final prefs = await SharedPreferences.getInstance();
   Bloc.observer = SimpleBlocObserver();
-  runApp(const JobFinderApp());
+  runApp(JobFinderApp(prefs: prefs));
 }
 
 class JobFinderApp extends StatelessWidget {
-  const JobFinderApp({Key? key}) : super(key: key);
+  final SharedPreferences prefs;
+
+  const JobFinderApp({
+    Key? key,
+    required this.prefs,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +37,8 @@ class JobFinderApp extends StatelessWidget {
         return MultiBlocProvider(
           providers: [
             BlocProvider<JobBloc>(
-              create: (context) => JobBloc(),
-              lazy: false, // Initialize immediately
+              create: (context) => JobBloc(prefs: prefs),
+              lazy: false,
             ),
           ],
           child: MaterialApp(
@@ -44,7 +50,6 @@ class JobFinderApp extends StatelessWidget {
             ),
             home: const AuthWrapper(),
             onGenerateRoute: (settings) {
-              // Wrap all routes that need JobBloc access with BlocProvider
               Widget? page;
               switch (settings.name) {
                 case '/login':
@@ -60,7 +65,6 @@ class JobFinderApp extends StatelessWidget {
                   return null;
               }
 
-              // Wrap the page with BlocProvider to ensure JobBloc is available
               return MaterialPageRoute(
                 builder: (context) => BlocProvider.value(
                   value: BlocProvider.of<JobBloc>(context),
