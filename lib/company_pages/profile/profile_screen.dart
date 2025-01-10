@@ -9,6 +9,8 @@ import 'widgets/job_list_section.dart';
 import 'widgets/job_details_dialog.dart';
 
 class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<JobBloc, JobState>(
@@ -128,6 +130,8 @@ class _ProfileScreenContentState extends State<ProfileScreenContent> {
                       onJobTap: (context, job) => _showJobDetails(context, job),
                       onJobUpdate: (job, updates) =>
                           context.read<JobBloc>().add(UpdateJob(job, updates)),
+                      onJobDelete: (job) =>
+                          context.read<JobBloc>().add(DeleteJob(job.id)),
                       sortOrder: state.sortOrder,
                     ),
                   ),

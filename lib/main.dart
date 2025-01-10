@@ -24,9 +24,9 @@ class JobFinderApp extends StatelessWidget {
   final SharedPreferences prefs;
 
   const JobFinderApp({
-    Key? key,
+    super.key,
     required this.prefs,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

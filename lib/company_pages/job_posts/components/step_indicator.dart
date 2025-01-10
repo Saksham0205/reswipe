@@ -6,10 +6,10 @@ class StepIndicator extends StatelessWidget {
   final Map<int, bool> completedSections;
 
   const StepIndicator({
-    Key? key,
+    super.key,
     required this.currentStep,
     required this.completedSections,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class StepIndicator extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -49,7 +49,7 @@ class StepIndicator extends StatelessWidget {
         borderRadius: BorderRadius.circular(2.r),
       ),
       child: AnimatedFractionallySizedBox(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         alignment: Alignment.centerLeft,
         widthFactor: (currentStep + 1) / totalSteps,
         child: Container(
@@ -90,7 +90,7 @@ class StepIndicator extends StatelessWidget {
     return Column(
       children: [
         TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 300),
           tween: Tween(begin: 1.0, end: isActive ? 1.1 : 1.0),
           builder: (context, scale, child) {
             return Transform.scale(
@@ -115,7 +115,7 @@ class StepIndicator extends StatelessWidget {
                           ? Colors.deepPurple.withOpacity(0.3)
                           : Colors.transparent,
                       blurRadius: 8,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),

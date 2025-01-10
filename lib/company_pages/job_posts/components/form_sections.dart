@@ -5,23 +5,25 @@ import 'custom_text_field.dart';
 class FormSections extends StatelessWidget {
   final int currentStep;
   final Map<String, TextEditingController> controllers;
+  final Map<String, FocusNode> focusNodes;
   final String employmentType;
   final Function(String) onEmploymentTypeChanged;
   final Function() onFieldChanged;
 
   const FormSections({
-    Key? key,
+    super.key,
     required this.currentStep,
     required this.controllers,
+    required this.focusNodes,
     required this.employmentType,
     required this.onEmploymentTypeChanged,
     required this.onFieldChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       child: _buildCurrentSection(),
     );
   }
@@ -35,7 +37,7 @@ class FormSections extends StatelessWidget {
       case 2:
         return _buildRequirementsSection();
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
   }
 
@@ -45,6 +47,7 @@ class FormSections extends StatelessWidget {
       children: [
         CustomTextField(
           controller: controllers['title']!,
+          focusNode: focusNodes['title']!,
           label: 'Job Title',
           icon: Icons.work,
           onChanged: (_) => onFieldChanged(),
@@ -52,6 +55,7 @@ class FormSections extends StatelessWidget {
         SizedBox(height: 16.h),
         CustomTextField(
           controller: controllers['description']!,
+          focusNode: focusNodes['description']!,
           label: 'Job Description',
           icon: Icons.description,
           maxLines: 5,
@@ -67,6 +71,7 @@ class FormSections extends StatelessWidget {
       children: [
         CustomTextField(
           controller: controllers['responsibilities']!,
+          focusNode: focusNodes['responsibilities']!,
           label: 'Responsibilities',
           icon: Icons.list,
           maxLines: 5,
@@ -76,6 +81,7 @@ class FormSections extends StatelessWidget {
         SizedBox(height: 16.h),
         CustomTextField(
           controller: controllers['qualifications']!,
+          focusNode: focusNodes['qualifications']!,
           label: 'Qualifications',
           icon: Icons.school,
           maxLines: 5,
@@ -95,6 +101,7 @@ class FormSections extends StatelessWidget {
             Expanded(
               child: CustomTextField(
                 controller: controllers['salaryRange']!,
+                focusNode: focusNodes['salaryRange']!,
                 label: 'Salary Range',
                 icon: Icons.currency_rupee,
                 onChanged: (_) => onFieldChanged(),
@@ -104,6 +111,7 @@ class FormSections extends StatelessWidget {
             Expanded(
               child: CustomTextField(
                 controller: controllers['location']!,
+                focusNode: focusNodes['location']!,
                 label: 'Location',
                 icon: Icons.location_on,
                 onChanged: (_) => onFieldChanged(),
@@ -119,23 +127,62 @@ class FormSections extends StatelessWidget {
 
   Widget _buildEmploymentTypeDropdown() {
     return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.deepPurple.shade200),
+        color: Colors.deepPurple.shade50,
       ),
       child: DropdownButtonFormField<String>(
         value: employmentType,
         decoration: InputDecoration(
           labelText: 'Employment Type',
-          prefixIcon: Icon(Icons.business_center),
+          labelStyle: TextStyle(
+            color: Colors.deepPurple.shade700,
+            fontWeight: FontWeight.w500,
+          ),
+          prefixIcon: Icon(
+            Icons.business_center_rounded,
+            color: Colors.deepPurple.shade400,
+          ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          filled: true,
+          fillColor: Colors.transparent,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.transparent),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+          ),
         ),
-        items: ['Full-time', 'Part-time', 'Contract', 'Internship']
-            .map((String value) {
+        icon: const Icon(
+          Icons.arrow_drop_down_rounded,
+          color: Colors.deepPurple,
+        ),
+        dropdownColor: Colors.white,
+        style: TextStyle(
+          color: Colors.deepPurple.shade900,
+          fontSize: 16,
+        ),
+        items: [
+          'Full-time',
+          'Part-time',
+          'Contract',
+          'Internship',
+          'Freelance',
+          'Remote'
+        ].map((String value) {
           return DropdownMenuItem<String>(
             value: value,
-            child: Text(value),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w400,
+              ),
+            ),
           );
         }).toList(),
         onChanged: (String? newValue) {

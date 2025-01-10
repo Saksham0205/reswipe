@@ -33,9 +33,9 @@ class _CompanyMainScreenState extends State<CompanyMainScreen> {
         builder: (context) {
           _screens = [
             const HomeScreen(),
-            JobPostScreen(),
+            const JobPostScreen(),
             CompanySettingsPage(),
-            ProfileScreen(),
+            const ProfileScreen(),
           ];
 
           return Scaffold(

@@ -9,6 +9,7 @@ class JobListSection extends StatelessWidget {
   final String selectedFilter;
   final Function(BuildContext, Job) onJobTap;
   final Function(Job, Map<String, dynamic>) onJobUpdate;
+  final Function(Job) onJobDelete;
   final SortOrder sortOrder;
 
   const JobListSection({
@@ -17,6 +18,7 @@ class JobListSection extends StatelessWidget {
     required this.selectedFilter,
     required this.onJobTap,
     required this.onJobUpdate,
+    required this.onJobDelete,
     required this.sortOrder,
   });
 
@@ -80,6 +82,7 @@ class JobListSection extends StatelessWidget {
             job: jobs[index],
             onTap: () => onJobTap(context, jobs[index]),
             onUpdate: onJobUpdate,
+            onDelete: onJobDelete,
             isEditable: true,
           ),
         );

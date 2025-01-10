@@ -259,7 +259,6 @@ class JobBloc extends Bloc<JobEvent, JobState> {
     final applications = applicationsByJob[jobId] ?? [];
     final shortlisted = shortlistedByJob[jobId] ?? [];
     final rejected = rejectedByJob[jobId] ?? [];
-
     return {
       'total': applications.length,
       'shortlisted': shortlisted.length,
@@ -787,6 +786,16 @@ class JobBloc extends Bloc<JobEvent, JobState> {
         throw Exception('Company information is missing. Please update your profile.');
       }
 
+      // Check job posting limit
+      final existingJobs = await _firestore
+          .collection('jobs')
+          .where('companyId', isEqualTo: companyId)
+          .get();
+
+      if (existingJobs.docs.length >= 3) {
+        throw Exception('You have reached the maximum limit of 3 job postings. Please delete an existing job before posting a new one.');
+      }
+
       // Use the Job model's copyWith to create a new job with company info
       final job = event.job.copyWith(
         companyId: companyId,
@@ -794,7 +803,16 @@ class JobBloc extends Bloc<JobEvent, JobState> {
         timestamp: DateTime.now(),
       );
 
-      await _firestore.collection('jobs').add(job.toMap());
+      // Add the job and wait for completion
+      final docRef = await _firestore.collection('jobs').add(job.toMap());
+
+      // Verify the job was added successfully
+      final newJob = await docRef.get();
+      if (!newJob.exists) {
+        throw Exception('Failed to create job posting. Please try again.');
+      }
+
+      // Reload jobs only after successful creation
       add(LoadJobs());
     } catch (e) {
       emit(JobError(e.toString()));

@@ -8,6 +8,7 @@ class JobCard extends StatelessWidget {
   final Job job;
   final VoidCallback onTap;
   final Function(Job, Map<String, dynamic>)? onUpdate;
+  final Function(Job)? onDelete;
   final bool isEditable;
 
   const JobCard({
@@ -15,6 +16,7 @@ class JobCard extends StatelessWidget {
     required this.job,
     required this.onTap,
     this.onUpdate,
+    this.onDelete,
     this.isEditable = false,
   });
 
@@ -28,6 +30,93 @@ class JobCard extends StatelessWidget {
         ),
       );
     }
+  }
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          title: Column(
+            children: [
+              Icon(
+                Icons.warning_rounded,
+                color: Colors.red,
+                size: 48.sp,
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                'Delete Job',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Are you sure you want to delete "${job.title}"?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'This action will remove all associated applications and cannot be undone.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (onDelete != null) {
+                  onDelete!(job);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              ),
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -72,7 +161,7 @@ class JobCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (isEditable)
+                  if (isEditable) ...[
                     IconButton(
                       icon: Icon(
                         Icons.edit,
@@ -81,6 +170,15 @@ class JobCard extends StatelessWidget {
                       ),
                       onPressed: () => _showEditDialog(context),
                     ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: 20.sp,
+                        color: Colors.red,
+                      ),
+                      onPressed: () => _showDeleteDialog(context),
+                    ),
+                  ],
                 ],
               ),
 
@@ -100,7 +198,7 @@ class JobCard extends StatelessWidget {
                   Icon(Icons.currency_rupee, size: 16.sp, color: Colors.grey),
                   SizedBox(width: 4.w),
                   Text(
-                    "${job.salaryRange} (per annum)",
+                    job.salaryRange,
                     style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
                   ),
                 ],

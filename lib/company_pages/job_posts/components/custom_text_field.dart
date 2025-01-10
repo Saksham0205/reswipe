@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
+  final FocusNode focusNode;
   final String label;
   final IconData icon;
   final int maxLines;
@@ -12,6 +13,7 @@ class CustomTextField extends StatelessWidget {
   const CustomTextField({
     Key? key,
     required this.controller,
+    required this.focusNode,
     required this.label,
     required this.icon,
     this.maxLines = 1,
@@ -24,9 +26,8 @@ class CustomTextField extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       child: TextFormField(
-
-
         controller: controller,
+        focusNode: focusNode,
         maxLines: maxLines,
         onChanged: onChanged,
         decoration: InputDecoration(

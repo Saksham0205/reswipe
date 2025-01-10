@@ -10,14 +10,14 @@ class NavigationButtons extends StatelessWidget {
   final VoidCallback onSubmit;
 
   const NavigationButtons({
-    Key? key,
+    super.key,
     required this.currentStep,
     required this.isLoading,
     required this.canProceed,
     required this.onPrevious,
     required this.onNext,
     required this.onSubmit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class NavigationButtons extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -44,7 +44,7 @@ class NavigationButtons extends StatelessWidget {
               isPrevious: true,
             )
           else
-            SizedBox(width: 0),
+            const SizedBox(width: 0),
           _buildButton(
             icon: currentStep < 2 ? Icons.arrow_forward : Icons.check,
             label: currentStep < 2 ? 'Next' : (isLoading ? 'Posting...' : 'Post Job'),
@@ -81,13 +81,13 @@ class NavigationButtons extends StatelessWidget {
             SizedBox(
               width: 20.r,
               height: 20.r,
-              child: CircularProgressIndicator(
+              child: const CircularProgressIndicator(
                 color: Colors.white,
                 strokeWidth: 2,
               ),
             )
           else
-            Icon(icon, size: 20.r),
+            Icon(icon, size: 20.r,color: Colors.white,),
           SizedBox(width: 8.w),
           Text(
             label,
