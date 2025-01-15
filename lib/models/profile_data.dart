@@ -8,9 +8,9 @@ class ProfileData {
   String qualification;
   String jobProfile;
   String skills;
-  List<String> experience;  // Changed to List<String>
-  List<String> achievements;  // Changed to List<String>
-  List<String> projects;  // Changed to List<String>
+  List<String> experience;
+  List<String> achievements;
+  List<String> projects;
   String resumeUrl;
   String profileImageUrl;
   int companyLikesCount;
@@ -40,9 +40,9 @@ class ProfileData {
       qualification: '',
       jobProfile: '',
       skills: '',
-      experience: [],  // Initialize as empty list
-      achievements: [],  // Initialize as empty list
-      projects: [],  // Initialize as empty list
+      experience: [],
+      achievements: [],
+      projects: [],
       resumeUrl: '',
       profileImageUrl: '',
       companyLikesCount: 0,
@@ -58,9 +58,9 @@ class ProfileData {
       qualification: map['qualification'] ?? '',
       jobProfile: map['jobProfile'] ?? '',
       skills: map['skills'] ?? '',
-      experience: _parseStringOrList(map['experience']),  // Handle both string and list
-      achievements: _parseStringOrList(map['achievements']),  // Handle both string and list
-      projects: _parseStringOrList(map['projects']),  // Handle both string and list
+      experience: _parseStringOrList(map['experience']),
+      achievements: _parseStringOrList(map['achievements']),
+      projects: _parseStringOrList(map['projects']),
       resumeUrl: map['resumeUrl'] ?? '',
       profileImageUrl: map['profileImageUrl'] ?? '',
       companyLikesCount: map['companyLikesCount'] ?? 0,
@@ -105,9 +105,9 @@ class ProfileData {
         qualification == other.qualification &&
         jobProfile == other.jobProfile &&
         skills == other.skills &&
-        listEquals(experience, other.experience) &&  // Use listEquals for List comparison
-        listEquals(achievements, other.achievements) &&  // Use listEquals for List comparison
-        listEquals(projects, other.projects) &&  // Use listEquals for List comparison
+        listEquals(experience, other.experience) &&
+        listEquals(achievements, other.achievements) &&
+        listEquals(projects, other.projects) &&
         resumeUrl == other.resumeUrl &&
         profileImageUrl == other.profileImageUrl &&
         companyLikesCount == other.companyLikesCount;

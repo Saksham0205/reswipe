@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:reswipe/backend/company_backend.dart';
+import 'package:reswipe/backend/user_backend.dart';  // Add this import
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:reswipe/home_screen/screens/company_home_screen.dart';
 import 'auth/auth_wrapper.dart';
@@ -43,6 +44,14 @@ class JobFinderApp extends StatelessWidget {
             BlocProvider<LogoutBloc>(
               create: (context) => LogoutBloc(prefs: prefs),
             ),
+            // Add ProfileBloc provider
+            BlocProvider<ProfileBloc>(
+              create: (context) => ProfileBloc(
+        userBackend: UserBackend(),
+        )..add(LoadProfile()),
+        child: JobSeekerHomeScreen(),
+              lazy: false,
+            ),
           ],
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -53,7 +62,7 @@ class JobFinderApp extends StatelessWidget {
             ),
             home: const AuthWrapper(),
             onGenerateRoute: (settings) {
-              Widget? page;
+              Widget page;
               switch (settings.name) {
                 case '/login':
                   page = LoginScreen();
@@ -62,15 +71,25 @@ class JobFinderApp extends StatelessWidget {
                   page = const CompanyMainScreen();
                   break;
                 case '/job_seeker_home':
-                  page = JobSeekerHomeScreen();
+                  page = BlocProvider.value(
+                    value: BlocProvider.of<ProfileBloc>(context),
+                    child: JobSeekerHomeScreen(),
+                  );
                   break;
                 default:
                   return null;
               }
 
               return MaterialPageRoute(
-                builder: (context) => BlocProvider.value(
-                  value: BlocProvider.of<JobBloc>(context),
+                builder: (context) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider.value(
+                      value: BlocProvider.of<JobBloc>(context),
+                    ),
+                    BlocProvider.value(
+                      value: BlocProvider.of<ProfileBloc>(context),
+                    ),
+                  ],
                   child: page,
                 ),
               );
