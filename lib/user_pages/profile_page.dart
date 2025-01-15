@@ -21,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+
     _controller = ProfileController();
     _controller.addListener(() {
       if (mounted) setState(() {});

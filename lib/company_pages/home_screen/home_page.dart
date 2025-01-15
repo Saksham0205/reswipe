@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:reswipe/company_pages/home_screen/rejected_screen.dart';
 import 'package:reswipe/company_pages/home_screen/shortlisted_screen.dart';
-import '../../State_management/company_backend.dart';
+import '../../backend/company_backend.dart';
 import 'components/applications_list.dart';
 import 'widgets/loading_shimmer.dart';
 import 'widgets/empty_state.dart';

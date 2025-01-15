@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:reswipe/backend/company_backend.dart';
 import 'package:reswipe/user_pages/user_settings_screen/about_screen.dart';
 import 'package:reswipe/user_pages/user_settings_screen/privacy_and_security_screen.dart';
 import 'package:reswipe/user_pages/user_settings_screen/support_and_help_screen.dart';
 
 class CompanySettingsPage extends StatefulWidget {
+  const CompanySettingsPage({super.key});
+
   @override
   State<CompanySettingsPage> createState() => _CompanySettingsPageState();
 }
@@ -246,196 +248,192 @@ class _CompanySettingsPageState extends State<CompanySettingsPage> with SingleTi
   }
 
   Widget _buildLogoutButton() {
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
-        ),
-      ),
-      child: SlideTransition(
-        position: Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _controller,
-            curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
-          ),
-        ),
-        child: Container(
-          width: double.infinity,
-          padding:  EdgeInsets.symmetric(horizontal: 16.w),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
+    return BlocConsumer<LogoutBloc, LogoutState>(
+      listener: (context, state) {
+        if (state is LogoutSuccess) {
+          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        } else if (state is LogoutFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.error),
               backgroundColor: Colors.red.shade600,
-              foregroundColor: Colors.white,
-              padding:  EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              elevation: 0,
+              behavior: SnackBarBehavior.floating,
             ),
-            onPressed: () => _showLogoutDialog(context),
-            child:  Text(
-              'Logout',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
+          );
+        }
+      },
+      builder: (context, state) {
+        return FadeTransition(
+          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(
+              parent: _controller,
+              curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
+            ),
+          ),
+          child: SlideTransition(
+            position: Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+              CurvedAnimation(
+                parent: _controller,
+                curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
+              ),
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: state is LogoutLoading ? null : () => _showLogoutDialog(context),
+                child: state is LogoutLoading
+                    ? SizedBox(
+                  height: 20.h,
+                  width: 20.w,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.w,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                    : Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Future<void> _showLogoutDialog(BuildContext context) async {
-    bool isLoading = false;
-
     final shouldLogout = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              child: Container(
-                padding:  EdgeInsets.all(20.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20.r,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20.r,
+                  offset: const Offset(0, 10),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red.shade600,
+                    size: 32.r,
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  'Are you sure you want to logout?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.logout_rounded,
-                        color: Colors.red.shade600,
-                        size: 32.r,
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                    Text(
-                      'Logout',
-                      style: TextStyle(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    Text(
-                      'Are you sure you want to logout?',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.symmetric(vertical: 12.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                            ),
-                            onPressed: isLoading ? null : () => Navigator.pop(context, false),
-                            child: Text(
-                              'Cancel',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                    Expanded(
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
                           ),
                         ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade600,
-                              padding:EdgeInsets.symmetric(vertical: 12.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: isLoading
-                                ? null
-                                : () async {
-                              setState(() => isLoading = true);
-                              try {
-                                // Perform logout operations concurrently
-                                await Future.wait([
-                                  FirebaseAuth.instance.signOut(),
-                                  GoogleSignIn().signOut(),
-                                ]);
-                                Navigator.pop(context, true);
-                              } catch (e) {
-                                // Handle error
-                                setState(() => isLoading = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Failed to logout. Please try again.'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            },
-                            child: isLoading
-                                ?  SizedBox(
-                              height: 20.h,
-                              width: 20.w,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.w,
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                                :  Text(
-                              'Logout',
-                              style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white
-                              ),
-                            ),
+                        onPressed: () {
+                          context.read<LogoutBloc>().add(LogoutCancelled());
+                          Navigator.pop(context, false);
+                        },
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context, true);
+                          context.read<LogoutBloc>().add(LogoutRequested());
+                        },
+                        child: Text(
+                          'Logout',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-            );
-          },
+              ],
+            ),
+          ),
         );
       },
     );
 
-    // if (shouldLogout ?? false) {
-    //  Navigator.pushReplacementNamed(context, "/login");
-    // }
+    if (shouldLogout ?? false) {
+      context.read<LogoutBloc>().add(LogoutRequested());
+    }
   }
 }

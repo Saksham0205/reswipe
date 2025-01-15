@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../state_management/company_backend.dart';
+import '../backend/company_backend.dart';
 import '../home_screen/screens/company_home_screen.dart';
 import '../home_screen/screens/job_seeker_home_screen.dart';
 import 'login_screen.dart';

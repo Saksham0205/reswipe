@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../State_management/company_backend.dart';
+import '../../backend/company_backend.dart';
 import '../../models/company_model/applications.dart';
 import 'favourites/components/application_details.dart';
 

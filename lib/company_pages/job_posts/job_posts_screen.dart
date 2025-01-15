@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
-import '../../State_management/company_backend.dart';
+import '../../backend/company_backend.dart';
 import '../../home_screen/screens/company_home_screen.dart';
 import '../../models/company_model/job.dart';
 import 'components/custom_snackbar.dart';

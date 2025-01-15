@@ -1,21 +1,75 @@
 import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../company_pages/profile/utils/job_sorter.dart';
 import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 
-abstract class JobEvent extends Equatable {
+abstract class LogoutEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
+class LogoutRequested extends LogoutEvent {}
+class LogoutCancelled extends LogoutEvent {}
+abstract class LogoutState extends Equatable {
   @override
   List<Object?> get props => [];
 }
 
+class LogoutInitial extends LogoutState {}
+class LogoutLoading extends LogoutState {}
+class LogoutSuccess extends LogoutState {}
+class LogoutFailure extends LogoutState {
+  final String error;
+  LogoutFailure(this.error);
+
+  @override
+  List<Object?> get props => [error];
+}
+
+class LogoutBloc extends Bloc<LogoutEvent, LogoutState> {
+  final FirebaseAuth _auth;
+  final GoogleSignIn _googleSignIn;
+  final SharedPreferences _prefs;
+  LogoutBloc({
+    required SharedPreferences prefs,
+    FirebaseAuth? auth,
+    GoogleSignIn? googleSignIn,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _prefs = prefs,
+        super(LogoutInitial()) {
+    on<LogoutRequested>(_onLogoutRequested);
+    on<LogoutCancelled>(_onLogoutCancelled);
+  }
+  Future<void> _onLogoutRequested(LogoutRequested event, Emitter<LogoutState> emit) async {
+    emit(LogoutLoading());
+    try {
+      await _prefs.clear();
+      await Future.wait([
+        _auth.signOut(),
+        _googleSignIn.signOut(),
+      ]);
+      emit(LogoutSuccess());
+    } catch (e) {
+      emit(LogoutFailure(e.toString()));
+    }
+  }
+  void _onLogoutCancelled(LogoutCancelled event, Emitter<LogoutState> emit) {
+    emit(LogoutInitial());
+  }
+}
+
+abstract class JobEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
 class LoadJobs extends JobEvent {}
 class Refresh extends JobEvent {}
 class SelectJob extends JobEvent {
