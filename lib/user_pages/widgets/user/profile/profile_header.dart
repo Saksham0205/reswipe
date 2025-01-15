@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../../../../controller/profile_controller.dart';
+import '../../../controller/profile_controller.dart';
 import '../../shared/profile_text_field.dart';
 
 class ProfileHeader extends StatelessWidget {

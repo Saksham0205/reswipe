@@ -5,7 +5,7 @@ import 'package:reswipe/user_pages/widgets/user/profile/profile_header.dart';
 import 'package:reswipe/user_pages/widgets/user/profile/resume_section.dart';
 import 'package:reswipe/user_pages/widgets/user/profile/skills_achievements_section.dart';
 
-import '../controller/profile_controller.dart';
+import 'controller/profile_controller.dart';
 
 
 

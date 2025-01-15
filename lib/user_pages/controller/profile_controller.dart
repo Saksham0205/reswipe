@@ -6,9 +6,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/profile_data.dart';
-import '../services/resume_parser_service.dart';
-import '../services/storage_service.dart';
+
+import '../../models/profile_data.dart';
+import '../../services/resume_parser_service.dart';
+import '../../services/storage_service.dart';
+
 
 class ProfileController extends ChangeNotifier {
   final _auth = FirebaseAuth.instance;
