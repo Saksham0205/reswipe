@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
-
 import '../backend/user_backend.dart';
 import '../models/profile_data.dart';
 
@@ -99,20 +98,6 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  Future<void> _pickAndUploadImage(BuildContext context) async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-      if (image != null) {
-        final file = File(image.path);
-        context.read<ProfileBloc>().add(UploadProfileImage(file));
-      }
-    } catch (e) {
-      _showErrorSnackBar('Error picking image: $e');
-    }
-  }
-
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -130,9 +115,13 @@ class _ProfileViewState extends State<ProfileView> {
           if (_isEditing) {
             setState(() => _isEditing = false);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile updated successfully'),
-                backgroundColor: Colors.green,
+              SnackBar(
+                content: const Text('Profile updated successfully'),
+                backgroundColor: Theme.of(context).primaryColor,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             );
           }
@@ -140,26 +129,28 @@ class _ProfileViewState extends State<ProfileView> {
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: Colors.grey[100],
+          backgroundColor: Colors.grey[50],
           appBar: AppBar(
             backgroundColor: Colors.white,
-            elevation: 1,
-            title: const Text(
-              'Profile',
+            elevation: 0,
+            title: Text(
+              'Professional Profile',
               style: TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w600,
               ),
             ),
             actions: [
               if (!_isEditing)
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
+                TextButton.icon(
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Edit'),
                   onPressed: _toggleEdit,
-                ),
-              if (_isEditing)
-                IconButton(
-                  icon: const Icon(Icons.save, color: Colors.blue),
+                )
+              else
+                TextButton.icon(
+                  icon: const Icon(Icons.save_outlined),
+                  label: const Text('Save'),
                   onPressed: _handleSave,
                 ),
             ],
@@ -169,7 +160,7 @@ class _ProfileViewState extends State<ProfileView> {
               _buildProfileContent(),
               if (state is ProfileLoading)
                 Container(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withOpacity(0.1),
                   child: const Center(
                     child: CircularProgressIndicator(),
                   ),
@@ -187,121 +178,177 @@ class _ProfileViewState extends State<ProfileView> {
         key: _formKey,
         child: Column(
           children: [
-            _buildCoverAndProfile(),
-            const SizedBox(height: 8),
-            _buildBasicInfo(),
-            const SizedBox(height: 8),
-            _buildAboutSection(),
-            const SizedBox(height: 8),
-            _buildExperienceSection(),
-            const SizedBox(height: 8),
-            _buildEducationSection(),
-            const SizedBox(height: 8),
-            _buildSkillsSection(),
-            const SizedBox(height: 8),
-            _buildProjectsSection(),
-            const SizedBox(height: 8),
-            _buildAchievementsSection(),
-            const SizedBox(height: 20),
+            _buildHeader(),
+            const SizedBox(height: 16),
+            _buildSections(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCoverAndProfile() {
+  Widget _buildHeader() {
     return Container(
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_isEditing)
-                        TextFormField(
-                          controller: _nameController,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'Name',
-                            border: OutlineInputBorder(),
-                          ),
-                        )
-                      else
-                        Text(
-                          _nameController.text,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      if (_isEditing)
-                        TextFormField(
-                          controller: _jobProfileController,
-                          decoration: const InputDecoration(
-                            labelText: 'Headline',
-                            border: OutlineInputBorder(),
-                          ),
-                        )
-                      else
-                        Text(
-                          _jobProfileController.text,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                    ],
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 24),
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+            child: Text(
+              _nameController.text.isNotEmpty ? _nameController.text[0] : 'U',
+              style: TextStyle(
+                fontSize: 32,
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_isEditing) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: TextFormField(
+                controller: _nameController,
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-              ],
+              ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => _pickAndUploadResume(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+          ] else
+            Text(
+              _nameController.text,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          const SizedBox(height: 8),
+          if (_isEditing) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: TextFormField(
+                controller: _jobProfileController,
+                decoration: InputDecoration(
+                  labelText: 'Job Title',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Upload Resume'),
             ),
-          ],
-        ),
+          ] else
+            Text(
+              _jobProfileController.text,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _pickAndUploadResume(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            icon: const Icon(Icons.upload_file_outlined),
+            label: const Text('Upload Resume'),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSections() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          _buildSectionCard(
+            title: 'Contact Information',
+            icon: Icons.contact_mail_outlined,
+            child: _buildContactInfo(),
+          ),
+          _buildSectionCard(
+            title: 'About',
+            icon: Icons.person_outline,
+            child: _buildAbout(),
+          ),
+          _buildSectionCard(
+            title: 'Experience',
+            icon: Icons.work_outline,
+            child: _buildExperience(),
+          ),
+          _buildSectionCard(
+            title: 'Education',
+            icon: Icons.school_outlined,
+            child: _buildEducation(),
+          ),
+          _buildSectionCard(
+            title: 'Skills',
+            icon: Icons.psychology_outlined,
+            child: _buildSkills(),
+          ),
+          _buildSectionCard(
+            title: 'Projects',
+            icon: Icons.assignment_outlined,
+            child: _buildProjects(),
+          ),
+          _buildSectionCard(
+            title: 'Achievements',
+            icon: Icons.emoji_events_outlined,
+            child: _buildAchievements(),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSectionCard({
     required String title,
+    required IconData icon,
     required Widget child,
-    VoidCallback? onEdit,
   }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
+                Icon(icon, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 12),
                 Text(
                   title,
                   style: const TextStyle(
@@ -309,165 +356,200 @@ class _ProfileViewState extends State<ProfileView> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (_isEditing && onEdit != null)
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: onEdit,
-                  ),
               ],
             ),
-            const Divider(),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBasicInfo() {
-    return _buildSectionCard(
-      title: 'Contact Information',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.email, color: Colors.blue),
-            title: _isEditing
-                ? TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            )
-                : Text(_emailController.text),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: child,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAboutSection() {
-    return _buildSectionCard(
-      title: 'About',
-      child: _isEditing
-          ? TextFormField(
-        controller: _qualificationController,
-        maxLines: 3,
-        decoration: const InputDecoration(
-          hintText: 'Write a summary about yourself...',
-          border: OutlineInputBorder(),
+  Widget _buildContactInfo() {
+    return _isEditing
+        ? TextFormField(
+      controller: _emailController,
+      decoration: InputDecoration(
+        labelText: 'Email Address',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-      )
-          : Text(_qualificationController.text),
+        prefixIcon: const Icon(Icons.email_outlined),
+      ),
+    )
+        : Row(
+      children: [
+        Icon(Icons.email_outlined,
+            color: Theme.of(context).primaryColor),
+        const SizedBox(width: 12),
+        Text(
+          _emailController.text,
+          style: const TextStyle(fontSize: 16),
+        ),
+      ],
     );
   }
 
-  Widget _buildExperienceSection() {
-    return _buildSectionCard(
-      title: 'Experience',
-      child: _isEditing
-          ? TextFormField(
-        controller: _experienceController,
-        maxLines: 4,
-        decoration: const InputDecoration(
-          hintText: 'Add your work experience...',
-          border: OutlineInputBorder(),
+  Widget _buildAbout() {
+    return _isEditing
+        ? TextFormField(
+      controller: _qualificationController,
+      maxLines: 3,
+      decoration: InputDecoration(
+        labelText: 'About Me',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-      )
-          : Text(_experienceController.text),
+        hintText: 'Write a summary about yourself...',
+      ),
+    )
+        : Text(
+      _qualificationController.text,
+      style: const TextStyle(fontSize: 16, height: 1.5),
     );
   }
 
-  Widget _buildEducationSection() {
-    return _buildSectionCard(
-      title: 'Education',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_isEditing) ...[
-            TextFormField(
-              controller: _collegeController,
-              decoration: const InputDecoration(
-                labelText: 'Institution',
-                border: OutlineInputBorder(),
+  Widget _buildExperience() {
+    return _isEditing
+        ? TextFormField(
+      controller: _experienceController,
+      maxLines: 4,
+      decoration: InputDecoration(
+        labelText: 'Professional Experience',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        hintText: 'Add your work experience...',
+      ),
+    )
+        : Text(
+      _experienceController.text,
+      style: const TextStyle(fontSize: 16, height: 1.5),
+    );
+  }
+
+  Widget _buildEducation() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_isEditing) ...[
+          TextFormField(
+            controller: _collegeController,
+            decoration: InputDecoration(
+              labelText: 'Institution',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _sessionController,
-              decoration: const InputDecoration(
-                labelText: 'Duration',
-                border: OutlineInputBorder(),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _sessionController,
+            decoration: InputDecoration(
+              labelText: 'Duration',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-          ] else ...[
-            Text(
-              _collegeController.text,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ] else ...[
+          Text(
+            _collegeController.text,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-            Text(_sessionController.text),
-          ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _sessionController.text,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildSkills() {
+    return _isEditing
+        ? TextFormField(
+      controller: _skillsController,
+      maxLines: 3,
+      decoration: InputDecoration(
+        labelText: 'Skills',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        hintText: 'Add your skills (comma separated)...',
       ),
+    )
+        : Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _skillsController.text.split(',').map((skill) {
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            skill.trim(),
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildSkillsSection() {
-    return _buildSectionCard(
-      title: 'Skills',
-      child: _isEditing
-          ? TextFormField(
-        controller: _skillsController,
-        maxLines: 3,
-        decoration: const InputDecoration(
-          hintText: 'Add your skills (comma separated)...',
-          border: OutlineInputBorder(),
+  Widget _buildProjects() {
+    return _isEditing
+        ? TextFormField(
+      controller: _projectsController,
+      maxLines: 4,
+      decoration: InputDecoration(
+        labelText: 'Projects',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-      )
-          : Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _skillsController.text
-            .split(',')
-            .map((skill) => Chip(
-          label: Text(skill.trim()),
-          backgroundColor: Colors.blue[50],
-        ))
-            .toList(),
+        hintText: 'Add your projects...',
       ),
+    )
+        : Text(
+      _projectsController.text,
+      style: const TextStyle(fontSize: 16, height: 1.5),
     );
   }
 
-  Widget _buildProjectsSection() {
-    return _buildSectionCard(
-      title: 'Projects',
-      child: _isEditing
-          ? TextFormField(
-        controller: _projectsController,
-        maxLines: 4,
-        decoration: const InputDecoration(
-          hintText: 'Add your projects...',
-          border: OutlineInputBorder(),
+  Widget _buildAchievements() {
+    return _isEditing
+        ? TextFormField(
+      controller: _achievementsController,
+      maxLines: 4,
+      decoration: InputDecoration(
+        labelText: 'Achievements',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-      )
-          : Text(_projectsController.text),
-    );
-  }
-
-  Widget _buildAchievementsSection() {
-    return _buildSectionCard(
-      title: 'Achievements',
-      child: _isEditing
-          ? TextFormField(
-        controller: _achievementsController,
-        maxLines: 4,
-        decoration: const InputDecoration(
-          hintText: 'Add your achievements...',
-          border: OutlineInputBorder(),
-        ),
-      )
-          : Text(_achievementsController.text),
+        hintText: 'Add your achievements...',
+      ),
+    )
+        : Text(
+      _achievementsController.text,
+      style: const TextStyle(fontSize: 16, height: 1.5),
     );
   }
 
