@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import '../backend/user_backend.dart';
-import '../models/profile_data.dart';
+import '../models/user_model/profile_data.dart';
 
 class ProfilePage extends StatelessWidget {
   final ProfileData initialData;

@@ -28,7 +28,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
 
   Widget _buildStatusChip(String status) {
     final Map<String, ({Color color, IconData icon, String label})> statusConfig = {
-      'accepted': (
+      'shortlisted': (
       color: const Color(0xFF4CAF50),
       icon: Icons.check_circle_outlined,
       label: 'Accepted'
@@ -297,7 +297,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
                               SizedBox(height: 16.h),
                               _buildDetailRow(
                                 Icons.calendar_today_rounded,
-                                'Applied on: ${DateFormat('MMM d, yyyy')}',
+                                'Applied on: ${DateFormat('MMM d, yyyy').format(application.timestamp ?? DateTime.now())}',
                               ),
                               if (!isExpanded)
                                 Center(

@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
-import '../models/profile_data.dart';
+import '../models/user_model/profile_data.dart';
 import '../services/storage_service.dart';
 import '../services/resume_parser_service.dart';
 
@@ -93,11 +93,18 @@ class UserBackend {
   Future<void> _loadCompanyDetails() async {
     if (_shouldRefreshCache(_lastCompanyDetailsFetch)) {
       try {
-        Set<String> companyIds = _cachedJobs?.map((job) => job.companyId).toSet() ?? {};
+        // Get company IDs from both jobs and applications
+        Set<String> companyIds = {};
+        if (_cachedJobs != null) {
+          companyIds.addAll(_cachedJobs!.map((job) => job.companyId));
+        }
+        if (_cachedApplications != null) {
+          companyIds.addAll(_cachedApplications!.map((app) => app.companyId));
+        }
 
         for (String companyId in companyIds) {
           DocumentSnapshot companyDoc = await _firestore
-              .collection('applications')
+              .collection('companies')  // Make sure this is the correct collection
               .doc(companyId)
               .get();
 
@@ -254,17 +261,20 @@ class UserBackend {
     if (_currentUserId == null) throw Exception('User not initialized');
 
     try {
+      // Get user document
       DocumentSnapshot userDoc = await _firestore
           .collection('users')
           .doc(_currentUserId)
           .get();
       Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
+      // Check for resume
       String? resumeUrl = userData['resumeUrl'];
       if (resumeUrl == null || resumeUrl.isEmpty) {
         throw Exception('Please upload your resume before applying');
       }
 
+      // Helper function to safely convert to List<String>
       List<String> safeListFromDynamic(dynamic value) {
         if (value == null) return [];
         if (value is List) return value.map((e) => e.toString()).toList();
@@ -272,38 +282,45 @@ class UserBackend {
         return [];
       }
 
-      Map<String, dynamic> applicationData = {
-        'jobId': job.id,
-        'jobTitle': job.title,
-        'jobDescription': job.description,
-        'jobResponsibilities': job.responsibilities,
-        'jobQualifications': job.qualifications,
-        'jobSalaryRange': job.salaryRange,
-        'jobLocation': job.location,
-        'jobEmploymentType': job.employmentType,
-        'companyId': job.companyId,
-        'companyName': getCompanyName(job.companyId),
-        'userId': _currentUserId!,
-        'applicantName': userData['name']?.toString() ?? 'Unknown',
-        'email': userData['email']?.toString() ?? '',
-        'qualification': userData['qualification']?.toString() ?? '',
-        'jobProfile': userData['jobProfile']?.toString() ?? '',
-        'skills': safeListFromDynamic(userData['skills']),
-        'experience': safeListFromDynamic(userData['experience']),
-        'college': userData['college']?.toString() ?? '',
-        'achievements': safeListFromDynamic(userData['achievements']),
-        'projects': safeListFromDynamic(userData['projects']),
-        'resumeUrl': resumeUrl,
-        'profileImageUrl': userData['profileImageUrl']?.toString() ?? '',
-        'status': 'pending',
-        'timestamp': DateTime.now(),
-        'statusUpdatedAt': DateTime.now(),
-        'companyLikesCount': 0,
-      };
+      // Create application object
+      Application application = Application(
+        id: '',  // Will be set by Firestore
+        jobId: job.id,
+        jobTitle: job.title,
+        jobDescription: job.description,
+        jobResponsibilities: job.responsibilities,
+        jobQualifications: job.qualifications,
+        jobSalaryRange: job.salaryRange,
+        jobLocation: job.location,
+        jobEmploymentType: job.employmentType,
+        companyId: job.companyId,
+        companyName: job.companyName,
+        userId: _currentUserId!,
+        applicantName: userData['name']?.toString() ?? 'Unknown',
+        email: userData['email']?.toString() ?? '',
+        qualification: userData['qualification']?.toString() ?? '',
+        jobProfile: userData['jobProfile']?.toString() ?? '',
+        skills: safeListFromDynamic(userData['skills']),
+        experience: safeListFromDynamic(userData['experience']),
+        college: userData['college']?.toString() ?? '',
+        achievements: safeListFromDynamic(userData['achievements']),
+        projects: safeListFromDynamic(userData['projects']),
+        resumeUrl: resumeUrl,
+        profileImageUrl: userData['profileImageUrl']?.toString() ?? '',
+        status: 'pending',
+        timestamp: DateTime.now(),
+        statusUpdatedAt: DateTime.now(),
+        companyLikesCount: 0,
+      );
 
+      // Add to Firestore
       await _firestore
           .collection('applications')
-          .add(applicationData);
+          .add(application.toMap());
+
+      // Update local cache
+      _cachedApplications = [...(_cachedApplications ?? []), application];
+      _applicationsController.add(_cachedApplications!);
 
     } catch (e) {
       print('Application error: $e');
