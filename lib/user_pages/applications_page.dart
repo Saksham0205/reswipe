@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+
+import '../backend/user_backend.dart';
 
 class ApplicationsPage extends StatefulWidget {
   @override
@@ -155,14 +156,9 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
         backgroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('applications')
-            .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
+      body: BlocBuilder<ApplicationsBloc, ApplicationsState>(
+        builder: (context, state) {
+          if (state is ApplicationsError) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -178,7 +174,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
             );
           }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (state is ApplicationsInitial) {
             return Center(
               child: CircularProgressIndicator(
                 color: const Color(0xFF6B46C1),
@@ -187,7 +183,7 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
             );
           }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          if (state is ApplicationsLoaded && state.applications.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -226,167 +222,170 @@ class _ApplicationsPageState extends State<ApplicationsPage> {
             );
           }
 
-          return ListView.builder(
-            controller: _scrollController,
-            padding: EdgeInsets.all(16.w),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              DocumentSnapshot application = snapshot.data!.docs[index];
-              Map<String, dynamic> data = application.data() as Map<String, dynamic>;
-              bool isExpanded = expandedCards.contains(application.id);
+          if (state is ApplicationsLoaded) {
+            return ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.all(16.w),
+              itemCount: state.applications.length,
+              itemBuilder: (context, index) {
+                final application = state.applications[index];
+                bool isExpanded = expandedCards.contains(application.id);
 
-              return Animate(
-                effects: const [
-                  FadeEffect(duration: Duration(milliseconds: 300)),
-                  SlideEffect(
-                    begin: Offset(0, 0.1),
-                    end: Offset.zero,
-                    duration: Duration(milliseconds: 300),
-                  ),
-                ],
-                child: Container(
-                  margin: EdgeInsets.only(bottom: 16.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10.r,
-                        offset: Offset(0, 4.h),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(16.r),
-                    child: InkWell(
+                return Animate(
+                  effects: const [
+                    FadeEffect(duration: Duration(milliseconds: 300)),
+                    SlideEffect(
+                      begin: Offset(0, 0.1),
+                      end: Offset.zero,
+                      duration: Duration(milliseconds: 300),
+                    ),
+                  ],
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 16.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16.r),
-                      onTap: () => toggleCard(application.id),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: EdgeInsets.all(20.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        data['jobTitle'] ?? 'Unknown Job',
-                                        style: TextStyle(
-                                          fontSize: 18.sp,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF2D3748),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10.r,
+                          offset: Offset(0, 4.h),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(16.r),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16.r),
+                        onTap: () => toggleCard(application.id),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: EdgeInsets.all(20.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          application.jobTitle,
+                                          style: TextStyle(
+                                            fontSize: 18.sp,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF2D3748),
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        data['companyName'] ?? 'Unknown Company',
-                                        style: TextStyle(
-                                          fontSize: 15.sp,
-                                          color: Colors.grey[600],
+                                        SizedBox(height: 4.h),
+                                        Text(
+                                          application.companyName,
+                                          style: TextStyle(
+                                            fontSize: 15.sp,
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                _buildStatusChip(data['status'] ?? 'pending'),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-                            _buildDetailRow(
-                              Icons.calendar_today_rounded,
-                              'Applied on: ${DateFormat('MMM d, yyyy').format((data['timestamp'] as Timestamp).toDate())}',
-                            ),
-                            if (!isExpanded)
-                              Center(
-                                child: Container(
-                                  margin: EdgeInsets.only(top: 8.h),
-                                  padding: EdgeInsets.all(4.w),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ),
-                            if (isExpanded) ...[
-                              Divider(height: 32.h, thickness: 1.h),
-                              _buildDetailRow(
-                                Icons.location_on_outlined,
-                                data['jobLocation'] ?? 'Unknown Location',
-                              ),
-                              _buildDetailRow(
-                                Icons.work_outline_rounded,
-                                data['jobEmploymentType'] ?? 'Not specified',
-                              ),
-                              _buildDetailRow(
-                                Icons.currency_rupee,
-                                data['jobSalaryRange'] ?? 'Not specified',
+                                  _buildStatusChip(application.status),
+                                ],
                               ),
                               SizedBox(height: 16.h),
-                              Text(
-                                'Description',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF2D3748),
-                                ),
+                              _buildDetailRow(
+                                Icons.calendar_today_rounded,
+                                'Applied on: ${DateFormat('MMM d, yyyy')}',
                               ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                data['jobDescription'] ?? 'No description available',
-                                style: TextStyle(
-                                  color: Colors.grey[800],
-                                  height: 1.5,
+                              if (!isExpanded)
+                                Center(
+                                  child: Container(
+                                    margin: EdgeInsets.only(top: 8.h),
+                                    padding: EdgeInsets.all(4.w),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 24.h),
-                              if (data['jobResponsibilities'] != null) ...[
-                                _buildSection(
-                                  'Responsibilities',
-                                  List<String>.from(data['jobResponsibilities']),
+                              if (isExpanded) ...[
+                                Divider(height: 32.h, thickness: 1.h),
+                                _buildDetailRow(
+                                  Icons.location_on_outlined,
+                                  application.jobLocation,
+                                ),
+                                _buildDetailRow(
+                                  Icons.work_outline_rounded,
+                                  application.jobEmploymentType,
+                                ),
+                                _buildDetailRow(
+                                  Icons.currency_rupee,
+                                  application.jobSalaryRange,
+                                ),
+                                SizedBox(height: 16.h),
+                                Text(
+                                  'Description',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF2D3748),
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  application.jobDescription,
+                                  style: TextStyle(
+                                    color: Colors.grey[800],
+                                    height: 1.5,
+                                  ),
                                 ),
                                 SizedBox(height: 24.h),
-                              ],
-                              if (data['jobQualifications'] != null) ...[
-                                _buildSection(
-                                  'Qualifications',
-                                  List<String>.from(data['jobQualifications']),
+                                if (application.jobResponsibilities.isNotEmpty) ...[
+                                  _buildSection(
+                                    'Responsibilities',
+                                    application.jobResponsibilities,
+                                  ),
+                                  SizedBox(height: 24.h),
+                                ],
+                                if (application.jobQualifications.isNotEmpty) ...[
+                                  _buildSection(
+                                    'Qualifications',
+                                    application.jobQualifications,
+                                  ),
+                                ],
+                                Center(
+                                  child: Container(
+                                    margin: EdgeInsets.only(top: 16.h),
+                                    padding: EdgeInsets.all(4.w),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    child: Icon(
+                                      Icons.keyboard_arrow_up_rounded,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
                                 ),
                               ],
-                              Center(
-                                child: Container(
-                                  margin: EdgeInsets.only(top: 16.h),
-                                  padding: EdgeInsets.all(4.w),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.keyboard_arrow_up_rounded,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ),
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              );
-            },
-          );
+                );
+              },
+            );
+          }
+
+          return const SizedBox.shrink();
         },
       ),
     );

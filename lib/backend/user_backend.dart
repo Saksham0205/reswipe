@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rxdart/rxdart.dart';
 import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 import '../models/profile_data.dart';
@@ -23,19 +24,23 @@ class UserBackend {
   String? _currentUserId;
   ProfileData? _profileData;
   List<Job>? _cachedJobs;
+  List<Application>? _cachedApplications;
   Map<String, Map<String, dynamic>> _cachedCompanyDetails = {};
   DateTime? _lastJobsFetch;
+  DateTime? _lastApplicationsFetch;
   DateTime? _lastCompanyDetailsFetch;
 
-  // Stream controllers
-  final _jobsController = StreamController<List<Job>>.broadcast();
-  final _applicationsController = StreamController<List<Application>>.broadcast();
+  // Stream controllers with proper BehaviorSubject
+  final _jobsController = BehaviorSubject<List<Job>>();
+  final _applicationsController = BehaviorSubject<List<Application>>();
+  StreamSubscription? _applicationsSubscription;
 
   // Getters
   ProfileData? get profileData => _profileData;
   List<Job> get jobs => _cachedJobs ?? [];
-  Stream<List<Job>> get jobsStream => _jobsController.stream;
+  List<Application> get applications => _cachedApplications ?? [];
   Stream<List<Application>> get applicationsStream => _applicationsController.stream;
+  Stream<List<Job>> get jobsStream => _jobsController.stream;
 
   Future<void> initialize(String userId) async {
     _currentUserId = userId;
@@ -44,6 +49,7 @@ class UserBackend {
       _loadJobs(),
       _loadCompanyDetails(),
     ]);
+    _setupApplicationsListener();
   }
 
   Future<void> _loadUserProfile() async {
@@ -135,67 +141,6 @@ class UserBackend {
         .toList() ?? [];
   }
 
-  Future<void> applyForJob(Job job) async {
-    if (_currentUserId == null) throw Exception('User not initialized');
-
-    try {
-      DocumentSnapshot userDoc = await _firestore
-          .collection('users')
-          .doc(_currentUserId)
-          .get();
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-      String? resumeUrl = userData['resumeUrl'];
-      if (resumeUrl == null || resumeUrl.isEmpty) {
-        throw Exception('Please upload your resume before applying');
-      }
-
-      List<String> safeListFromDynamic(dynamic value) {
-        if (value == null) return [];
-        if (value is List) return value.map((e) => e.toString()).toList();
-        if (value is String) return [value];
-        return [];
-      }
-
-      Application application = Application(
-        id: '',
-        jobId: job.id,
-        jobTitle: job.title,
-        jobDescription: job.description,
-        jobResponsibilities: job.responsibilities,
-        jobQualifications: job.qualifications,
-        jobSalaryRange: job.salaryRange,
-        jobLocation: job.location,
-        jobEmploymentType: job.employmentType,
-        companyId: job.companyId,
-        companyName: getCompanyName(job.companyId),
-        userId: _currentUserId!,
-        applicantName: userData['name']?.toString() ?? 'Unknown',
-        email: userData['email']?.toString() ?? '',
-        qualification: userData['qualification']?.toString() ?? '',
-        jobProfile: userData['jobProfile']?.toString() ?? '',
-        skills: safeListFromDynamic(userData['skills']),
-        experience: safeListFromDynamic(userData['experience']),
-        college: userData['college']?.toString() ?? '',
-        achievements: safeListFromDynamic(userData['achievements']),
-        projects: safeListFromDynamic(userData['projects']),
-        resumeUrl: resumeUrl,
-        profileImageUrl: userData['profileImageUrl']?.toString() ?? '',
-        status: 'pending',
-        timestamp: DateTime.now(),
-        companyLikesCount: 0,
-      );
-
-      await _firestore
-          .collection('applications')
-          .add(application.toMap());
-
-    } catch (e) {
-      print('Application error: $e');
-      throw Exception(e.toString());
-    }
-  }
-
   Future<void> uploadAndParseResume(File resumeFile) async {
     if (_currentUserId == null) throw Exception('User not initialized');
 
@@ -255,13 +200,120 @@ class UserBackend {
     }
   }
 
+  // Update these methods in your UserBackend class
 
-  bool _shouldRefreshJobsCache() {
-    if (_cachedJobs == null || _lastJobsFetch == null) return true;
+  void _setupApplicationsListener() {
+    _applicationsSubscription?.cancel();
 
-    // Refresh cache if it's older than 5 minutes
-    final cacheAge = DateTime.now().difference(_lastJobsFetch!);
-    return cacheAge.inMinutes >= 5;
+    _applicationsSubscription = _firestore
+        .collection('applications')
+        .where('userId', isEqualTo: _currentUserId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen(
+          (snapshot) {
+        try {
+          _cachedApplications = snapshot.docs
+              .map((doc) => Application.fromFirestore(doc))
+              .toList();
+          _lastApplicationsFetch = DateTime.now();
+          _applicationsController.add(_cachedApplications!);
+        } catch (e) {
+          _applicationsController.addError('Failed to process applications: $e');
+        }
+      },
+      onError: (error) {
+        _applicationsController.addError('Error in applications stream: $error');
+      },
+    );
+  }
+
+  Future<List<Application>> getApplications() async {
+    if (_shouldRefreshCache(_lastApplicationsFetch)) {
+      try {
+        QuerySnapshot querySnapshot = await _firestore
+            .collection('applications')
+            .where('userId', isEqualTo: _currentUserId)
+            .orderBy('timestamp', descending: true)
+            .get();
+
+        _cachedApplications = querySnapshot.docs
+            .map((doc) => Application.fromFirestore(doc))
+            .toList();
+        _lastApplicationsFetch = DateTime.now();
+        _applicationsController.add(_cachedApplications!);
+      } catch (e) {
+        print('Error loading applications: $e');
+        throw Exception('Failed to load applications: $e');
+      }
+    }
+    return _cachedApplications ?? [];
+  }
+
+  Future<void> applyForJob(Job job) async {
+    if (_currentUserId == null) throw Exception('User not initialized');
+
+    try {
+      DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(_currentUserId)
+          .get();
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+      String? resumeUrl = userData['resumeUrl'];
+      if (resumeUrl == null || resumeUrl.isEmpty) {
+        throw Exception('Please upload your resume before applying');
+      }
+
+      List<String> safeListFromDynamic(dynamic value) {
+        if (value == null) return [];
+        if (value is List) return value.map((e) => e.toString()).toList();
+        if (value is String) return [value];
+        return [];
+      }
+
+      Map<String, dynamic> applicationData = {
+        'jobId': job.id,
+        'jobTitle': job.title,
+        'jobDescription': job.description,
+        'jobResponsibilities': job.responsibilities,
+        'jobQualifications': job.qualifications,
+        'jobSalaryRange': job.salaryRange,
+        'jobLocation': job.location,
+        'jobEmploymentType': job.employmentType,
+        'companyId': job.companyId,
+        'companyName': getCompanyName(job.companyId),
+        'userId': _currentUserId!,
+        'applicantName': userData['name']?.toString() ?? 'Unknown',
+        'email': userData['email']?.toString() ?? '',
+        'qualification': userData['qualification']?.toString() ?? '',
+        'jobProfile': userData['jobProfile']?.toString() ?? '',
+        'skills': safeListFromDynamic(userData['skills']),
+        'experience': safeListFromDynamic(userData['experience']),
+        'college': userData['college']?.toString() ?? '',
+        'achievements': safeListFromDynamic(userData['achievements']),
+        'projects': safeListFromDynamic(userData['projects']),
+        'resumeUrl': resumeUrl,
+        'profileImageUrl': userData['profileImageUrl']?.toString() ?? '',
+        'status': 'pending',
+        'timestamp': DateTime.now(),
+        'statusUpdatedAt': DateTime.now(),
+        'companyLikesCount': 0,
+      };
+
+      await _firestore
+          .collection('applications')
+          .add(applicationData);
+
+    } catch (e) {
+      print('Application error: $e');
+      throw Exception(e.toString());
+    }
+  }
+
+
+  List<Application> getCachedApplications() {
+    return _cachedApplications ?? [];
   }
 
 
@@ -269,10 +321,50 @@ class UserBackend {
   void dispose() {
     _jobsController.close();
     _applicationsController.close();
+    _applicationsSubscription?.cancel();
   }
 }
 
+class ApplicationsBloc extends Cubit<ApplicationsState> {
+  final UserBackend _userBackend;
+  StreamSubscription? _applicationsSubscription;
 
+  ApplicationsBloc(this._userBackend) : super(ApplicationsInitial()) {
+    _initializeBloc();
+  }
+
+  void _initializeBloc() {
+    _applicationsSubscription = _userBackend.applicationsStream.listen(
+          (applications) {
+        emit(ApplicationsLoaded(applications));
+      },
+      onError: (error) {
+        emit(ApplicationsError(error.toString()));
+      },
+    );
+  }
+
+  @override
+  Future<void> close() async {
+    await _applicationsSubscription?.cancel();
+    return super.close();
+  }
+}
+
+// Applications State
+abstract class ApplicationsState {}
+
+class ApplicationsInitial extends ApplicationsState {}
+
+class ApplicationsLoaded extends ApplicationsState {
+  final List<Application> applications;
+  ApplicationsLoaded(this.applications);
+}
+
+class ApplicationsError extends ApplicationsState {
+  final String message;
+  ApplicationsError(this.message);
+}
 // Events
 abstract class ProfileEvent {}
 

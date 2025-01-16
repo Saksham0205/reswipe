@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../utils/job_sorter.dart';
-import 'sort_button.dart';
 
 class FilterSection extends StatelessWidget {
   final List<String> filters;

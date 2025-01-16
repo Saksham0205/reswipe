@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
-import '../constants/app_text_styles.dart';
 import '../services/firestore_service.dart';
 import 'forgot_password.dart';
 import 'registration_screen.dart';
