@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../backend/user_backend.dart';
 import '../../models/company_model/applications.dart';
 import '../../models/company_model/job.dart';
 
@@ -17,6 +18,7 @@ class JobListingsPage extends StatefulWidget {
 
 class _JobListingsPageState extends State<JobListingsPage>
     with SingleTickerProviderStateMixin {
+  final UserBackend _userBackend = UserBackend();
   Map<String, String> companyNames = {};
   Map<String, String> companyLogos = {};
   List<Job> jobs = [];
@@ -41,11 +43,7 @@ class _JobListingsPageState extends State<JobListingsPage>
     super.initState();
     controller = CardSwiperController();
     _showEndState = false;
-    _fetchJobs().then((_) {
-      if (mounted) {
-        _filterJobs('All');
-      }
-    });
+    _initializeData();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -67,25 +65,62 @@ class _JobListingsPageState extends State<JobListingsPage>
     super.dispose();
   }
 
+  Future<void> _initializeData() async {
+    setState(() => _isLoading = true);
+
+    try {
+      List<Job> jobs = await _userBackend.getFilteredJobs(selectedFilter);
+
+      if (mounted) {
+        setState(() {
+          filteredJobs = jobs;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load jobs. Please try again later.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   void _filterJobs(String filter) {
     setState(() {
       selectedFilter = filter;
       _showEndState = false;
-      if (filter == 'All') {
-        filteredJobs = List.from(jobs);
-      } else {
-        filteredJobs = jobs
-            .where((job) =>
-        job.employmentType.toLowerCase() == filter.toLowerCase())
-            .toList();
-      }
-
-      // Reset the controller when filter changes
-      if (filteredJobs.isNotEmpty) {
-        controller = CardSwiperController();
-      }
+      _initializeData();
     });
+  }
+
+  void _applyForJob(BuildContext context, Job job) async {
+    try {
+      await _userBackend.applyForJob(job);
+      _showSuccessSnackBar('Application submitted successfully!');
+    } catch (e) {
+      _showErrorSnackBar(e.toString());
+    }
+  }
+
+  Future<void> _fetchCompanyDetails(List<Job> jobs) async {
+    Set<String> companyIds = jobs.map((job) => job.companyId).toSet();
+    for (String companyId in companyIds) {
+      if (!mounted) return;
+
+      DocumentSnapshot companyDoc = await FirebaseFirestore.instance
+          .collection('applications')
+          .doc(companyId)
+          .get();
+      if (companyDoc.exists) {
+        companyNames[companyId] = companyDoc.get('companyName') ?? 'Unknown Company';
+        companyLogos[companyId] = companyDoc.get('logoUrl') ?? '';
+      }
+    }
   }
 
   Future<void> _fetchJobs() async {
@@ -97,11 +132,8 @@ class _JobListingsPageState extends State<JobListingsPage>
     });
 
     try {
-      QuerySnapshot querySnapshot =
-      await FirebaseFirestore.instance.collection('jobs').get();
-      List<Job> fetchedJobs = querySnapshot.docs
-          .map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-          .toList();
+      // Get jobs from UserBackend
+      List<Job> fetchedJobs = _userBackend.jobs;
 
       // Fetch company details
       Set<String> companyIds = fetchedJobs.map((job) => job.companyId).toSet();
@@ -142,6 +174,7 @@ class _JobListingsPageState extends State<JobListingsPage>
       );
     }
   }
+
 
   Widget _buildEndState() {
     return Center(
@@ -559,75 +592,6 @@ class _JobListingsPageState extends State<JobListingsPage>
     );
   }
 
-  void _applyForJob(BuildContext context, Job job) async {
-    String userId = FirebaseAuth.instance.currentUser!.uid;
-
-    try {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
-      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-
-      String? resumeUrl = userData['resumeUrl'];
-      if (resumeUrl == null || resumeUrl.isEmpty) {
-        _showErrorSnackBar('Please upload your resume before applying');
-        return;
-      }
-
-      // Helper function to safely convert to List<String>
-      List<String> safeListFromDynamic(dynamic value) {
-        if (value == null) return [];
-        if (value is List) {
-          return value.map((e) => e.toString()).toList();
-        }
-        if (value is String) {
-          return [value]; // Convert single string to list
-        }
-        return [];
-      }
-
-      // Safely get user data with proper type conversion
-      Application application = Application(
-        id: '',
-        jobId: job.id,
-        jobTitle: job.title,
-        jobDescription: job.description,
-        jobResponsibilities: job.responsibilities,
-        jobQualifications: job.qualifications,
-        jobSalaryRange: job.salaryRange,
-        jobLocation: job.location,
-        jobEmploymentType: job.employmentType,
-        companyId: job.companyId,
-        companyName: job.companyName,
-        userId: userId,
-        applicantName: userData['name']?.toString() ?? 'Unknown',
-        email: userData['email']?.toString() ?? '',
-        qualification: userData['qualification']?.toString() ?? '',
-        jobProfile: userData['jobProfile']?.toString() ?? '',
-        // Safely convert lists using the helper function
-        skills: safeListFromDynamic(userData['skills']),
-        experience: safeListFromDynamic(userData['experience']),
-        college: userData['college']?.toString() ?? '',
-        achievements: safeListFromDynamic(userData['achievements']),
-        projects: safeListFromDynamic(userData['projects']),
-        resumeUrl: resumeUrl,
-        profileImageUrl: userData['profileImageUrl']?.toString() ?? '',
-        status: 'pending',
-        timestamp: DateTime.now(),
-        companyLikesCount: 0,
-      );
-
-      await FirebaseFirestore.instance
-          .collection('applications')
-          .add(application.toMap());
-
-      _showSuccessSnackBar('Application submitted successfully!');
-    } catch (e) {
-      print('Application error details: $e'); // Add detailed error logging
-      _showErrorSnackBar('Failed to apply: $e');
-    }
-  }
 
   void _showSuccessSnackBar(String message) {
     final snackBar = SnackBar(

@@ -1,8 +1,11 @@
 // user_backend.dart
+import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../models/company_model/applications.dart';
+import '../models/company_model/job.dart';
 import '../models/profile_data.dart';
 import '../services/storage_service.dart';
 import '../services/resume_parser_service.dart';
@@ -19,11 +22,28 @@ class UserBackend {
 
   String? _currentUserId;
   ProfileData? _profileData;
+  List<Job>? _cachedJobs;
+  Map<String, Map<String, dynamic>> _cachedCompanyDetails = {};
+  DateTime? _lastJobsFetch;
+  DateTime? _lastCompanyDetailsFetch;
+
+  // Stream controllers
+  final _jobsController = StreamController<List<Job>>.broadcast();
+  final _applicationsController = StreamController<List<Application>>.broadcast();
+
+  // Getters
   ProfileData? get profileData => _profileData;
+  List<Job> get jobs => _cachedJobs ?? [];
+  Stream<List<Job>> get jobsStream => _jobsController.stream;
+  Stream<List<Application>> get applicationsStream => _applicationsController.stream;
 
   Future<void> initialize(String userId) async {
     _currentUserId = userId;
-    await _loadUserProfile();
+    await Future.wait([
+      _loadUserProfile(),
+      _loadJobs(),
+      _loadCompanyDetails(),
+    ]);
   }
 
   Future<void> _loadUserProfile() async {
@@ -36,7 +56,6 @@ class UserBackend {
       if (docSnapshot.exists) {
         _profileData = ProfileData.fromMap(docSnapshot.data()!);
       } else {
-        // Create new profile if it doesn't exist
         _profileData = ProfileData.empty();
         await _firestore
             .collection('users')
@@ -46,6 +65,134 @@ class UserBackend {
     } catch (e) {
       print('Error loading profile: $e');
       throw Exception('Failed to load profile: $e');
+    }
+  }
+
+  Future<void> _loadJobs() async {
+    if (_shouldRefreshCache(_lastJobsFetch)) {
+      try {
+        QuerySnapshot querySnapshot = await _firestore.collection('jobs').get();
+        _cachedJobs = querySnapshot.docs
+            .map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+            .toList();
+        _lastJobsFetch = DateTime.now();
+        _jobsController.add(_cachedJobs!);
+      } catch (e) {
+        print('Error loading jobs: $e');
+        throw Exception('Failed to load jobs: $e');
+      }
+    }
+  }
+
+  Future<void> _loadCompanyDetails() async {
+    if (_shouldRefreshCache(_lastCompanyDetailsFetch)) {
+      try {
+        Set<String> companyIds = _cachedJobs?.map((job) => job.companyId).toSet() ?? {};
+
+        for (String companyId in companyIds) {
+          DocumentSnapshot companyDoc = await _firestore
+              .collection('applications')
+              .doc(companyId)
+              .get();
+
+          if (companyDoc.exists) {
+            _cachedCompanyDetails[companyId] = {
+              'companyName': companyDoc.get('companyName') ?? 'Unknown Company',
+              'logoUrl': companyDoc.get('logoUrl') ?? '',
+            };
+          }
+        }
+        _lastCompanyDetailsFetch = DateTime.now();
+      } catch (e) {
+        print('Error loading company details: $e');
+        throw Exception('Failed to load company details: $e');
+      }
+    }
+  }
+
+  bool _shouldRefreshCache(DateTime? lastFetch) {
+    if (lastFetch == null) return true;
+    return DateTime.now().difference(lastFetch).inMinutes >= 5;
+  }
+
+  String getCompanyName(String companyId) {
+    return _cachedCompanyDetails[companyId]?['companyName'] ?? 'Unknown Company';
+  }
+
+  String getCompanyLogo(String companyId) {
+    return _cachedCompanyDetails[companyId]?['logoUrl'] ?? '';
+  }
+
+  Future<List<Job>> getFilteredJobs(String filter) async {
+    await _loadJobs();
+
+    if (filter.toLowerCase() == 'all') {
+      return _cachedJobs ?? [];
+    }
+
+    return _cachedJobs
+        ?.where((job) => job.employmentType.toLowerCase() == filter.toLowerCase())
+        .toList() ?? [];
+  }
+
+  Future<void> applyForJob(Job job) async {
+    if (_currentUserId == null) throw Exception('User not initialized');
+
+    try {
+      DocumentSnapshot userDoc = await _firestore
+          .collection('users')
+          .doc(_currentUserId)
+          .get();
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+      String? resumeUrl = userData['resumeUrl'];
+      if (resumeUrl == null || resumeUrl.isEmpty) {
+        throw Exception('Please upload your resume before applying');
+      }
+
+      List<String> safeListFromDynamic(dynamic value) {
+        if (value == null) return [];
+        if (value is List) return value.map((e) => e.toString()).toList();
+        if (value is String) return [value];
+        return [];
+      }
+
+      Application application = Application(
+        id: '',
+        jobId: job.id,
+        jobTitle: job.title,
+        jobDescription: job.description,
+        jobResponsibilities: job.responsibilities,
+        jobQualifications: job.qualifications,
+        jobSalaryRange: job.salaryRange,
+        jobLocation: job.location,
+        jobEmploymentType: job.employmentType,
+        companyId: job.companyId,
+        companyName: getCompanyName(job.companyId),
+        userId: _currentUserId!,
+        applicantName: userData['name']?.toString() ?? 'Unknown',
+        email: userData['email']?.toString() ?? '',
+        qualification: userData['qualification']?.toString() ?? '',
+        jobProfile: userData['jobProfile']?.toString() ?? '',
+        skills: safeListFromDynamic(userData['skills']),
+        experience: safeListFromDynamic(userData['experience']),
+        college: userData['college']?.toString() ?? '',
+        achievements: safeListFromDynamic(userData['achievements']),
+        projects: safeListFromDynamic(userData['projects']),
+        resumeUrl: resumeUrl,
+        profileImageUrl: userData['profileImageUrl']?.toString() ?? '',
+        status: 'pending',
+        timestamp: DateTime.now(),
+        companyLikesCount: 0,
+      );
+
+      await _firestore
+          .collection('applications')
+          .add(application.toMap());
+
+    } catch (e) {
+      print('Application error: $e');
+      throw Exception(e.toString());
     }
   }
 
@@ -109,8 +256,22 @@ class UserBackend {
   }
 
 
+  bool _shouldRefreshJobsCache() {
+    if (_cachedJobs == null || _lastJobsFetch == null) return true;
 
+    // Refresh cache if it's older than 5 minutes
+    final cacheAge = DateTime.now().difference(_lastJobsFetch!);
+    return cacheAge.inMinutes >= 5;
+  }
+
+
+  @override
+  void dispose() {
+    _jobsController.close();
+    _applicationsController.close();
+  }
 }
+
 
 // Events
 abstract class ProfileEvent {}
