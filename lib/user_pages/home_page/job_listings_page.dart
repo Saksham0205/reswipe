@@ -107,22 +107,7 @@ class _JobListingsPageState extends State<JobListingsPage>
     }
   }
 
-  Future<void> _fetchCompanyDetails(List<Job> jobs) async {
-    Set<String> companyIds = jobs.map((job) => job.companyId).toSet();
-    for (String companyId in companyIds) {
-      if (!mounted) return;
-
-      DocumentSnapshot companyDoc = await FirebaseFirestore.instance
-          .collection('applications')
-          .doc(companyId)
-          .get();
-      if (companyDoc.exists) {
-        companyNames[companyId] = companyDoc.get('companyName') ?? 'Unknown Company';
-        companyLogos[companyId] = companyDoc.get('logoUrl') ?? '';
-      }
-    }
-  }
-
+// Update the _fetchJobs method
   Future<void> _fetchJobs() async {
     if (!mounted) return;
 
@@ -132,8 +117,8 @@ class _JobListingsPageState extends State<JobListingsPage>
     });
 
     try {
-      // Get jobs from UserBackend
-      List<Job> fetchedJobs = _userBackend.jobs;
+      // Get jobs from UserBackend (this will now automatically filter out swiped jobs)
+      List<Job> fetchedJobs = await _userBackend.getFilteredJobs(selectedFilter);
 
       // Fetch company details
       Set<String> companyIds = fetchedJobs.map((job) => job.companyId).toSet();
@@ -145,8 +130,7 @@ class _JobListingsPageState extends State<JobListingsPage>
             .doc(companyId)
             .get();
         if (companyDoc.exists) {
-          companyNames[companyId] =
-              companyDoc.get('companyName') ?? 'Unknown Company';
+          companyNames[companyId] = companyDoc.get('companyName') ?? 'Unknown Company';
           companyLogos[companyId] = companyDoc.get('logoUrl') ?? '';
         }
       }
@@ -505,11 +489,10 @@ class _JobListingsPageState extends State<JobListingsPage>
     );
   }
 
+  Future<bool> _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) async {
+    // Mark the job as swiped regardless of direction
+    await _userBackend.markJobAsSwiped(filteredJobs[previousIndex].id);
 
-
-
-  bool _onSwipe(
-      int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     if (currentIndex != null) {
       setState(() {
         _currentIndex = currentIndex;
@@ -531,6 +514,7 @@ class _JobListingsPageState extends State<JobListingsPage>
     }
     return true;
   }
+
   Widget _buildSwipeActions() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 32.0),

@@ -17,7 +17,6 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final prefs = await SharedPreferences.getInstance();
-  Bloc.observer = SimpleBlocObserver();
   runApp(JobFinderApp(prefs: prefs));
 }
 
@@ -91,22 +90,22 @@ class JobFinderApp extends StatelessWidget {
   }
 }
 
-class SimpleBlocObserver extends BlocObserver {
-  @override
-  void onEvent(Bloc bloc, Object? event) {
-    super.onEvent(bloc, event);
-    print('${bloc.runtimeType} $event');
-  }
-
-  @override
-  void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
-    print('${bloc.runtimeType} $error $stackTrace');
-    super.onError(bloc, error, stackTrace);
-  }
-
-  @override
-  void onChange(BlocBase bloc, Change change) {
-    super.onChange(bloc, change);
-    print('${bloc.runtimeType} $change');
-  }
-}
+// class SimpleBlocObserver extends BlocObserver {
+//   @override
+//   void onEvent(Bloc bloc, Object? event) {
+//     super.onEvent(bloc, event);
+//     print('${bloc.runtimeType} $event');
+//   }
+//
+//   @override
+//   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
+//     print('${bloc.runtimeType} $error $stackTrace');
+//     super.onError(bloc, error, stackTrace);
+//   }
+//
+//   @override
+//   void onChange(BlocBase bloc, Change change) {
+//     super.onChange(bloc, change);
+//     print('${bloc.runtimeType} $change');
+//   }
+// }

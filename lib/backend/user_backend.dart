@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 import '../models/user_model/profile_data.dart';
@@ -14,13 +15,18 @@ import '../services/resume_parser_service.dart';
 class UserBackend {
   static final UserBackend _instance = UserBackend._internal();
   factory UserBackend() => _instance;
-  UserBackend._internal();
+  late final SharedPreferences _prefs;
 
+  UserBackend._internal() {
+    _initializePrefs();
+  }
+
+  Future<void> _initializePrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
   final StorageService _storageService = StorageService();
   final ResumeParserService _resumeParserService = ResumeParserService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
   String? _currentUserId;
   ProfileData? _profileData;
   List<Job>? _cachedJobs;
@@ -29,6 +35,7 @@ class UserBackend {
   DateTime? _lastJobsFetch;
   DateTime? _lastApplicationsFetch;
   DateTime? _lastCompanyDetailsFetch;
+  Set<String> _swipedJobIds = {};
 
   // Stream controllers with proper BehaviorSubject
   final _jobsController = BehaviorSubject<List<Job>>();
@@ -44,12 +51,28 @@ class UserBackend {
 
   Future<void> initialize(String userId) async {
     _currentUserId = userId;
+    await _loadSwipedJobs(); // Load swiped jobs first
     await Future.wait([
       _loadUserProfile(),
       _loadJobs(),
       _loadCompanyDetails(),
     ]);
     _setupApplicationsListener();
+  }
+
+  // Add method to load swiped jobs from SharedPreferences
+  Future<void> _loadSwipedJobs() async {
+    final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
+    final List<String>? swipedJobs = _prefs.getStringList(key);
+    if (swipedJobs != null) {
+      _swipedJobIds = Set<String>.from(swipedJobs);
+    }
+  }
+
+  // Add method to save swiped jobs to SharedPreferences
+  Future<void> _saveSwipedJobs() async {
+    final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
+    await _prefs.setStringList(key, _swipedJobIds.toList());
   }
 
   Future<void> _loadUserProfile() async {
@@ -138,14 +161,29 @@ class UserBackend {
 
   Future<List<Job>> getFilteredJobs(String filter) async {
     await _loadJobs();
+    await _loadSwipedJobs(); // Ensure we have the latest swiped jobs
+
+    // Filter out swiped jobs first
+    List<Job> availableJobs = _cachedJobs?.where((job) => !_swipedJobIds.contains(job.id)).toList() ?? [];
 
     if (filter.toLowerCase() == 'all') {
-      return _cachedJobs ?? [];
+      return availableJobs;
     }
 
-    return _cachedJobs
-        ?.where((job) => job.employmentType.toLowerCase() == filter.toLowerCase())
-        .toList() ?? [];
+    return availableJobs
+        .where((job) => job.employmentType.toLowerCase() == filter.toLowerCase())
+        .toList();
+  }
+
+  Future<void> markJobAsSwiped(String jobId) async {
+    _swipedJobIds.add(jobId);
+    await _saveSwipedJobs();
+  }
+
+  // Modify clearSwipedJobs method to persist the change
+  Future<void> clearSwipedJobs() async {
+    _swipedJobIds.clear();
+    await _saveSwipedJobs();
   }
 
   Future<void> uploadAndParseResume(File resumeFile) async {
