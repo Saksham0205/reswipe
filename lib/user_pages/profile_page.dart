@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:image_picker/image_picker.dart';
 import '../backend/user_backend.dart';
 import '../models/user_model/profile_data.dart';
 
@@ -21,7 +20,6 @@ class ProfilePage extends StatelessWidget {
     return ProfileView(initialData: initialData);
   }
 }
-
 
 class ProfileView extends StatefulWidget {
   final ProfileData initialData;
@@ -117,7 +115,7 @@ class _ProfileViewState extends State<ProfileView> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: const Text('Profile updated successfully'),
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -129,29 +127,46 @@ class _ProfileViewState extends State<ProfileView> {
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: Colors.grey[50],
+          backgroundColor: const Color(0xFFF5F7FA),
           appBar: AppBar(
             backgroundColor: Colors.white,
-            elevation: 0,
+            elevation: 1,
             title: Text(
               'Professional Profile',
               style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
               ),
             ),
             actions: [
               if (!_isEditing)
-                TextButton.icon(
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Edit'),
+                TextButton(
                   onPressed: _toggleEdit,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.edit_outlined, size: 20),
+                      SizedBox(width: 4),
+                      Text('Edit', style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 )
               else
-                TextButton.icon(
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text('Save'),
+                TextButton(
                   onPressed: _handleSave,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.save_outlined, size: 20),
+                      SizedBox(width: 4),
+                      Text('Save', style: TextStyle(fontSize: 16)),
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -197,21 +212,34 @@ class _ProfileViewState extends State<ProfileView> {
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 5,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         children: [
           const SizedBox(height: 24),
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-            child: Text(
-              _nameController.text.isNotEmpty ? _nameController.text[0] : 'U',
-              style: TextStyle(
-                fontSize: 32,
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.bold,
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 60,
+              backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              child: Text(
+                _nameController.text.isNotEmpty ? _nameController.text[0] : 'U',
+                style: TextStyle(
+                  fontSize: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -221,11 +249,24 @@ class _ProfileViewState extends State<ProfileView> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: TextFormField(
                 controller: _nameController,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Full Name',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    ),
                   ),
                 ),
               ),
@@ -233,7 +274,11 @@ class _ProfileViewState extends State<ProfileView> {
           ] else
             Text(
               _nameController.text,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           const SizedBox(height: 8),
           if (_isEditing) ...[
@@ -241,10 +286,23 @@ class _ProfileViewState extends State<ProfileView> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: TextFormField(
                 controller: _jobProfileController,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                ),
                 decoration: InputDecoration(
                   labelText: 'Job Title',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    ),
                   ),
                 ),
               ),
@@ -254,7 +312,7 @@ class _ProfileViewState extends State<ProfileView> {
               _jobProfileController.text,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: Colors.grey[700],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -262,14 +320,22 @@ class _ProfileViewState extends State<ProfileView> {
           ElevatedButton.icon(
             onPressed: () => _pickAndUploadResume(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
+              elevation: 3,
             ),
             icon: const Icon(Icons.upload_file_outlined),
-            label: const Text('Upload Resume'),
+            label: const Text(
+              'Upload Resume',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
           ),
           const SizedBox(height: 24),
         ],
@@ -331,12 +397,13 @@ class _ProfileViewState extends State<ProfileView> {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.2),
             spreadRadius: 1,
-            blurRadius: 5,
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -347,19 +414,20 @@ class _ProfileViewState extends State<ProfileView> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(icon, color: Theme.of(context).primaryColor),
+                Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, thickness: 0.5),
           Padding(
             padding: const EdgeInsets.all(16),
             child: child,
@@ -553,7 +621,6 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-
   void _toggleEdit() {
     setState(() {
       if (_isEditing) {
@@ -562,6 +629,7 @@ class _ProfileViewState extends State<ProfileView> {
       _isEditing = !_isEditing;
     });
   }
+
   void _handleSave() {
     if (_formKey.currentState?.validate() ?? false) {
       final updatedProfile = ProfileData(
