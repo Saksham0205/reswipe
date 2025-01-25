@@ -69,11 +69,18 @@ class _JobListingsPageState extends State<JobListingsPage>
     setState(() => _isLoading = true);
 
     try {
-      List<Job> jobs = await _userBackend.getFilteredJobs(selectedFilter);
+      // Clear existing jobs before fetching
+      setState(() {
+        jobs.clear();
+        filteredJobs.clear();
+      });
+
+      List<Job> fetchedJobs = await _userBackend.getFilteredJobs(selectedFilter);
 
       if (mounted) {
         setState(() {
-          filteredJobs = jobs;
+          jobs = fetchedJobs;
+          filteredJobs = fetchedJobs;
           _isLoading = false;
         });
       }
@@ -87,6 +94,50 @@ class _JobListingsPageState extends State<JobListingsPage>
           ),
         );
       }
+    }
+  }
+
+  Future<void> _fetchJobs() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _showEndState = false;
+    });
+
+    try {
+      // Explicitly clear existing jobs
+      setState(() {
+        jobs.clear();
+        filteredJobs.clear();
+      });
+
+      // Get jobs from UserBackend
+      List<Job> fetchedJobs = await _userBackend.getFilteredJobs(selectedFilter);
+
+      if (!mounted) return;
+
+      setState(() {
+        jobs = fetchedJobs;
+        filteredJobs = fetchedJobs;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      print('Error fetching jobs: $e');
+      setState(() {
+        _isLoading = false;
+        jobs = [];
+        filteredJobs = [];
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to load jobs. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -107,57 +158,6 @@ class _JobListingsPageState extends State<JobListingsPage>
     }
   }
 
-// Update the _fetchJobs method
-  Future<void> _fetchJobs() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = true;
-      _showEndState = false;
-    });
-
-    try {
-      // Get jobs from UserBackend (this will now automatically filter out swiped jobs)
-      List<Job> fetchedJobs = await _userBackend.getFilteredJobs(selectedFilter);
-
-      // Fetch company details
-      Set<String> companyIds = fetchedJobs.map((job) => job.companyId).toSet();
-      for (String companyId in companyIds) {
-        if (!mounted) return;
-
-        DocumentSnapshot companyDoc = await FirebaseFirestore.instance
-            .collection('applications')
-            .doc(companyId)
-            .get();
-        if (companyDoc.exists) {
-          companyNames[companyId] = companyDoc.get('companyName') ?? 'Unknown Company';
-          companyLogos[companyId] = companyDoc.get('logoUrl') ?? '';
-        }
-      }
-
-      if (!mounted) return;
-
-      setState(() {
-        jobs = fetchedJobs;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      print('Error fetching jobs: $e');
-      setState(() {
-        _isLoading = false;
-        jobs = [];
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to load jobs. Please try again later.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 
 
   Widget _buildEndState() {
@@ -429,24 +429,6 @@ class _JobListingsPageState extends State<JobListingsPage>
             children: [
               ElevatedButton.icon(
                 onPressed: () {
-                  _filterJobs('All');
-                },
-                icon: const Icon(Icons.refresh, color: Colors.deepPurple),
-                label: Text(
-                  'Show All Jobs',
-                  style: TextStyle(color: Colors.deepPurple, fontSize: 14.sp),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.r),
-                  ),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              ElevatedButton.icon(
-                onPressed: () {
                   _fetchJobs();
                 },
                 icon: const Icon(Icons.refresh, color: Colors.white),
@@ -490,20 +472,40 @@ class _JobListingsPageState extends State<JobListingsPage>
   }
 
   Future<bool> _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) async {
-    // Mark the job as swiped regardless of direction
-    await _userBackend.markJobAsSwiped(filteredJobs[previousIndex].id);
-
-    if (currentIndex != null) {
-      setState(() {
-        _currentIndex = currentIndex;
-      });
+    // Ensure we're within bounds before accessing the job
+    if (previousIndex < 0 || previousIndex >= filteredJobs.length) {
+      return false;
     }
+
+    Job swipedJob = filteredJobs[previousIndex];
+
+    // Check if resume exists before applying
+    if (direction == CardSwiperDirection.right) {
+      final profileData = _userBackend.profileData;
+
+      if (profileData?.resumeUrl == null || profileData!.resumeUrl!.isEmpty) {
+        _showErrorSnackBar('Please upload a resume before applying');
+        return false;
+      }
+    }
+
+    // Mark the job as swiped
+    await _userBackend.markJobAsSwiped(swipedJob.id);
+
+    setState(() {
+      filteredJobs.removeAt(previousIndex);
+    });
 
     if (direction == CardSwiperDirection.right) {
-      _applyForJob(context, filteredJobs[previousIndex]);
+      try {
+        await _userBackend.applyForJob(swipedJob);
+        _showSuccessSnackBar('Application submitted successfully!');
+      } catch (e) {
+        _showErrorSnackBar(e.toString());
+      }
     }
 
-    if (currentIndex == null || currentIndex >= filteredJobs.length - 1) {
+    if (filteredJobs.isEmpty) {
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           setState(() {
@@ -512,9 +514,9 @@ class _JobListingsPageState extends State<JobListingsPage>
         }
       });
     }
+
     return true;
   }
-
   Widget _buildSwipeActions() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 32.0),

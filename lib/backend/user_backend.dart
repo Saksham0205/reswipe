@@ -1,4 +1,3 @@
-// user_backend.dart
 import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -51,7 +50,6 @@ class UserBackend {
 
   Future<void> initialize(String userId) async {
     _currentUserId = userId;
-    await _loadSwipedJobs(); // Load swiped jobs first
     await Future.wait([
       _loadUserProfile(),
       _loadJobs(),
@@ -75,14 +73,6 @@ class UserBackend {
     }
   }
 
-  // Add method to load swiped jobs from SharedPreferences
-  Future<void> _loadSwipedJobs() async {
-    final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
-    final List<String>? swipedJobs = _prefs.getStringList(key);
-    if (swipedJobs != null) {
-      _swipedJobIds = Set<String>.from(swipedJobs);
-    }
-  }
 
   // Add method to save swiped jobs to SharedPreferences
   Future<void> _saveSwipedJobs() async {
@@ -176,7 +166,6 @@ class UserBackend {
 
   Future<List<Job>> getFilteredJobs(String filter) async {
     await _loadJobs();
-    await _loadSwipedJobs(); // Ensure we have the latest swiped jobs
 
     // Filter out swiped jobs first
     List<Job> availableJobs = _cachedJobs?.where((job) => !_swipedJobIds.contains(job.id)).toList() ?? [];
