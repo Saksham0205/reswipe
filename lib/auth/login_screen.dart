@@ -179,8 +179,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     SizedBox(height: 24.h),
                     _buildLoginButton(),
                     SizedBox(height: 24.h),
-                    _buildSocialLogin(),
-                    SizedBox(height: 24.h),
+                    // _buildSocialLogin(),
+                    // SizedBox(height: 24.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -302,35 +302,35 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildSocialLogin() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: Divider(color: Colors.grey.shade300)),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Text(
-                'Or continue with',
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-            ),
-            Expanded(child: Divider(color: Colors.grey.shade300)),
-          ],
-        ),
-        SizedBox(height: 20.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _socialButton(
-              'assets/google_icon.png',
-              _handleGoogleSignIn,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  // Widget _buildSocialLogin() {
+  //   return Column(
+  //     children: [
+  //       Row(
+  //         children: [
+  //           Expanded(child: Divider(color: Colors.grey.shade300)),
+  //           Padding(
+  //             padding: EdgeInsets.symmetric(horizontal: 16.w),
+  //             child: Text(
+  //               'Or continue with',
+  //               style: TextStyle(color: Colors.grey.shade600),
+  //             ),
+  //           ),
+  //           Expanded(child: Divider(color: Colors.grey.shade300)),
+  //         ],
+  //       ),
+  //       SizedBox(height: 20.h),
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.center,
+  //         children: [
+  //           _socialButton(
+  //             'assets/google_icon.png',
+  //             _handleGoogleSignIn,
+  //           ),
+  //         ],
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _socialButton(String iconPath, VoidCallback onPressed) {
     return Container(

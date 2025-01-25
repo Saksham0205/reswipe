@@ -4,6 +4,7 @@ class UserRegistration {
   final String role;
   final String? companyName;
   final String? companyId;
+  final String? fcmToken;
 
   UserRegistration({
     required this.name,
@@ -11,6 +12,7 @@ class UserRegistration {
     required this.role,
     this.companyName,
     this.companyId,
+    this.fcmToken,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,6 +24,7 @@ class UserRegistration {
       'emailVerified': false,
       if (companyName != null) 'companyName': companyName,
       if (companyId != null) 'companyId': companyId,
+      if (fcmToken != null) 'fcmToken': fcmToken,
     };
   }
 
@@ -32,6 +35,7 @@ class UserRegistration {
       role: map['role'] ?? '',
       companyName: map['companyName'],
       companyId: map['companyId'],
+      fcmToken: map['fcmToken'],
     );
   }
 }

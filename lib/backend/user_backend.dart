@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,6 +58,21 @@ class UserBackend {
       _loadCompanyDetails(),
     ]);
     _setupApplicationsListener();
+  }
+  Future<void> updateFCMToken() async {
+    if (_currentUserId == null) return;
+
+    try {
+      String? newToken = await FirebaseMessaging.instance.getToken();
+      if (newToken != null) {
+        await _firestore
+            .collection('users')
+            .doc(_currentUserId)
+            .update({'fcmToken': newToken});
+      }
+    } catch (e) {
+      print('Error updating FCM token: $e');
+    }
   }
 
   // Add method to load swiped jobs from SharedPreferences

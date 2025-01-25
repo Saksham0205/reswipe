@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -49,11 +50,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
     super.dispose();
   }
 
-  Future<void>  _register() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
     try {
+      // Get FCM token
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+
       // Create user account
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
@@ -67,13 +71,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
       // Generate company ID if needed
       String? companyId = _role == 'company' ? _generateRandomCompanyId() : null;
 
-      // Create user profile
+      // Create user profile with FCM token
       UserRegistration newUser = UserRegistration(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         role: _role,
         companyName: _role == 'company' ? _companyNameController.text.trim() : null,
         companyId: companyId,
+        fcmToken: fcmToken, // Add FCM token here
       );
 
       // Save user data to Firestore
