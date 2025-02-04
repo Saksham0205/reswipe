@@ -60,8 +60,8 @@ class _JobListingsPageState extends State<JobListingsPage>
 
   @override
   void dispose() {
-    controller.dispose();  // Dispose the card swiper controller
-    _animationController.dispose();  // Dispose the animation controller
+    controller.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -147,6 +147,50 @@ class _JobListingsPageState extends State<JobListingsPage>
       _showEndState = false;
       _initializeData();
     });
+  }
+
+  Future<bool> _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) async {
+    if (previousIndex < 0 || previousIndex >= filteredJobs.length) {
+      return false;
+    }
+
+    Job swipedJob = filteredJobs[previousIndex];
+
+    if (direction == CardSwiperDirection.right) {
+      final profileData = _userBackend.profileData;
+
+      if (profileData?.resumeUrl == null || profileData!.resumeUrl!.isEmpty) {
+        _showErrorSnackBar('Please upload a resume before applying');
+        return false;
+      }
+    }
+
+    await _userBackend.markJobAsSwiped(swipedJob.id);
+
+    setState(() {
+      filteredJobs.removeAt(previousIndex);
+    });
+
+    if (direction == CardSwiperDirection.right) {
+      try {
+        await _userBackend.applyForJob(swipedJob);
+        _showSuccessSnackBar('Application submitted successfully!');
+      } catch (e) {
+        _showErrorSnackBar(e.toString());
+      }
+    }
+
+    if (filteredJobs.isEmpty) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          setState(() {
+            _showEndState = true;
+          });
+        }
+      });
+    }
+
+    return true;
   }
 
   void _applyForJob(BuildContext context, Job job) async {
@@ -471,52 +515,52 @@ class _JobListingsPageState extends State<JobListingsPage>
     );
   }
 
-  Future<bool> _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) async {
-    // Ensure we're within bounds before accessing the job
-    if (previousIndex < 0 || previousIndex >= filteredJobs.length) {
-      return false;
-    }
-
-    Job swipedJob = filteredJobs[previousIndex];
-
-    // Check if resume exists before applying
-    if (direction == CardSwiperDirection.right) {
-      final profileData = _userBackend.profileData;
-
-      if (profileData?.resumeUrl == null || profileData!.resumeUrl!.isEmpty) {
-        _showErrorSnackBar('Please upload a resume before applying');
-        return false;
-      }
-    }
-
-    // Mark the job as swiped
-    await _userBackend.markJobAsSwiped(swipedJob.id);
-
-    setState(() {
-      filteredJobs.removeAt(previousIndex);
-    });
-
-    if (direction == CardSwiperDirection.right) {
-      try {
-        await _userBackend.applyForJob(swipedJob);
-        _showSuccessSnackBar('Application submitted successfully!');
-      } catch (e) {
-        _showErrorSnackBar(e.toString());
-      }
-    }
-
-    if (filteredJobs.isEmpty) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          setState(() {
-            _showEndState = true;
-          });
-        }
-      });
-    }
-
-    return true;
-  }
+  // Future<bool> _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) async {
+  //   // Ensure we're within bounds before accessing the job
+  //   if (previousIndex < 0 || previousIndex >= filteredJobs.length) {
+  //     return false;
+  //   }
+  //
+  //   Job swipedJob = filteredJobs[previousIndex];
+  //
+  //   // Check if resume exists before applying
+  //   if (direction == CardSwiperDirection.right) {
+  //     final profileData = _userBackend.profileData;
+  //
+  //     if (profileData?.resumeUrl == null || profileData!.resumeUrl!.isEmpty) {
+  //       _showErrorSnackBar('Please upload a resume before applying');
+  //       return false;
+  //     }
+  //   }
+  //
+  //   // Mark the job as swiped
+  //   await _userBackend.markJobAsSwiped(swipedJob.id);
+  //
+  //   setState(() {
+  //     filteredJobs.removeAt(previousIndex);
+  //   });
+  //
+  //   if (direction == CardSwiperDirection.right) {
+  //     try {
+  //       await _userBackend.applyForJob(swipedJob);
+  //       _showSuccessSnackBar('Application submitted successfully!');
+  //     } catch (e) {
+  //       _showErrorSnackBar(e.toString());
+  //     }
+  //   }
+  //
+  //   if (filteredJobs.isEmpty) {
+  //     Future.delayed(const Duration(milliseconds: 300), () {
+  //       if (mounted) {
+  //         setState(() {
+  //           _showEndState = true;
+  //         });
+  //       }
+  //     });
+  //   }
+  //
+  //   return true;
+  // }
   Widget _buildSwipeActions() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 32.0),

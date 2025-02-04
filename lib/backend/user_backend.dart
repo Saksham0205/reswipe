@@ -22,7 +22,9 @@ class UserBackend {
 
   Future<void> _initializePrefs() async {
     _prefs = await SharedPreferences.getInstance();
+    _loadSwipedJobs();
   }
+
   final StorageService _storageService = StorageService();
   final ResumeParserService _resumeParserService = ResumeParserService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -57,6 +59,41 @@ class UserBackend {
     ]);
     _setupApplicationsListener();
   }
+
+  Future<void> _loadSwipedJobs() async {
+    final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
+    final List<String>? swipedJobs = _prefs.getStringList(key);
+    if (swipedJobs != null) {
+      _swipedJobIds = Set.from(swipedJobs);
+    }
+  }
+
+  Future<void> _saveSwipedJobs() async {
+    final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
+    await _prefs.setStringList(key, _swipedJobIds.toList());
+  }
+
+  Future<void> _loadJobs() async {
+    if (_shouldRefreshCache(_lastJobsFetch)) {
+      try {
+        QuerySnapshot querySnapshot = await _firestore.collection('jobs').get();
+        _cachedJobs = querySnapshot.docs
+            .map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+            .where((job) => !_swipedJobIds.contains(job.id)) // Filter out swiped jobs
+            .toList();
+        _lastJobsFetch = DateTime.now();
+        _jobsController.add(_cachedJobs!);
+      } catch (e) {
+        print('Error loading jobs: $e');
+        throw Exception('Failed to load jobs: $e');
+      }
+    }
+  }
+
+  Future<void> markJobAsSwiped(String jobId) async {
+    _swipedJobIds.add(jobId);
+    await _saveSwipedJobs();
+  }
   Future<void> updateFCMToken() async {
     if (_currentUserId == null) return;
 
@@ -74,11 +111,11 @@ class UserBackend {
   }
 
 
-  // Add method to save swiped jobs to SharedPreferences
-  Future<void> _saveSwipedJobs() async {
-    final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
-    await _prefs.setStringList(key, _swipedJobIds.toList());
-  }
+  // // Add method to save swiped jobs to SharedPreferences
+  // Future<void> _saveSwipedJobs() async {
+  //   final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
+  //   await _prefs.setStringList(key, _swipedJobIds.toList());
+  // }
 
   Future<void> _loadUserProfile() async {
     try {
@@ -102,21 +139,21 @@ class UserBackend {
     }
   }
 
-  Future<void> _loadJobs() async {
-    if (_shouldRefreshCache(_lastJobsFetch)) {
-      try {
-        QuerySnapshot querySnapshot = await _firestore.collection('jobs').get();
-        _cachedJobs = querySnapshot.docs
-            .map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-            .toList();
-        _lastJobsFetch = DateTime.now();
-        _jobsController.add(_cachedJobs!);
-      } catch (e) {
-        print('Error loading jobs: $e');
-        throw Exception('Failed to load jobs: $e');
-      }
-    }
-  }
+  // Future<void> _loadJobs() async {
+  //   if (_shouldRefreshCache(_lastJobsFetch)) {
+  //     try {
+  //       QuerySnapshot querySnapshot = await _firestore.collection('jobs').get();
+  //       _cachedJobs = querySnapshot.docs
+  //           .map((doc) => Job.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+  //           .toList();
+  //       _lastJobsFetch = DateTime.now();
+  //       _jobsController.add(_cachedJobs!);
+  //     } catch (e) {
+  //       print('Error loading jobs: $e');
+  //       throw Exception('Failed to load jobs: $e');
+  //     }
+  //   }
+  // }
 
   Future<void> _loadCompanyDetails() async {
     if (_shouldRefreshCache(_lastCompanyDetailsFetch)) {
@@ -179,10 +216,10 @@ class UserBackend {
         .toList();
   }
 
-  Future<void> markJobAsSwiped(String jobId) async {
-    _swipedJobIds.add(jobId);
-    await _saveSwipedJobs();
-  }
+  // Future<void> markJobAsSwiped(String jobId) async {
+  //   _swipedJobIds.add(jobId);
+  //   await _saveSwipedJobs();
+  // }
 
   // Modify clearSwipedJobs method to persist the change
   Future<void> clearSwipedJobs() async {
