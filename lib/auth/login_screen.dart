@@ -179,8 +179,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     SizedBox(height: 24.h),
                     _buildLoginButton(),
                     SizedBox(height: 24.h),
-                    _buildSocialLogin(),
-                    SizedBox(height: 24.h),
+                    // _buildSocialLogin(),
+                    // SizedBox(height: 24.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
