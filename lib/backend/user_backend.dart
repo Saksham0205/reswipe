@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -8,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 import '../models/user_model/profile_data.dart';
+import '../models/user_registration.dart';
 import '../services/storage_service.dart';
 import '../services/resume_parser_service.dart';
 
@@ -59,7 +62,6 @@ class UserBackend {
     ]);
     _setupApplicationsListener();
   }
-
   Future<void> _loadSwipedJobs() async {
     final String key = 'swiped_jobs_${_currentUserId ?? "default"}';
     final List<String>? swipedJobs = _prefs.getStringList(key);
@@ -401,9 +403,68 @@ class UserBackend {
       _cachedApplications = [...(_cachedApplications ?? []), application];
       _applicationsController.add(_cachedApplications!);
 
+      // Send notification to the company
+      await _sendNotificationToCompany(application);
     } catch (e) {
       print('Application error: $e');
       throw Exception(e.toString());
+    }
+  }
+  Future<bool> _sendNotificationToCompany(Application application) async {
+    try {
+      // Validate application
+      if (application.companyId.isEmpty) {
+        print('Invalid company ID');
+        return false;
+      }
+
+      // Fetch company document
+      final companySnapshot = await _firestore
+          .collection('users')
+          .where('companyId', isEqualTo: application.companyId)
+          .get();
+
+      if (companySnapshot.docs.isEmpty) {
+        print('No company found with ID: ${application.companyId}');
+        return false;
+      }
+
+      final companyDoc = companySnapshot.docs.first;
+      final companyFCMToken = companyDoc.get('fcmToken') as String?;
+
+      if (companyFCMToken == null) {
+        print('Company FCM token is null for companyId: ${application.companyId}');
+        return false;
+      }
+
+      // Prepare the URL for the notification API
+      final url = Uri.parse('https://resumeapplyingapi.onrender.com/api/send-notification');
+
+      // Send a POST request to the notification API
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(<String, dynamic>{
+          "fcmToken": companyFCMToken,
+          "title": "New Application Received",
+          "body": "${application.applicantName} has applied for the job: ${application.jobTitle}",
+          "data": {
+            "jobId": application.companyId,
+            "applicantName": application.applicantName,
+          }
+        }),
+      );
+
+      // Check response status
+      if (response.statusCode != 200) {
+        print('Failed to send notification: ${response.body}');
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      print('Error sending notification: $e');
+      return false;
     }
   }
 
