@@ -53,10 +53,12 @@ class _JobPostScreenContentState extends State<JobPostScreenContent> with Ticker
   late FocusNode _qualificationsFocus;
   late FocusNode _salaryRangeFocus;
   late FocusNode _locationFocus;
+  late SalaryData _salaryData;
 
   @override
   void initState() {
     super.initState();
+    _salaryData = SalaryData(amount: '', frequency: PaymentFrequency.perYear);
     _titleFocus = FocusNode();
     _descriptionFocus = FocusNode();
     _responsibilitiesFocus = FocusNode();
@@ -71,7 +73,6 @@ class _JobPostScreenContentState extends State<JobPostScreenContent> with Ticker
       duration: const Duration(seconds: 2),
     );
     _checkJobPostLimit();
-    _setupSalaryRangeListener();
   }
 
   Future<void> _checkJobPostLimit() async {
@@ -115,15 +116,6 @@ class _JobPostScreenContentState extends State<JobPostScreenContent> with Ticker
         duration: const Duration(milliseconds: 300),
       );
     }
-  }
-  void _setupSalaryRangeListener() {
-    _salaryRangeController.addListener(() {
-      if (_salaryRangeController.text.isNotEmpty &&
-          !_salaryRangeController.text.toLowerCase().contains('per year') &&
-          !_salaryRangeController.text.toLowerCase().contains('per annum')) {
-        _salaryRangeController.text = '${_salaryRangeController.text} per year';
-      }
-    });
   }
   void _showJobLimitDialog() {
     showDialog(
@@ -492,7 +484,7 @@ class _JobPostScreenContentState extends State<JobPostScreenContent> with Ticker
             .split('\n')
             .where((line) => line.trim().isNotEmpty)
             .toList(),
-        salaryRange: _salaryRangeController.text.trim(),
+        salaryRange: _salaryData.toString(),
         location: _locationController.text.trim(),
         employmentType: _employmentType,
         companyId: '',  // Will be set in bloc

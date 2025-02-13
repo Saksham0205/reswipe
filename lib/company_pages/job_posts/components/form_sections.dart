@@ -96,28 +96,18 @@ class FormSections extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: CustomTextField(
-                controller: controllers['salaryRange']!,
-                focusNode: focusNodes['salaryRange']!,
-                label: 'Salary Range',
-                icon: Icons.currency_rupee,
-                onChanged: (_) => onFieldChanged(),
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: CustomTextField(
-                controller: controllers['location']!,
-                focusNode: focusNodes['location']!,
-                label: 'Location',
-                icon: Icons.location_on,
-                onChanged: (_) => onFieldChanged(),
-              ),
-            ),
-          ],
+        SalaryInputField(
+          controller: controllers['salaryRange']!,
+          focusNode: focusNodes['salaryRange']!,
+          onFieldChanged: onFieldChanged,
+        ),
+        SizedBox(height: 16.h),
+        CustomTextField(
+          controller: controllers['location']!,
+          focusNode: focusNodes['location']!,
+          label: 'Location',
+          icon: Icons.location_on,
+          onChanged: (_) => onFieldChanged(),
         ),
         SizedBox(height: 16.h),
         _buildEmploymentTypeDropdown(),
@@ -192,6 +182,149 @@ class FormSections extends StatelessWidget {
           }
         },
       ),
+    );
+  }
+}
+
+enum PaymentFrequency {
+  perMonth('per month'),
+  perYear('per year');
+
+  final String label;
+  const PaymentFrequency(this.label);
+}
+class SalaryData {
+  final String amount;
+  final PaymentFrequency frequency;
+
+  SalaryData({
+    required this.amount,
+    required this.frequency,
+  });
+
+  @override
+  String toString() => '$amount ${frequency.label}';
+}
+class SalaryInputField extends StatefulWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final Function() onFieldChanged;
+
+  const SalaryInputField({
+    Key? key,
+    required this.controller,
+    required this.focusNode,
+    required this.onFieldChanged,
+  }) : super(key: key);
+
+  @override
+  State<SalaryInputField> createState() => _SalaryInputFieldState();
+}
+class _SalaryInputFieldState extends State<SalaryInputField> {
+  PaymentFrequency _frequency = PaymentFrequency.perYear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.deepPurple.shade200),
+              color: Colors.deepPurple.shade50,
+            ),
+            child: TextFormField(
+              controller: widget.controller,
+              focusNode: widget.focusNode,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: Colors.deepPurple.shade900,
+                fontSize: 16.sp,
+              ),
+              decoration: InputDecoration(
+                labelText: 'Salary Range',
+                labelStyle: TextStyle(
+                  color: Colors.deepPurple.shade700,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14.sp,
+                ),
+                prefixIcon: Icon(
+                  Icons.currency_rupee,
+                  color: Colors.deepPurple.shade400,
+                  size: 20.w,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                filled: true,
+                fillColor: Colors.transparent,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(color: Colors.transparent),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.deepPurple, width: 2.w),
+                ),
+              ),
+              onChanged: (_) => widget.onFieldChanged(),
+            ),
+          ),
+        ),
+        SizedBox(width: 8.w),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.deepPurple.shade200),
+              color: Colors.deepPurple.shade50,
+            ),
+            child: DropdownButtonFormField<PaymentFrequency>(
+              value: _frequency,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                filled: true,
+                fillColor: Colors.transparent,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(color: Colors.transparent),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide(color: Colors.deepPurple, width: 2.w),
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.deepPurple.shade900,
+                fontSize: 16.sp,
+              ),
+              dropdownColor: Colors.white,
+              items: PaymentFrequency.values.map((frequency) {
+                return DropdownMenuItem(
+                  value: frequency,
+                  child: Text(
+                    frequency.label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _frequency = newValue;
+                  });
+                  widget.onFieldChanged();
+                }
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
