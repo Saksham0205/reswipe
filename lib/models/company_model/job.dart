@@ -11,7 +11,7 @@ class Job {
   final String employmentType;
   final String companyId;
   final String companyName;
-  final DateTime timestamp; // Added timestamp field
+  final DateTime timestamp;
 
   Job({
     this.id = '',
@@ -24,8 +24,8 @@ class Job {
     required this.employmentType,
     required this.companyId,
     required this.companyName,
-    DateTime? timestamp, // Optional parameter with default value
-  }) : timestamp = timestamp ?? DateTime.now(); // Default to current time if not provided
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
 
   factory Job.fromMap(Map<String, dynamic> data, String id) {
     return Job(
