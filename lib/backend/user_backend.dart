@@ -10,7 +10,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/company_model/applications.dart';
 import '../models/company_model/job.dart';
 import '../models/user_model/profile_data.dart';
-import '../models/user_registration.dart';
 import '../services/storage_service.dart';
 import '../services/resume_parser_service.dart';
 

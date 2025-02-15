@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
@@ -860,19 +861,18 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       // Add the job and wait for completion
       final docRef = await _firestore.collection('jobs').add(job.toMap());
 
-      // Verify the job was added successfully
-      final newJob = await docRef.get();
-      if (!newJob.exists) {
-        throw Exception('Failed to create job posting. Please try again.');
-      }
+      // Get the job with the generated ID
+      final jobWithId = job.copyWith(id: docRef.id);
+
+      // Send notifications to job seekers
+      await _sendNewJobNotification(jobWithId);
 
       // Reload jobs only after successful creation
       add(LoadJobs());
     } catch (e) {
       emit(JobError(e.toString()));
     }
-  }
-  Future<void> _sendNotificationToApplicant(String userId, String status, String jobTitle,) async {
+  }  Future<void> _sendNotificationToApplicant(String userId, String status, String jobTitle,) async {
     try {
       final userDoc = await _firestore.collection('users').doc(userId).get();
       final tokens = List<String>.from(userDoc.data()?['fcmTokens'] ?? []);
@@ -909,6 +909,71 @@ class JobBloc extends Bloc<JobEvent, JobState> {
       if (kDebugMode) {
         print('Error sending notification: $e');
       }
+    }
+  }
+
+  Future<bool> _sendNewJobNotification(Job job) async {
+    try {
+      // Query for all users with role 'job_seeker' who have FCM tokens
+      final usersSnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'job_seeker')
+          .where('fcmToken', isNull: false)
+          .get();
+
+      if (usersSnapshot.docs.isEmpty) return true;
+
+      // Keep track of successful notifications
+      int successCount = 0;
+      int failCount = 0;
+
+      // Prepare the URL for the notification API
+      final url = Uri.parse('https://resumeapplyingapi.onrender.com/api/send-notification');
+
+      // Process each user
+      for (var userDoc in usersSnapshot.docs) {
+        final userData = userDoc.data();
+        final fcmToken = userData['fcmToken'] as String?;
+
+        if (fcmToken == null || fcmToken.isEmpty) continue;
+
+        // Send a POST request to the notification API
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json; charset=UTF-8'},
+          body: jsonEncode({
+            "fcmToken": fcmToken,
+            "title": "New Job Opportunity!",
+            "body": "${job.companyName} is hiring: ${job.title}",
+            "data": {
+              "jobId": job.id,
+              "companyId": job.companyId,
+              "jobTitle": job.title,
+            }
+          }),
+        );
+
+        // Check response status
+        if (response.statusCode == 200) {
+          successCount++;
+        } else {
+          failCount++;
+          if (kDebugMode) {
+            print('Failed to send notification to user ${userDoc.id}: ${response.body}');
+          }
+        }
+      }
+
+      if (kDebugMode) {
+        print('Job notifications sent: $successCount successful, $failCount failed for job: ${job.id}');
+      }
+
+      return successCount > 0;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error sending job notifications: $e');
+      }
+      return false;
     }
   }
 // Future<void> _refreshApplications(String jobId) async {
