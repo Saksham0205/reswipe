@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/animation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../home_screen/screens/job_seeker_home_screen.dart';
+import '../home_screen/screens/company_home_screen.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -40,10 +42,42 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 3));
 
     User? user = FirebaseAuth.instance.currentUser;
+
     if (user != null) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const JobSeekerHomeScreen()),
-      );
+      try {
+        // Check Firestore to determine if the user is a job seeker or company
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+          String role = userData['role'] ?? 'job_seeker';
+
+          if (role == 'company') {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const CompanyMainScreen()),
+            );
+          } else {
+            // For job seekers
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const JobSeekerHomeScreen()),
+            );
+          }
+        } else {
+          // If user document doesn't exist, default to job seeker
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const JobSeekerHomeScreen()),
+          );
+        }
+      } catch (e) {
+        print('Error determining user type: $e');
+        // Default to job seeker home in case of error
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const JobSeekerHomeScreen()),
+        );
+      }
     } else {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => LoginScreen()),

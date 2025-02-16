@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lottie/lottie.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firestore_service.dart';
 import 'forgot_password.dart';
 import 'registration_screen.dart';
+import '../home_screen/screens/job_seeker_home_screen.dart';
+import '../home_screen/screens/company_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -42,15 +45,57 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (mounted) setState(() => _isLoading = value);
   }
 
+  Future<void> _navigateBasedOnUserType(User user) async {
+    try {
+      // Check Firestore to determine if the user is a job seeker or company
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userDoc.exists) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        String role = userData['role'] ?? 'job_seeker';
+
+        if (role == 'company') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const CompanyMainScreen()),
+          );
+        } else {
+          // For job seekers
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const JobSeekerHomeScreen()),
+          );
+        }
+      } else {
+        // If user document doesn't exist, default to job seeker
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const JobSeekerHomeScreen()),
+        );
+      }
+    } catch (e) {
+      print('Error determining user type: $e');
+      // Default to job seeker home in case of error
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const JobSeekerHomeScreen()),
+      );
+    }
+  }
+
   Future<void> _tryLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     _setLoading(true);
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
+      if (userCredential.user != null) {
+        await _navigateBasedOnUserType(userCredential.user!);
+      }
+
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -70,7 +115,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _setLoading(true);
     try {
       final UserCredential? userCredential = await _authService.signInWithGoogle();
-      if (userCredential == null && mounted) {
+      if (userCredential != null && userCredential.user != null) {
+        await _navigateBasedOnUserType(userCredential.user!);
+      } else if (userCredential == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Google sign in was cancelled'),
@@ -95,6 +142,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    // Rest of the build method remains unchanged
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -213,6 +261,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
+  // The rest of the widget methods remain unchanged
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,
