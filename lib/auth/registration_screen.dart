@@ -55,10 +55,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
 
     setState(() => _isLoading = true);
     try {
-      // Get FCM token
       String? fcmToken = await FirebaseMessaging.instance.getToken();
 
-      // Create user account
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
         email: _emailController.text.trim(),

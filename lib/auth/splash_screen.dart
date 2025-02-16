@@ -45,7 +45,6 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (user != null) {
       try {
-        // Check Firestore to determine if the user is a job seeker or company
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
