@@ -10,13 +10,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:reswipe/home_screen/screens/company_home_screen.dart';
 import 'auth/auth_wrapper.dart';
 import 'auth/login_screen.dart';
+import 'auth/splash_screen.dart';
 import 'firebase_options.dart';
 import 'home_screen/screens/job_seeker_home_screen.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Optional: Handle background messages
   print("Handling a background message: ${message.messageId}");
 }
 
@@ -87,15 +86,13 @@ class _JobFinderAppState extends State<JobFinderApp> {
   }
 
   Future<void> _updateFCMTokenOnInitialize() async {
-    // Ensure user is logged in before updating token
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-      // Initialize backend for current user first
       await _userBackend.initialize(currentUser.uid);
-      // Then update FCM token
       await _userBackend.updateFCMToken();
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
@@ -117,7 +114,6 @@ class _JobFinderAppState extends State<JobFinderApp> {
               )..add(LoadProfile()),
               lazy: false,
             ),
-            // Add ApplicationsBloc provider
             BlocProvider<ApplicationsBloc>(
               create: (context) => ApplicationsBloc(UserBackend()),
               lazy: false,
@@ -130,7 +126,7 @@ class _JobFinderAppState extends State<JobFinderApp> {
               primarySwatch: Colors.blue,
               visualDensity: VisualDensity.adaptivePlatformDensity,
             ),
-            home: const AuthWrapper(),
+            home: const SplashScreen(), // Redirect to SplashScreen
             onGenerateRoute: (settings) {
               Widget page;
               switch (settings.name) {
