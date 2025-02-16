@@ -65,9 +65,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
         password: _passwordController.text,
       );
 
-      // Send email verification
-      await userCredential.user!.sendEmailVerification();
-
       // Generate company ID if needed
       String? companyId = _role == 'company' ? _generateRandomCompanyId() : null;
 

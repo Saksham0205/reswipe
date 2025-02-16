@@ -385,7 +385,7 @@ class _JobListingsPageState extends State<JobListingsPage>
       return _buildEmptyState(
         message: 'No Jobs Available',
         subMessage: 'Looks like all the good jobs are taking a coffee break! ☕\nCheck back later for fresh opportunities.',
-        lottieUrl: 'https://assets1.lottiefiles.com/packages/lf20_EMTsq1.json',
+        lottieUrl: 'assets/lottie/no_jobs.json',
       );
     }
 
@@ -393,13 +393,14 @@ class _JobListingsPageState extends State<JobListingsPage>
       return _buildEmptyState(
         message: 'No ${selectedFilter} Jobs Found',
         subMessage: 'We couldn\'t find any jobs matching your filter.\nTry selecting a different category!',
-        lottieUrl: 'https://assets10.lottiefiles.com/packages/lf20_swnrn2gh.json',
+        lottieUrl: 'assets/lottie/no_jobs.json',
       );
     }
 
     if (_showEndState) {
       return _buildEndState();
     }
+
     return Column(
       children: [
         Expanded(
@@ -407,18 +408,91 @@ class _JobListingsPageState extends State<JobListingsPage>
             controller: controller,
             cardsCount: filteredJobs.length,
             onSwipe: _onSwipe,
-            numberOfCardsDisplayed: 1, // Explicitly set to 1
-            backCardOffset: const Offset(0, 0), // Prevent showing partial cards
+            numberOfCardsDisplayed: 1,
+            backCardOffset: const Offset(0, 0),
             padding: EdgeInsets.all(24.0.w),
-            cardBuilder: (context, index, _, __) => JobCard(
-              job: filteredJobs[index],
-              companyName: companyNames[filteredJobs[index].companyId] ?? 'Unknown Company',
-              companyLogo: companyLogos[filteredJobs[index].companyId] ?? '',
-            ),
+            cardBuilder: (context, index, _, __) {
+              // Add a safety check to prevent index out of bounds
+              if (index < 0 || index >= filteredJobs.length) {
+                // Return the Lottie animation if index is invalid
+                return _buildEmptyStateCard(
+                  message: 'Oops! Something went wrong',
+                  subMessage: 'We couldn\'t find this job. Please try again later.',
+                  lottieUrl: 'assets/lottie/no_jobs.json',
+                );
+              }
+              return JobCard(
+                job: filteredJobs[index],
+                companyName: companyNames[filteredJobs[index].companyId] ?? 'Unknown Company',
+                companyLogo: companyLogos[filteredJobs[index].companyId] ?? '',
+              );
+            },
           ),
         ),
-        if (filteredJobs.length >= 1) _buildSwipeActions(),
+        if (filteredJobs.isNotEmpty) _buildSwipeActions(),
       ],
+    );
+  }
+
+// New method to build an empty state specifically for the card
+  Widget _buildEmptyStateCard({
+    required String message,
+    required String subMessage,
+    required String lottieUrl,
+  }) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0.w),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.0.w),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Colors.grey.shade50],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Lottie.asset(
+              lottieUrl,
+              width: 150.w,
+              height: 150.h,
+              fit: BoxFit.contain,
+              frameRate: const FrameRate(60),
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.error_outline,
+                size: 80.sp,
+                color: Colors.deepPurple.shade200,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              message,
+              style: GoogleFonts.poppins(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Text(
+                subMessage,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 14.sp,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -431,7 +505,7 @@ class _JobListingsPageState extends State<JobListingsPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Lottie.network(
+          Lottie.asset(
             lottieUrl,
             width: 200.w,
             height: 200.h,
