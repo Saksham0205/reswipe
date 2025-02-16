@@ -450,8 +450,8 @@ class _UserSettingsPageState extends State<UserSettingsPage>
       },
     );
 
-    // if (shouldLogout ?? false) {
-    //  Navigator.pushReplacementNamed(context, "/login");
-    // }
+    if (shouldLogout ?? false) {
+     Navigator.pushReplacementNamed(context, "/login");
+    }
   }
 }

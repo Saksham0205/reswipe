@@ -130,6 +130,9 @@ class _JobFinderAppState extends State<JobFinderApp> {
             onGenerateRoute: (settings) {
               Widget page;
               switch (settings.name) {
+                case '/':
+                  page = SplashScreen();
+                  break;
                 case '/login':
                   page = LoginScreen();
                   break;
