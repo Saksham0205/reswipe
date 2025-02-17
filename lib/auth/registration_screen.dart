@@ -54,63 +54,137 @@ class _RegistrationScreenState extends State<RegistrationScreen> with SingleTick
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    try {
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
 
-      UserCredential userCredential = await FirebaseAuth.instance
+    try {
+      // Get FCM token before creating user
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print('FCM Token: $fcmToken');
+
+      // Create user account
+      final UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+      print('User created: ${userCredential.user?.uid}');
 
-      // Generate company ID if needed
+      if (!mounted) return; // Check if widget is still mounted
+
+      // Generate company ID for company role
       String? companyId = _role == 'company' ? _generateRandomCompanyId() : null;
+      print('Company ID: $companyId');
 
-      // Create user profile with FCM token
-      UserRegistration newUser = UserRegistration(
+      // Create user profile object
+      final UserRegistration newUser = UserRegistration(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         role: _role,
         companyName: _role == 'company' ? _companyNameController.text.trim() : null,
         companyId: companyId,
-        fcmToken: fcmToken, // Add FCM token here
+        fcmToken: fcmToken,
       );
+      print('UserRegistration: ${newUser.toMap()}');
 
       // Save user data to Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .set(newUser.toMap());
+      print('User data saved to Firestore');
 
-      // Navigate based on role
+      if (!mounted) return; // Check mounted state again after async operation
+
+      // Clear all controllers
+      _emailController.clear();
+      _passwordController.clear();
+      _nameController.clear();
+      _companyNameController.clear();
+
+      // Navigate based on role using pushAndRemoveUntil to clear the stack
       if (_role == 'company') {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => CompanyVerificationScreen(
-            email: _emailController.text.trim(),
-            companyName: _companyNameController.text.trim(),
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CompanyVerificationScreen(
+              email: newUser.email,
+              companyName: newUser.companyName!,
+            ),
           ),
-        ));
+              (route) => false, // Remove all previous routes
+        );
       } else {
-        Navigator.of(context).pushReplacementNamed('/home');
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/job_seeker_home',
+              (route) => false, // Remove all previous routes
+        );
       }
     } on FirebaseAuthException catch (e) {
-      _showErrorSnackbar(e.message ?? 'Registration failed');
+      print('FirebaseAuthException: ${e.code} - ${e.message}');
+      if (!mounted) return;
+      _handleFirebaseError(e);
     } catch (e) {
-      _showErrorSnackbar('An unexpected error occurred');
+      print('Unexpected error: $e');
+      if (!mounted) return;
+      _showErrorSnackbar('An unexpected error occurred. Please try again.');
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
+  void _handleFirebaseError(FirebaseAuthException e) {
+    String errorMessage;
+    switch (e.code) {
+      case 'email-already-in-use':
+        errorMessage = 'This email is already registered. Please sign in instead.';
+        break;
+      case 'invalid-email':
+        errorMessage = 'Please enter a valid email address.';
+        break;
+      case 'operation-not-allowed':
+        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+        break;
+      case 'weak-password':
+        errorMessage = 'Please choose a stronger password.';
+        break;
+      default:
+        errorMessage = 'Registration failed. Please try again.';
+    }
+    _showErrorSnackbar(errorMessage);
+  }
+
   void _showErrorSnackbar(String message) {
+    // Remove any existing snackbars before showing new one
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red[400],
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
       ),
     );
   }
+
+  // void _showErrorSnackbar(String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(message),
+  //       backgroundColor: Colors.red[400],
+  //       behavior: SnackBarBehavior.floating,
+  //     ),
+  //   );
+  // }
 
   String _generateRandomCompanyId() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
